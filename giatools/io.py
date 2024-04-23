@@ -16,7 +16,7 @@ def imread(*args, impl=skimage.io.imread, **kwargs):
 
     When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported although the image file will be read successfully.
     In those cases, Galaxy might detect the errors and assume that the tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection
-    To prevent this, this wrapper around ``skimage.io.imread`` will mute non-fatal all errors.
+    To prevent this, this wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
     """
     try:
 
