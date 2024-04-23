@@ -10,7 +10,7 @@ import contextlib
 import skimage.io
 
 
-def imread(*args, **kwargs):
+def imread(*args, impl=skimage.io.imread, **kwargs):
     """
     Wrapper around ``skimage.io.imread`` which mutes non-fatal errors.
 
@@ -22,7 +22,7 @@ def imread(*args, **kwargs):
 
         # Mute stderr unless an error occurs
         with contextlib.redirect_stderr(None):
-            return skimage.io.imread(*args, **kwargs)
+            return impl(*args, **kwargs)
 
     except:  # noqa: E722
 
