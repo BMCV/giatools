@@ -12,4 +12,6 @@
     </h1>
   </div>
 
+Galaxy Image Analysis: https://github.com/BMCV/galaxy-image-analysis
+
 Use ``python -m unittest`` in the root directory of the repository to run the test suite.
