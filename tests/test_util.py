@@ -32,7 +32,3 @@ class convert_image_to_format_of(unittest.TestCase):
                 actual = giatools.util.convert_image_to_format_of(src_img, dst_img)
                 self.assertEqual(actual.dtype, dst_img.dtype)
                 self.assertTrue(np.allclose(actual, dst_img, rtol=1e-2))
-
-
-if __name__ == '__main__':
-    unittest.main()
