@@ -3,7 +3,6 @@ import unittest.mock
 
 import giatools.io
 
-
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
 
