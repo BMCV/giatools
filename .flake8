@@ -1,3 +1,5 @@
 [flake8]
 
-extend-ignore = E221,E211,E222,E202,F541,E201,E203,E501
+max-line-length = 120
+
+extend-ignore = E221,E211,E222,E202,F541,E201,E203

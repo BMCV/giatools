@@ -5,26 +5,36 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import contextlib
-
 import skimage.io
 
+import giatools.util
 
-def imread(*args, impl=skimage.io.imread, **kwargs):
+try:
+    import tifffile
+except ImportError:
+    tifffile = None
+
+
+@giatools.util.silent
+def imread(*args, **kwargs):
     """
-    Wrapper around ``skimage.io.imread`` which mutes non-fatal errors.
+    Wrapper for loading images which mutes non-fatal errors.
 
-    When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported although the image file will be read successfully.
-    In those cases, Galaxy might detect the errors and assume that the tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection
-    To prevent this, this wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
+    When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported although the image file
+    will be read successfully. In those cases, Galaxy might detect the errors on stdout or stderr, and assume that the
+    tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this
+    wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
+
+    Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
+    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``.
     """
-    try:
 
-        # Mute stderr unless an error occurs
-        with contextlib.redirect_stderr(None):
-            return impl(*args, **kwargs)
+    # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
+    if tifffile is not None:
+        try:
+            return tifffile.imread(*args, **kwargs)
+        except tifffile.TiffFileError:
+            pass  # not a TIFF file
 
-    except:  # noqa: E722
-
-        # Raise the error outside of the contextlib redirection
-        raise
+    # If the image is not a TIFF file, or `tifffile is not available`, fall back to `skimage.io.imread`
+    return skimage.io.imread(*args, **kwargs)

@@ -1,10 +1,25 @@
 import itertools
+import sys
 import unittest
 
 import numpy as np
 import skimage.util
 
 import giatools.util
+import tests.tools
+
+
+class silent(unittest.TestCase):
+
+    def test_silent(self):
+        @giatools.util.silent
+        def func():
+            print('Test', file=sys.stderr)
+            raise ValueError('This is a test error message')
+        with tests.tools.CaptureStderr() as stderr:
+            with self.assertRaises(ValueError):
+                func()
+        self.assertEqual(str(stderr), '')
 
 
 class convert_image_to_format_of(unittest.TestCase):

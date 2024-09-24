@@ -15,3 +15,5 @@
 Galaxy Image Analysis: https://github.com/BMCV/galaxy-image-analysis
 
 Use ``python -m unittest`` in the root directory of the repository to run the test suite.
+
+Use ``coverage run -m unittest && coverage html`` to generate a coverage report.

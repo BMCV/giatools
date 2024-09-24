@@ -5,8 +5,24 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+import contextlib
+import os
+
 import numpy as np
 import skimage.util
+
+
+def silent(func):
+    """
+    Decorator that mutes the standard error stream of the decorated function.
+    """
+
+    def wrapper(*args, **kwargs):
+        with open(os.devnull, 'w') as fnull:
+            with contextlib.redirect_stderr(fnull):
+                return func(*args, **kwargs)
+
+    return wrapper
 
 
 def convert_image_to_format_of(image, format_image):
