@@ -25,7 +25,7 @@ def imread(*args, **kwargs):
     tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this
     wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
 
-    Image loading is first attempted using ``tifffile`` (if available, more reliable for loading TIFF files), and if
+    Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
     that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``.
     """
 
