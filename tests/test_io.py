@@ -12,10 +12,12 @@ class imread(unittest.TestCase):
     def test_input1(self):
         img = giatools.io.imread('tests/data/input1_uint8_yx.tif')
         self.assertEqual(img.mean(), 63.66848655158571)
+        self.assertEqual(img.shape, (265, 329))
 
     def test_input2(self):
         img = giatools.io.imread('tests/data/input2_uint8_yx.tif')
         self.assertEqual(img.mean(), 9.543921821305842)
+        self.assertEqual(img.shape, (96, 97))
 
     def test_input3(self):
         """
