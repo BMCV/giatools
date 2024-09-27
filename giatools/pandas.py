@@ -13,9 +13,6 @@ try:
 except ImportError:
     pd = None
 
-    @overload
-    def find_column(df: Any, candidates: Iterable[str]) -> str: ...
-
 
 def find_column(df: Any, candidates: Iterable[str]) -> str:
     """
