@@ -57,3 +57,18 @@ def convert_image_to_format_of(image, format_image):
     # Other formats are not supported yet (e.g., float16).
     else:
         raise ValueError(f'Unsupported image data type: {format_image.dtype}')
+
+
+def move_char(s: str, pos_src: int, pos_dst: int) -> str:
+    s_list = list(s)
+    c = s_list.pop(pos_src)
+    if pos_dst < 0:
+        pos_dst = len(s_list) + pos_dst + 1
+    s_list.insert(pos_dst, c)
+    return ''.join(s_list)
+
+
+def swap_char(s: str, pos1: int, pos2: int) -> str:
+    s_list = list(s)
+    s_list[pos1], s_list[pos2] = s_list[pos2], s_list[pos1]
+    return ''.join(s_list)

@@ -47,3 +47,34 @@ class convert_image_to_format_of(unittest.TestCase):
                 actual = giatools.util.convert_image_to_format_of(src_img, dst_img)
                 self.assertEqual(actual.dtype, dst_img.dtype)
                 self.assertTrue(np.allclose(actual, dst_img, rtol=1e-2))
+
+
+class move_char(unittest.TestCase):
+
+    def test(self):
+        self.assertEqual(giatools.util.move_char('ABC', 0, 1), 'BAC')
+        self.assertEqual(giatools.util.move_char('ABC', 0, 2), 'BCA')
+        self.assertEqual(giatools.util.move_char('ABC', 1, 0), 'BAC')
+        self.assertEqual(giatools.util.move_char('ABC', 1, 2), 'ACB')
+        self.assertEqual(giatools.util.move_char('ABC', 2, 0), 'CAB')
+        self.assertEqual(giatools.util.move_char('ABC', 2, 1), 'ACB')
+        self.assertEqual(giatools.util.move_char('ABC', 0, 0), 'ABC')
+        self.assertEqual(giatools.util.move_char('ABC', 1, 1), 'ABC')
+        self.assertEqual(giatools.util.move_char('ABC', 2, 2), 'ABC')
+        self.assertEqual(giatools.util.move_char('ABC', 0, -1), 'BCA')
+        self.assertEqual(giatools.util.move_char('ABC', 1, -1), 'ACB')
+        self.assertEqual(giatools.util.move_char('ABC', 2, -1), 'ABC')
+        self.assertEqual(giatools.util.move_char('ABC', 0, -2), 'BAC')
+        self.assertEqual(giatools.util.move_char('ABC', 1, -2), 'ABC')
+        self.assertEqual(giatools.util.move_char('ABC', 2, -2), 'ACB')
+
+
+class swap_char(unittest.TestCase):
+
+    def test(self):
+        self.assertEqual(giatools.util.swap_char('ABC', 0, 1), 'BAC')
+        self.assertEqual(giatools.util.swap_char('ABC', 0, 2), 'CBA')
+        self.assertEqual(giatools.util.swap_char('ABC', 1, 2), 'ACB')
+        self.assertEqual(giatools.util.swap_char('ABC', 0, 0), 'ABC')
+        self.assertEqual(giatools.util.swap_char('ABC', 1, 1), 'ABC')
+        self.assertEqual(giatools.util.swap_char('ABC', 2, 2), 'ABC')
