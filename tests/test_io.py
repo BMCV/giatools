@@ -10,11 +10,11 @@ assert giatools.io.tifffile is not None
 class imread(unittest.TestCase):
 
     def test_input1(self):
-        img = giatools.io.imread('tests/data/input1.tif')
+        img = giatools.io.imread('tests/data/input1_uint8_yx.tif')
         self.assertEqual(img.mean(), 63.66848655158571)
 
     def test_input2(self):
-        img = giatools.io.imread('tests/data/input2.tif')
+        img = giatools.io.imread('tests/data/input2_uint8_yx.tif')
         self.assertEqual(img.mean(), 9.543921821305842)
 
     def test_input3(self):
@@ -24,7 +24,7 @@ class imread(unittest.TestCase):
 
         For details see: https://github.com/BMCV/galaxy-image-analysis/pull/132#issuecomment-2371561435
         """
-        img = giatools.io.imread('tests/data/input3.tif')
+        img = giatools.io.imread('tests/data/input3_uint16_zyx.tif')
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
 
@@ -32,7 +32,7 @@ class imread(unittest.TestCase):
         """
         This is an RGB PNG file, that cannot be loaded with `tifffile`, but works with ``skimage.io.imread``.
         """
-        img = giatools.io.imread('tests/data/input4.png')
+        img = giatools.io.imread('tests/data/input4_uint8.png')
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(img.mean(), 130.04)
 
