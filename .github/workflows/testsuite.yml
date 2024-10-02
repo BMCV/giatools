@@ -45,7 +45,7 @@ jobs:
           isort tests --check-only
 
   run_testsuite:
-    name: Run tests
+    name: Tests
     uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
     with:
       main_branch: master
