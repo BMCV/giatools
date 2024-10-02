@@ -1,15 +1,14 @@
 name: Test suite
 
 on:
-
   workflow_dispatch:
-
+  push:
+    branches:
+      - master
   pull_request:
-
     branches:
       - develop
       - master
-
     paths:
       - .github/workflows/testsuite.yml
       - giatools/*.py
@@ -17,24 +16,12 @@ on:
       - tests/*.py
       - tests/data/**
       - requirements.txt
-
-  push:
-
-    branches:
-      - master
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+      - tests/requirements.txt
 
 jobs:
-
   python_lint:
-
     name: Linting
     runs-on: ubuntu-latest
-
     steps:
 
       - name: Checkout
@@ -58,44 +45,13 @@ jobs:
           isort tests --check-only
 
   run_testsuite:
-
-    name: Tests
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version:
-        - "3.8"
-        - "3.9"
-        - "3.10"
-        - "3.11"
-        - "3.12"
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        shell: bash
-        run: |
-          sudo apt install -y libopenblas-dev
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run tests
-        uses: kostrykin/report-test-coverage-action@v1.0.0
-        with:
-          report: ${{ strategy.job-index == 0 }}
-          gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
-          github-auth: ${{ secrets.GITHUB_TOKEN }}
-          gist-auth: ${{ secrets.GIST_SECRET }}
-          gist-filename: giatools.json
+    name: Run tests
+    uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
+    with:
+      main_branch: master
+      python_versions: '["3.8", "3.9", "3.10", "3.11", "3.12"]'
+      main_python_version: "3.9"
+      gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
+      gist-filename: giatools.json
+    secrets:
+      gist-auth: ${{ secrets.GIST_SECRET }}
