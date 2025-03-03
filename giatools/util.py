@@ -7,6 +7,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import contextlib
 import os
+import warnings
 
 import numpy as np
 import skimage.util
@@ -69,6 +70,18 @@ def move_char(s: str, pos_src: int, pos_dst: int) -> str:
 
 
 def swap_char(s: str, pos1: int, pos2: int) -> str:
+    """
+    Swaps the characters at positions `pos1` and `pos2` in the string `s`.
+
+    .. deprecated:: 0.3.2
+    """
+
+    warnings.warn(
+        'swap_char function is deprecated and will be removed in a future release.',
+        DeprecationWarning,
+        stacklevel=2
+    )
+
     s_list = list(s)
     s_list[pos1], s_list[pos2] = s_list[pos2], s_list[pos1]
     return ''.join(s_list)
