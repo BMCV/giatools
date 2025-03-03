@@ -12,8 +12,10 @@ from typing import (
 
 import numpy as np
 
-from . import io
-from . import util
+from . import (
+    io,
+    util,
+)
 
 
 class Image:
