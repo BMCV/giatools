@@ -5,16 +5,15 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-from .typing import (
-    Optional,
-    Self,
-)
-
 import numpy as np
 
 from . import (
     io,
     util,
+)
+from .typing import (
+    Optional,
+    Self,
 )
 
 
