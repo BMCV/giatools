@@ -72,3 +72,12 @@ def swap_char(s: str, pos1: int, pos2: int) -> str:
     s_list = list(s)
     s_list[pos1], s_list[pos2] = s_list[pos2], s_list[pos1]
     return ''.join(s_list)
+
+
+def str_without_positions(s: str, positions: list[int]) -> str:
+    """
+    Returns the string `s` with the `characters` removed from it.
+    """
+    for pos in sorted(positions, reverse=True):
+        s = s[:pos] + s[pos + 1:]
+    return s

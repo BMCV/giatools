@@ -1,3 +1,5 @@
+from .image import Image  # noqa: F401
+
 VERSION_MAJOR = 0
 VERSION_MINOR = 3
 VERSION_PATCH = 1
