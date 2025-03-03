@@ -5,7 +5,10 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-from typing import Self
+from typing import (
+    Optional,
+    Self,
+)
 
 import numpy as np
 
@@ -18,16 +21,18 @@ class Image:
     Represents an image (image pixel/voxel data and the corresponding axes metadata).
     """
 
-    def __init__(self, data: np.ndarray, axes: str):
+    def __init__(self, data: np.ndarray, axes: str, original_axes: Optional[str] = None):
         self.data = data
         self.axes = axes
+        self.original_axes = original_axes
 
     @staticmethod
     def read(*args, **kwargs) -> Self:
         """
         Read an image from file.
         """
-        return Image(*io.imread(*args, ret_axes=True, **kwargs))
+        data, original_axes = io.imread(*args, ret_axes=True, **kwargs)
+        return Image(data, 'TZYXC', original_axes=original_axes)
 
     def squeeze_like(self, axes: str) -> Self:
         """

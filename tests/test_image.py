@@ -22,7 +22,8 @@ class Image__read(unittest.TestCase):
         img = giatools.image.Image.read('tests/data/input1_uint8_yx.tif')
         self.assertEqual(img.data.mean(), 63.66848655158571)
         self.assertEqual(img.data.shape, (1, 1, 265, 329, 1))
-        self.assertEqual(img.axes, 'YX')
+        self.assertEqual(img.original_axes, 'YX')
+        self.assertEqual(img.axes, 'TZYXC')
 
 
 class Image__reorder_axes_like(unittest.TestCase):
