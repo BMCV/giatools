@@ -27,12 +27,15 @@ class Image:
         self.original_axes = original_axes
 
     @staticmethod
-    def read(*args, **kwargs) -> Self:
+    def read(*args, normalize_axes: str = 'TZYXC', **kwargs) -> Self:
         """
-        Read an image from file.
+        Read an image from file and normalize the image axes like `normalize_axes`.
+
+        See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
-        data, original_axes = io.imread(*args, ret_axes=True, **kwargs)
-        return Image(data, 'TZYXC', original_axes=original_axes)
+        data, axes = io.imreadraw(*args, **kwargs)
+        img = Image(data, axes, original_axes=axes)
+        return img.normalize_axes_like(normalize_axes)
 
     def squeeze_like(self, axes: str) -> Self:
         """
@@ -47,7 +50,7 @@ class Image:
         ), f'Cannot squeeze axes "{axes}" from image with axes "{self.axes}"'
         s = tuple(axis_pos for axis_pos, axis in enumerate(self.axes) if axis not in axes)
         squeezed_axes = util.str_without_positions(self.axes, s)
-        squeezed_image = Image(data=self.data.squeeze(axis=s), axes=squeezed_axes)
+        squeezed_image = Image(data=self.data.squeeze(axis=s), axes=squeezed_axes, original_axes=self.original_axes)
         return squeezed_image.reorder_axes_like(axes)
 
     def reorder_axes_like(self, axes: str) -> Self:
@@ -65,4 +68,25 @@ class Image:
                 reordered_data = np.moveaxis(reordered_data, src, dst)
                 reordered_axes = util.move_char(reordered_axes, src, dst)
         assert reordered_axes == axes, f'Failed to reorder axes "{self.axes}" to "{axes}", got "{reordered_axes}"'
-        return Image(data=reordered_data, axes=axes)
+        return Image(data=reordered_data, axes=axes, original_axes=self.original_axes)
+
+    def normalize_axes_like(self, axes: str) -> Self:
+        """
+        Normalize the axes of the image.
+
+        Raises:
+            AssertionError: If `axes` is ambiguous.
+            ValueError: If one of the axis cannot be squeezed.
+        """
+        assert len(frozenset(axes)) == len(axes), f'Axes "{axes}" is ambiguous'
+
+        # Add missing axes
+        complete_data = self.data
+        complete_axes = self.axes
+        for axis in axes:
+            if axis not in self.axes:
+                complete_data = complete_data[..., None]
+                complete_axes += axis
+
+        # Squeeze spurious axes and establish order
+        return Image(data=complete_data, axes=complete_axes, original_axes=self.original_axes).squeeze_like(axes)
