@@ -1,5 +1,5 @@
 """
-Copyright 2017-2024 Leonid Kostrykin, Biomedical Computer Vision Group, Heidelberg University.
+Copyright 2017-2025 Leonid Kostrykin, Biomedical Computer Vision Group, Heidelberg University.
 
 Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
@@ -17,7 +17,7 @@ except ImportError:
 
 
 @giatools.util.silent
-def imread(*args, **kwargs):
+def imread(*args, ret_axes: bool = False, **kwargs):
     """
     Wrapper for loading images, muting non-fatal errors, and normalizing the image axes like ``TZYXC``.
 
@@ -32,7 +32,20 @@ def imread(*args, **kwargs):
     The image axes are normalized like ``TZYXC``, treating sample axis ``S`` as an alias for the channel axis ``C``.
     For images which cannot be read by `tifffile`, two- and three-dimensional data is supported. Two-dimensional images
     are assumed to be in ``YX`` axes order, and three-dimensional images are assumed to be in ``YXC`` axes order.
+
+    Returns:
+        The returned object depends on the value of the `ret_axes` parameter:
+        - If `ret_axes` is `True`, a tuple `(im_arr, axes)` is returned, where `im_arr` is the image data as a
+          five-dimensional NumPy array, and `axes` is the original axes of the image.
+        - If `ret_axes` is `False`, only the image data as a five-dimensional NumPy array is returned.
     """
+
+    # Helper function to return the result based on the value of `ret_axes`
+    def result(im_arr: np.ndarray, axes: str, ret_axes: bool):
+        if ret_axes:
+            return im_arr, axes
+        else:
+            return im_arr
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
     if tifffile is not None:
@@ -40,7 +53,8 @@ def imread(*args, **kwargs):
 
             with tifffile.TiffFile(*args, **kwargs) as im_file:
                 assert len(im_file.series) == 1, f'Image has unsupported number of series: {len(im_file.series)}'
-                im_axes = im_file.series[0].axes
+                original_axes = im_file.series[0].axes
+                im_axes = original_axes
 
                 # Verify that the image format is supported
                 assert (
@@ -102,7 +116,7 @@ def imread(*args, **kwargs):
 
                 # Verify that the normalizations were successful
                 assert im_axes == 'TZYXC', f'Image axis normalization failed: {im_axes}'
-                return im_arr
+                return result(im_arr, original_axes, ret_axes)
 
         except tifffile.TiffFileError:
             pass  # not a TIFF file
@@ -116,8 +130,11 @@ def imread(*args, **kwargs):
     # Normalize the axes
     if im_arr.ndim == 2:  # Append "C" axis if not present yet
         im_arr = im_arr[..., None]
+        original_axes = 'YX'
+    else:
+        original_axes = 'YXC'
     im_arr = im_arr[None, None, ...]  # Prepend "T" and "Z" axes
 
     # Verify that the normalizations were successful
     assert im_arr.ndim == 5, "Image axis normalization failed"
-    return im_arr
+    return result(im_arr, original_axes, ret_axes)

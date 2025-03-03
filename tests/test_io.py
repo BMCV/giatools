@@ -20,6 +20,12 @@ class imread__with_tifffile(unittest.TestCase):
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (1, 1, 265, 329, 1))
 
+    def test__input1__ret_axes(self):
+        img, axes = giatools.io.imread('tests/data/input1_uint8_yx.tif', ret_axes=True)
+        self.assertEqual(img.mean(), 63.66848655158571)
+        self.assertEqual(img.shape, (1, 1, 265, 329, 1))
+        self.assertEqual(axes, 'YX')
+
     def test__input2(self):
         img = giatools.io.imread('tests/data/input2_uint8_yx.tif')
         self.assertEqual(img.mean(), 9.543921821305842)
@@ -43,6 +49,15 @@ class imread__with_tifffile(unittest.TestCase):
         img = giatools.io.imread('tests/data/input4_uint8.png')
         self.assertEqual(img.shape, (1, 1, 10, 10, 3))
         self.assertEqual(img.mean(), 130.04)
+
+    def test__input4__ret_axes(self):
+        """
+        Same as `test__input4`, but with `ret_axes=True`.
+        """
+        img, axes = giatools.io.imread('tests/data/input4_uint8.png', ret_axes=True)
+        self.assertEqual(img.shape, (1, 1, 10, 10, 3))
+        self.assertEqual(img.mean(), 130.04)
+        self.assertEqual(axes, 'YXC')
 
     def test__input5(self):
         """
