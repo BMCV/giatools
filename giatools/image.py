@@ -42,12 +42,12 @@ class Image:
         Squeeze the axes of the image to match the axes.
 
         Raises:
-            ValueError: If one of the axis cannot be squeezed.
-            AssertionError: If `axes` is not a subset of the image axes.
+            ValueError: If one of the axis cannot be squeezed or `axes` is not a subset of the image axes.
         """
-        assert (
-            frozenset(axes) <= frozenset(self.axes)
-        ), f'Cannot squeeze axes "{axes}" from image with axes "{self.axes}"'
+
+        if not (frozenset(axes) <= frozenset(self.axes)):
+            raise ValueError(f'Cannot squeeze axes "{axes}" from image with axes "{self.axes}"')
+
         s = tuple(axis_pos for axis_pos, axis in enumerate(self.axes) if axis not in axes)
         squeezed_axes = util.str_without_positions(self.axes, s)
         squeezed_image = Image(data=self.data.squeeze(axis=s), axes=squeezed_axes, original_axes=self.original_axes)
@@ -56,10 +56,13 @@ class Image:
     def reorder_axes_like(self, axes: str) -> Self:
         """
         Reorder the axes of the image to match the given order.
+
+        Raises:
+            ValueError: If there are spurious, missing, or ambiguous axes.
         """
-        assert (
-            frozenset(axes) == frozenset(self.axes) and len(frozenset(axes)) == len(axes)
-        ), f'Cannot reorder axes like "{axes}" of image with axes "{self.axes}"'
+        if not (frozenset(axes) == frozenset(self.axes) and len(frozenset(axes)) == len(axes)):
+            raise ValueError(f'Cannot reorder axes like "{axes}" of image with axes "{self.axes}"')
+
         reordered_data = self.data
         reordered_axes = self.axes
         for dst, axis in enumerate(axes):
@@ -78,7 +81,8 @@ class Image:
             AssertionError: If `axes` is ambiguous.
             ValueError: If one of the axis cannot be squeezed.
         """
-        assert len(frozenset(axes)) == len(axes), f'Axes "{axes}" is ambiguous'
+        if not (len(frozenset(axes)) == len(axes)):
+            raise AssertionError(f'Axes "{axes}" is ambiguous')
 
         # Add missing axes
         complete_data = self.data

@@ -95,17 +95,17 @@ class Image__reorder_axes_like(unittest.TestCase):
         self.assertEqual(img_reordered.original_axes, test1_original_axes)
 
     def test__spurious_axis(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.reorder_axes_like('ZTCYXW')
 
     def test__missing_axis(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.reorder_axes_like('ZTCY')
 
     def test__ambigious_axis(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.reorder_axes_like('ZTCYXX')
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.reorder_axes_like('ZTCXX')
 
 
@@ -144,11 +144,11 @@ class Image__squeeze_like(unittest.TestCase):
             self.img1.squeeze_like('TCYX')
 
     def test__spurious_axis(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.squeeze_like('ZCYXW')
 
     def test__ambigious_axis(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             self.img1.squeeze_like('ZCYXX')
 
 
