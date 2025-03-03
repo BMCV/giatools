@@ -12,6 +12,8 @@ import warnings
 import numpy as np
 import skimage.util
 
+from .typing import Iterable
+
 
 def silent(func):
     """
@@ -87,7 +89,7 @@ def swap_char(s: str, pos1: int, pos2: int) -> str:
     return ''.join(s_list)
 
 
-def str_without_positions(s: str, positions: list[int]) -> str:
+def str_without_positions(s: str, positions: Iterable[int]) -> str:
     """
     Returns the string `s` with the `characters` removed from it.
     """
