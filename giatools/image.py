@@ -5,9 +5,7 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-from __future__ import annotations
-
-from typing import (
+from .typing import (
     Optional,
     Self,
 )
