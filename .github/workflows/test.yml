@@ -1,0 +1,14 @@
+name: Test suite
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Hide previous comments
+      uses: int128/hide-comment-action@v1
+      with:
+        ends-with: <!-- COVERAGE -->
