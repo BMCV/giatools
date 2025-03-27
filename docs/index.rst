@@ -13,5 +13,4 @@ API
    giatools.image
    giatools.io
    giatools.pandas
-   giatools.typing
    giatools.util
