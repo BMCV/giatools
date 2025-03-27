@@ -1,7 +1,7 @@
 giatools
 ========
 
-Tools required for Galaxy Image Analysis: https://github.com/BMCV/galaxy-image-analysis
+Tools required for `Galaxy Image Analysis <https://github.com/BMCV/galaxy-image-analysis>`_
 
 API
 ---
