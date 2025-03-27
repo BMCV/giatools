@@ -11,4 +11,4 @@ jobs:
     - name: Hide previous comments
       uses: int128/hide-comment-action@v1
       with:
-        ends-with: <!-- COVERAGE -->
+        ends-with: '<!-- COVERAGE -->'
