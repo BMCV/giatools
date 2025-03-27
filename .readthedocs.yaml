@@ -15,7 +15,10 @@ sphinx:
   fail_on_warning: true
   configuration: docs/conf.py
 
-# Declare the Python requirements required to build your documentation
+# Install our python package and other dependencies
 python:
   install:
+    - requirements: requirements.txt
     - requirements: docs/requirements.txt
+    - method: pip
+      path: .
