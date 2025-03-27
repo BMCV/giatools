@@ -7,6 +7,8 @@ API
 ---
 
 .. toctree::
+   :maxdepth: 1
+
    giatools
    giatools.image
    giatools.io
