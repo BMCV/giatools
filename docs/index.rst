@@ -7,6 +7,7 @@ API
 ---
 
 .. toctree::
+   giatools
    giatools.image
    giatools.io
    giatools.pandas
