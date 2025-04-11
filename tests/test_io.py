@@ -90,7 +90,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         img, axes = giatools.io.imreadraw('tests/data/input9_qyx.tif')
         self.assertEqual(img.shape, (2, 256, 256))
-        self.assertEqual(img.mean(), 0.05388291)
+        self.assertEqual(img.mean(), 0.05388291, f'Difference: {img.mean() - 0.05388291}')
         self.assertEqual(axes, 'QYX')
 
 
