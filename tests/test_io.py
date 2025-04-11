@@ -84,6 +84,17 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
 
+    def test__input9(self):
+        """
+        Test TIFF file with ``QYX`` axes.
+
+        Python 3.8 yields subtly different result, hence the tolerance for the `img.mean()` test.
+        """
+        img, axes = giatools.io.imreadraw('tests/data/input9_qyx.tif')
+        self.assertEqual(img.shape, (2, 256, 256))
+        self.assertAlmostEqual(img.mean(), 0.05388291, places=8)
+        self.assertEqual(axes, 'QYX')
+
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)
@@ -123,10 +134,3 @@ class imreadraw__without_tifffile(unittest.TestCase):
         with self.assertRaises(AssertionError):
             giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
-
-
-class imread(unittest.TestCase):
-
-    def test__deprecation(self):
-        with self.assertWarns(DeprecationWarning):
-            giatools.io.imread('tests/data/input1_uint8_yx.tif')

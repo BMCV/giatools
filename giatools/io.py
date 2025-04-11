@@ -5,8 +5,6 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import warnings
-
 import skimage.io
 
 import giatools.util
@@ -46,7 +44,7 @@ def imreadraw(*args, **kwargs):
 
                 # Verify that the image format is supported
                 assert (
-                    frozenset('YX') <= frozenset(im_axes) <= frozenset('TZYXCS')
+                    frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
                 ), f'Image has unsupported axes: {im_axes}'
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
@@ -78,22 +76,3 @@ def imreadraw(*args, **kwargs):
 
     # Return the image data and axes
     return im_arr, im_axes
-
-
-def imread(*args, ret_axes: bool = False, **kwargs):
-    """
-    Wrapper for loading images, muting non-fatal errors and normalizing the image axes like ``TZYXC``.
-
-    .. deprecated:: 0.3.2
-       Use :meth:`giatools.image.Image.read` instead.
-    """
-
-    warnings.warn(
-        'imread function is deprecated and will be removed in a future release. Use Image.read instead.',
-        DeprecationWarning,
-        stacklevel=2
-    )
-
-    from .image import Image
-    img = Image.read(*args, normalize_axes='TZYXC', **kwargs)
-    return img.data

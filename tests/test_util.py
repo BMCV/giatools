@@ -67,15 +67,3 @@ class move_char(unittest.TestCase):
         self.assertEqual(giatools.util.move_char('ABC', 0, -2), 'BAC')
         self.assertEqual(giatools.util.move_char('ABC', 1, -2), 'ABC')
         self.assertEqual(giatools.util.move_char('ABC', 2, -2), 'ACB')
-
-
-class swap_char(unittest.TestCase):
-
-    def test(self):
-        with self.assertWarns(DeprecationWarning):
-            self.assertEqual(giatools.util.swap_char('ABC', 0, 1), 'BAC')
-            self.assertEqual(giatools.util.swap_char('ABC', 0, 2), 'CBA')
-            self.assertEqual(giatools.util.swap_char('ABC', 1, 2), 'ACB')
-            self.assertEqual(giatools.util.swap_char('ABC', 0, 0), 'ABC')
-            self.assertEqual(giatools.util.swap_char('ABC', 1, 1), 'ABC')
-            self.assertEqual(giatools.util.swap_char('ABC', 2, 2), 'ABC')
