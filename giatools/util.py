@@ -6,6 +6,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
 import contextlib
+import functools
 import os
 
 import numpy as np
@@ -19,6 +20,7 @@ def silent(func):
     Decorator that mutes the standard error stream of the decorated function.
     """
 
+    @functools.wraps(func)  # propagate function signature so Sphinx can handle it
     def wrapper(*args, **kwargs):
         with open(os.devnull, 'w') as fnull:
             with contextlib.redirect_stderr(fnull):
