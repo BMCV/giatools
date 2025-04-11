@@ -90,7 +90,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         img, axes = giatools.io.imreadraw('tests/data/input9_qyx.tif')
         self.assertEqual(img.shape, (2, 256, 256))
-        self.assertEqual(img.mean(), 0.05388291, f'Difference: {img.mean() - 0.05388291}')
+        self.assertAlmostEqual(img.mean(), 0.05388291, places=8)  # Python 3.8 yields subtly different result, hence the tolerance
         self.assertEqual(axes, 'QYX')
 
 
