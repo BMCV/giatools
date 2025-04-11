@@ -5,8 +5,6 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import warnings
-
 import skimage.io
 
 import giatools.util

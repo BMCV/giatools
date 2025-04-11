@@ -7,7 +7,6 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import contextlib
 import os
-import warnings
 
 import numpy as np
 import skimage.util
