@@ -46,7 +46,7 @@ def imreadraw(*args, **kwargs):
 
                 # Verify that the image format is supported
                 assert (
-                    frozenset('YX') <= frozenset(im_axes) <= frozenset('TZYXCS')
+                    frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
                 ), f'Image has unsupported axes: {im_axes}'
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present

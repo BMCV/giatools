@@ -28,7 +28,7 @@ class Image:
         self.original_axes = original_axes
 
     @staticmethod
-    def read(*args, normalize_axes: str = 'TZYXC', **kwargs) -> Self:
+    def read(*args, normalize_axes: str = 'QTZYXC', **kwargs) -> Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`.
 

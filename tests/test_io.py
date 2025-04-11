@@ -84,6 +84,15 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
 
+    def test__input9(self):
+        """
+        Test TIFF file with ``QYX`` axes.
+        """
+        img, axes = giatools.io.imreadraw('tests/data/input9_qyx.tif')
+        self.assertEqual(img.shape, (2, 256, 256))
+        self.assertEqual(img.mean(), 0.05388291)
+        self.assertEqual(axes, 'QYX')
+
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)
