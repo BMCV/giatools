@@ -132,10 +132,3 @@ class imreadraw__without_tifffile(unittest.TestCase):
         with self.assertRaises(AssertionError):
             giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
-
-
-class imread(unittest.TestCase):
-
-    def test__deprecation(self):
-        with self.assertWarns(DeprecationWarning):
-            giatools.io.imread('tests/data/input1_uint8_yx.tif')
