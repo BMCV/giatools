@@ -187,6 +187,16 @@ class imwriteTestCase(unittest.TestCase):
         if validate_axes:
             self.assertEqual(axes1, axes)
 
+    def test__unsupported_backend(self):
+        with self.assertRaises(ValueError):
+            self._test(
+                data_shape=(10, 10, 2),
+                axes='YXC',
+                dtype=np.float32,
+                ext='tif',
+                backend='unsupported_backend',
+            )
+
 
 class imwrite__tifffile__mixin:
 

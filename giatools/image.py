@@ -53,6 +53,13 @@ class Image:
         data, axes = io.imreadraw(*args, **kwargs)
         img = Image(data, axes, original_axes=axes)
         return img.normalize_axes_like(normalize_axes)
+    
+    def write(self, filepath: str, backend: io.BackendType = 'auto') -> Self:
+        """
+        Write the image to a file.
+        """
+        io.imwrite(self.data, filepath, backend=backend, metadata=dict(axes=self.axes))
+        return self
 
     def squeeze_like(self, axes: str) -> Self:
         """
