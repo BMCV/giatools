@@ -9,6 +9,7 @@ import numpy as np
 import skimage.io
 
 import giatools.util
+
 from .typing import (
     Literal,
     Optional,
