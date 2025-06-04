@@ -143,7 +143,6 @@ class imreadraw__without_tifffile(unittest.TestCase):
 
 class imwriteTestCase(unittest.TestCase):
 
-
     def setUp(self):
         np.random.seed(0)
         self.tempdir = tempfile.TemporaryDirectory()
@@ -157,7 +156,6 @@ class imwriteTestCase(unittest.TestCase):
 
         This is a helper function to read image files for validation.
         """
-        import tifffile
         try:
             with tifffile.TiffFile(filepath) as tif:
                 axes = tif.series[0].axes
@@ -168,15 +166,15 @@ class imwriteTestCase(unittest.TestCase):
         return data, axes
 
     def _test(
-            self,
-            data_shape: Tuple,
-            axes: str,
-            dtype: np.dtype,
-            *,
-            ext: str,
-            backend: giatools.io.BackendType = 'auto',
-            validate_axes: bool = True,
-        ):
+                self,
+                data_shape: Tuple,
+                axes: str,
+                dtype: np.dtype,
+                *,
+                ext: str,
+                backend: giatools.io.BackendType = 'auto',
+                validate_axes: bool = True,
+            ):
         data = np.random.rand(*data_shape)
         if not np.issubdtype(dtype, np.floating):
             data = (data * np.iinfo(dtype).max).astype(dtype)
