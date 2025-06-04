@@ -108,6 +108,15 @@ class Image__reorder_axes_like(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.img1.reorder_axes_like('ZTCXX')
 
+    def test__immutability(self):
+        """
+        Verify that the original image is not modified.
+        """
+        self.img1.reorder_axes_like('ZTCYX')
+        np.testing.assert_array_equal(self.img1.data, test1_data)
+        self.assertEqual(self.img1.axes, test1_axes)
+        self.assertEqual(self.img1.original_axes, test1_original_axes)
+
 
 class Image__squeeze_like(unittest.TestCase):
 
@@ -151,19 +160,40 @@ class Image__squeeze_like(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.img1.squeeze_like('ZCYXX')
 
+    def test__immutability(self):
+        """
+        Verify that the original image is not modified.
+        """
+        self.img1.squeeze_like('ZCYX')
+        np.testing.assert_array_equal(self.img1.data, test1_data)
+        self.assertEqual(self.img1.axes, test1_axes)
+        self.assertEqual(self.img1.original_axes, test1_original_axes)
+
 
 class Image__normalize_axes_like(unittest.TestCase):
 
+    def setUp(self):
+        super().setUp()
+        self.img1 = giatools.image.Image(data=test1_data, axes=test1_axes, original_axes=test1_original_axes)
+        self.img2 = giatools.image.Image(data=test2_data, axes=test2_axes, original_axes=test2_original_axes)
+
     def test1(self):
-        img = giatools.image.Image(data=test1_data, axes=test1_axes, original_axes=test1_original_axes)
-        img_normalized = img.normalize_axes_like(test1_original_axes)
+        img_normalized = self.img1.normalize_axes_like(test1_original_axes)
         self.assertEqual(img_normalized.axes, test1_original_axes)
         self.assertEqual(img_normalized.data.shape, (2, 32, 26, 3))
         self.assertEqual(img_normalized.original_axes, test1_original_axes)
 
     def test2(self):
-        img = giatools.image.Image(data=test2_data, axes=test2_axes, original_axes=test2_original_axes)
-        img_normalized = img.normalize_axes_like(test2_original_axes)
+        img_normalized = self.img2.normalize_axes_like(test2_original_axes)
         self.assertEqual(img_normalized.axes, test2_original_axes)
         self.assertEqual(img_normalized.data.shape, (32, 26, 1))
         self.assertEqual(img_normalized.original_axes, test2_original_axes)
+
+    def test__immutability(self):
+        """
+        Verify that the original image is not modified.
+        """
+        self.img1.normalize_axes_like(test1_original_axes)
+        np.testing.assert_array_equal(self.img1.data, test1_data)
+        self.assertEqual(self.img1.axes, test1_axes)
+        self.assertEqual(self.img1.original_axes, test1_original_axes)
