@@ -1,9 +1,14 @@
+import os
+import tempfile
 import unittest
 import unittest.mock
 
 import numpy as np
+import skimage.io
+import tifffile
 
 import giatools.io
+from giatools.typing import Tuple
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -134,3 +139,138 @@ class imreadraw__without_tifffile(unittest.TestCase):
         with self.assertRaises(AssertionError):
             giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
+
+
+class imwriteTestCase(unittest.TestCase):
+
+    def setUp(self):
+        np.random.seed(0)
+        self.tempdir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def read_image(self, filepath: str) -> Tuple[np.ndarray, str]:
+        """
+        Read an image file and return the image data and axes.
+
+        This is a helper function to read image files for validation.
+        """
+        try:
+            with tifffile.TiffFile(filepath) as tif:
+                axes = tif.series[0].axes
+                data = tif.asarray()
+        except tifffile.TiffFileError:
+            data = skimage.io.imread(filepath, as_gray=False)
+            axes = 'YXC'
+        return data, axes
+
+    def _test(
+                self,
+                data_shape: Tuple,
+                axes: str,
+                dtype: np.dtype,
+                *,
+                ext: str,
+                backend: giatools.io.BackendType = 'auto',
+                validate_axes: bool = True,
+            ):
+        data = np.random.rand(*data_shape)
+        if not np.issubdtype(dtype, np.floating):
+            data = (data * np.iinfo(dtype).max).astype(dtype)
+        filepath = os.path.join(self.tempdir.name, f'test.{ext}')
+        giatools.io.imwrite(data, filepath, backend=backend, metadata=dict(axes=axes))
+        data1, axes1 = self.read_image(filepath)
+        np.testing.assert_array_equal(data1, data)
+        if validate_axes:
+            self.assertEqual(axes1, axes)
+
+    def test__unsupported_backend(self):
+        with self.assertRaises(ValueError):
+            self._test(
+                data_shape=(10, 10, 2),
+                axes='YXC',
+                dtype=np.float32,
+                ext='tif',
+                backend='unsupported_backend',
+            )
+
+
+class imwrite__tifffile__mixin:
+
+    def test__float32__tifffile__tif(self):
+        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
+
+    def test__float32__tifffile__tiff(self):
+        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='tifffile')
+
+
+class imwrite__skimage__mixin:
+
+    def test__float32__skimage__tif(self):
+        self._test(
+            data_shape=(10, 10, 5, 2),
+            axes='YXZC',
+            dtype=np.float32,
+            ext='tif',
+            backend='skimage',
+            validate_axes=False,
+        )
+
+    def test__float32__skimage__tiff(self):
+        self._test(
+            data_shape=(10, 10, 5, 2),
+            axes='YXZC',
+            dtype=np.float32,
+            ext='tiff',
+            backend='skimage',
+            validate_axes=False,
+        )
+
+
+class imwrite__with_tifffile(imwriteTestCase, imwrite__tifffile__mixin, imwrite__skimage__mixin):
+
+    def setUp(self):
+        super().setUp()
+
+        # Verify that the `tifffile` package is installed
+        assert giatools.io.tifffile is not None
+
+    def test__float32__auto__tif(self):
+        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='auto')
+
+    def test__float32__auto__tiff(self):
+        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='auto')
+
+    def test__uint8__auto__png(self):
+        self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
+
+
+@unittest.mock.patch('giatools.io.tifffile', None)
+class imwrite__without_tifffile(imwriteTestCase, imwrite__skimage__mixin):
+
+    def test__float32__auto__tif(self):
+        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
+        self._test(
+            data_shape=(10, 10, 5, 2),
+            axes='YXZC',
+            dtype=np.float32,
+            ext='tif',
+            backend='auto',
+            validate_axes=False,
+        )
+
+    def test__float32__auto__tiff(self):
+        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
+        self._test(
+            data_shape=(10, 10, 5, 2),
+            axes='YXZC',
+            dtype=np.float32,
+            ext='tiff',
+            backend='auto',
+            validate_axes=False,
+        )
+
+    def test__uint8__auto__png(self):
+        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
+        self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')

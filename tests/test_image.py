@@ -77,6 +77,26 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, 'QTZYXC')
 
 
+@unittest.mock.patch('giatools.io.imwrite')
+class Image__write(unittest.TestCase):
+    def setUp(self):
+        self.img1 = giatools.image.Image(data=test1_data.copy(), axes=test1_axes, original_axes=test1_original_axes)
+
+    def test(self, mock_imwrite):
+        self.img1.write('test_output.tiff')
+        mock_imwrite.assert_called_once()
+        np.testing.assert_array_equal(mock_imwrite.call_args_list[0][0][0], test1_data)
+        self.assertEqual(mock_imwrite.call_args_list[0][0][1], 'test_output.tiff')
+        self.assertEqual(mock_imwrite.call_args_list[0][1], dict(backend='auto', metadata=dict(axes=test1_axes)))
+
+    def test__tifffile(self, mock_imwrite):
+        self.img1.write('test_output.tiff', backend='tifffile')
+        mock_imwrite.assert_called_once()
+        np.testing.assert_array_equal(mock_imwrite.call_args_list[0][0][0], test1_data)
+        self.assertEqual(mock_imwrite.call_args_list[0][0][1], 'test_output.tiff')
+        self.assertEqual(mock_imwrite.call_args_list[0][1], dict(backend='tifffile', metadata=dict(axes=test1_axes)))
+
+
 class Image__reorder_axes_like(unittest.TestCase):
 
     def setUp(self):
