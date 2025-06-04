@@ -22,6 +22,22 @@ class Image:
     Represents an image (image pixel/voxel data and the corresponding axes metadata).
     """
 
+    data: np.ndarray
+    """
+    The image data as a numpy array.
+    """
+
+    axes: str
+    """
+    The axes of the image data as a string.
+    """
+
+    original_axes: Optional[str]
+    """
+    The original axes of the image data as a string, if available. This is useful for keeping track of the original
+    axes when normalizing or reordering axes.
+    """
+
     def __init__(self, data: np.ndarray, axes: str, original_axes: Optional[str] = None):
         self.data = data
         self.axes = axes
@@ -42,6 +58,8 @@ class Image:
         """
         Squeeze the axes of the image to match the axes.
 
+        This image is not changed in place, a new image is returned (without copying the data).
+
         Raises:
             ValueError: If one of the axis cannot be squeezed or `axes` is not a subset of the image axes.
         """
@@ -57,6 +75,8 @@ class Image:
     def reorder_axes_like(self, axes: str) -> Self:
         """
         Reorder the axes of the image to match the given order.
+
+        This image is not changed in place, a new image is returned (without copying the data).
 
         Raises:
             ValueError: If there are spurious, missing, or ambiguous axes.
@@ -77,6 +97,8 @@ class Image:
     def normalize_axes_like(self, axes: str) -> Self:
         """
         Normalize the axes of the image.
+
+        This image is not changed in place, a new image is returned (without copying the data).
 
         Raises:
             AssertionError: If `axes` is ambiguous.
