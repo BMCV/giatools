@@ -5,14 +5,22 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+import numpy as np
 import skimage.io
 
 import giatools.util
+from .typing import (
+    Literal,
+    Optional,
+)
 
 try:
     import tifffile
 except ImportError:
     tifffile = None
+
+
+BackendType = Literal['auto', 'tifffile', 'skimage']
 
 
 @giatools.util.silent
@@ -76,3 +84,20 @@ def imreadraw(*args, **kwargs):
 
     # Return the image data and axes
     return im_arr, im_axes
+
+
+def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', metadata: Optional[dict] = None):
+    """
+    Save an image to a file using either `tifffile` or `skimage.io.imsave`.
+    """
+    if backend == 'auto':
+        if tifffile is not None and (filepath.lower().endswith('.tif') or filepath.lower().endswith('.tiff')):
+            backend = 'tifffile'
+        else:
+            backend = 'skimage'
+    if backend == 'tifffile':
+        tifffile.imwrite(filepath, im_arr, metadata=metadata)
+    elif backend == 'skimage':
+        skimage.io.imsave(filepath, im_arr, check_contrast=False)
+    else:
+        raise ValueError(f'Unknown backend: {backend}. Use "auto", "tifffile", or "skimage".')
