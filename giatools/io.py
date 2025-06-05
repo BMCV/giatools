@@ -49,7 +49,7 @@ def imreadraw(*args, **kwargs):
 
             with tifffile.TiffFile(*args, **kwargs) as im_file:
                 assert len(im_file.series) == 1, f'Image has unsupported number of series: {len(im_file.series)}'
-                im_axes = im_file.series[0].axes
+                im_axes = im_file.series[0].axes.upper()
 
                 # Verify that the image format is supported
                 assert (
