@@ -12,6 +12,7 @@ from . import (
     util,
 )
 from .typing import (
+    Any,
     Optional,
     Self,
 )
@@ -54,11 +55,17 @@ class Image:
         img = Image(data, axes, original_axes=axes)
         return img.normalize_axes_like(normalize_axes)
 
-    def write(self, filepath: str, backend: io.BackendType = 'auto') -> Self:
+    def write(
+        self,
+        filepath: str,
+        backend: io.BackendType = 'auto',
+        metadata: dict[str, Any] | None = None,
+    ) -> Self:
         """
         Write the image to a file.
         """
-        io.imwrite(self.data, filepath, backend=backend, metadata=dict(axes=self.axes))
+        full_metadata = dict(axes=self.axes) | (metadata if metadata else dict())
+        io.imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 
     def squeeze_like(self, axes: str) -> Self:
