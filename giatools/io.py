@@ -91,13 +91,26 @@ def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', me
     """
     Save an image to a file using either `tifffile` or `skimage.io.imsave`.
     """
+
+    # Automatically dispatch to the proper backend
     if backend == 'auto':
         if tifffile is not None and (filepath.lower().endswith('.tif') or filepath.lower().endswith('.tiff')):
             backend = 'tifffile'
         else:
             backend = 'skimage'
+
+    # Dispatch via tifffile
     if backend == 'tifffile':
-        tifffile.imwrite(filepath, im_arr, metadata=metadata)
+
+        # Update the metadata structure to what `tifffile` expects
+        kwargs = dict(metadata=metadata)
+        if 'resolution' in metadata:
+            kwargs['resolution'] = metadata.pop('resolution')
+
+        # Write the image using tifffile
+        tifffile.imwrite(filepath, im_arr, **kwargs)
+
+    # Dispatch via skimage
     elif backend == 'skimage':
         skimage.io.imsave(filepath, im_arr, check_contrast=False)
     else:
