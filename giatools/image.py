@@ -13,6 +13,7 @@ from . import (
 )
 from .typing import (
     Any,
+    Dict,
     Optional,
     Self,
 )
@@ -59,7 +60,7 @@ class Image:
         self,
         filepath: str,
         backend: io.BackendType = 'auto',
-        metadata: dict[str, Any] | None = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Self:
         """
         Write the image to a file.
