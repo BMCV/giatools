@@ -40,10 +40,22 @@ class Image:
     axes when normalizing or reordering axes.
     """
 
-    def __init__(self, data: np.ndarray, axes: str, original_axes: Optional[str] = None):
+    metadata: Dict
+    """
+    Additional metadata of the image.
+    """
+
+    def __init__(
+        self,
+        data: np.ndarray,
+        axes: str,
+        original_axes: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+    ):
         self.data = data
         self.axes = axes
         self.original_axes = original_axes
+        self.metadata = metadata or dict()
 
     @staticmethod
     def read(*args, normalize_axes: str = 'QTZYXC', **kwargs) -> Self:
@@ -52,8 +64,8 @@ class Image:
 
         See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
-        data, axes = io.imreadraw(*args, **kwargs)
-        img = Image(data, axes, original_axes=axes)
+        data, axes, metadata = io.imreadraw(*args, **kwargs)
+        img = Image(data, axes, original_axes=axes, metadata=metadata)
         return img.normalize_axes_like(normalize_axes)
 
     def write(

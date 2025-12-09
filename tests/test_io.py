@@ -8,7 +8,10 @@ import skimage.io
 import tifffile
 
 import giatools.io
-from giatools.typing import Tuple
+from giatools.typing import (
+    Any,
+    Tuple,
+)
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -20,17 +23,34 @@ class imreadraw__with_tifffile(unittest.TestCase):
         # Verify that the `tifffile` package is installed
         assert giatools.io.tifffile is not None
 
+    def verify_metadata(self, metadata: dict, **expected: Any):
+        """
+        Verify that the metadata is present and correct.
+        """
+        self.assertIsInstance(metadata, dict)
+        for key, value in expected.items():
+            if value is None:
+                self.assertNotIn(key, metadata)
+            else:
+                self.assertIn(key, metadata)
+                if isinstance(value, tuple):
+                    np.testing.assert_array_almost_equal(metadata[key], value)
+                else:
+                    self.assertEqual(metadata[key], value)
+
     def test__input1(self):
-        img, axes = giatools.io.imreadraw('tests/data/input1_uint8_yx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tif')
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (265, 329))
         self.assertEqual(axes, 'YX')
+        self.verify_metadata(metadata, resolution=None)
 
     def test__input2(self):
-        img, axes = giatools.io.imreadraw('tests/data/input2_uint8_yx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tif')
         self.assertEqual(img.mean(), 9.543921821305842)
         self.assertEqual(img.shape, (96, 97))
         self.assertEqual(axes, 'YX')
+        self.verify_metadata(metadata, resolution=None)
 
     def test__input3(self):
         """
@@ -39,55 +59,61 @@ class imreadraw__with_tifffile(unittest.TestCase):
 
         For details see: https://github.com/BMCV/galaxy-image-analysis/pull/132#issuecomment-2371561435
         """
-        img, axes = giatools.io.imreadraw('tests/data/input3_uint16_zyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input3_uint16_zyx.tif')
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
+        self.verify_metadata(metadata, resolution=(10000, 10000))
 
     def test__input4(self):
         """
         Test an RGB PNG file, that cannot be loaded with `tifffile`, but works with ``skimage.io.imread``.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input4_uint8.png')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input4_uint8.png')
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(img.mean(), 130.04)
         self.assertEqual(axes, 'YXC')
+        self.verify_metadata(metadata, resolution=None)
 
     def test__input5(self):
         """
         Test TIFF file with ``CYX`` axes.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input5_uint8_cyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input5_uint8_cyx.tif')
         self.assertEqual(img.shape, (2, 8, 16))
         self.assertEqual(img.mean(), 22.25390625)
         self.assertEqual(axes, 'CYX')
+        self.verify_metadata(metadata, resolution=(0.734551, 0.367275))
 
     def test__input6(self):
         """
         Test TIFF file with ``ZYX`` axes.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input6_uint8_zyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input6_uint8_zyx.tif')
         self.assertEqual(img.shape, (25, 8, 16))
         self.assertEqual(img.mean(), 26.555)
         self.assertEqual(axes, 'ZYX')
+        self.verify_metadata(metadata, resolution=(0.734551, 0.367275))
 
     def test__input7(self):
         """
         Test TIFF file with ``ZCYX`` axes.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input7_uint8_zcyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input7_uint8_zcyx.tif')
         self.assertEqual(img.shape, (25, 2, 50, 50))
         self.assertEqual(img.mean(), 14.182152)
         self.assertEqual(axes, 'ZCYX')
+        self.verify_metadata(metadata, resolution=(2.295473, 2.295473))
 
     def test__input8(self):
         """
         Test TIFF file with ``TYX`` axes.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input8_uint16_tyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input8_uint16_tyx.tif')
         self.assertEqual(img.shape, (5, 49, 56))
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
+        self.verify_metadata(metadata, resolution=(1, 1))
 
     def test__input9(self):
         """
@@ -95,11 +121,11 @@ class imreadraw__with_tifffile(unittest.TestCase):
 
         Python 3.8 yields subtly different result, hence the tolerance for the `img.mean()` test.
         """
-        img, axes = giatools.io.imreadraw('tests/data/input9_qyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input9_qyx.tif')
         self.assertEqual(img.shape, (2, 256, 256))
         self.assertAlmostEqual(img.mean(), 0.05388291, places=8)
         self.assertEqual(axes, 'QYX')
-
+        self.verify_metadata(metadata, resolution=(1, 1))
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)
@@ -108,16 +134,24 @@ class imreadraw__without_tifffile(unittest.TestCase):
     Test loading an image without `tifffile` installed.
     """
 
+    def verify_metadata(self, metadata: dict):
+        """
+        Verify that the metadata dictionary is empty.
+        """
+        self.assertIsInstance(metadata, dict)
+        self.assertEqual(len(metadata), 0)
+
     def test__yx(self, mock_skimage_io_imread):
         """
         Test fallback to ``skimage.io.imread`` with a two-dimensional image.
         """
         np.random.seed(0)
         mock_skimage_io_imread.return_value = np.random.rand(5, 5)
-        img, axis = giatools.io.imreadraw('tests/data/input1.tif')
+        img, axis, metadata = giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
         np.testing.assert_array_equal(img, mock_skimage_io_imread.return_value)
         self.assertEqual(axis, 'YX')
+        self.verify_metadata(metadata)
 
     def test__yxc(self, mock_skimage_io_imread):
         """
@@ -125,10 +159,11 @@ class imreadraw__without_tifffile(unittest.TestCase):
         """
         np.random.seed(0)
         mock_skimage_io_imread.return_value = np.random.rand(5, 5, 3)
-        img, axis = giatools.io.imreadraw('tests/data/input1.tif')
+        img, axis, metadata = giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
         np.testing.assert_array_equal(img, mock_skimage_io_imread.return_value)
         self.assertEqual(axis, 'YXC')
+        self.verify_metadata(metadata)
 
     def test__unsupported_dimensions(self, mock_skimage_io_imread):
         """

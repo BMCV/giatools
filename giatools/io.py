@@ -11,8 +11,11 @@ import skimage.io
 import giatools.util
 
 from .typing import (
+    Any,
+    Dict,
     Literal,
     Optional,
+    Tuple,
 )
 
 try:
@@ -25,7 +28,7 @@ BackendType = Literal['auto', 'tifffile', 'skimage']
 
 
 @giatools.util.silent
-def imreadraw(*args, **kwargs):
+def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     """
     Wrapper for loading images, muting non-fatal errors.
 
@@ -37,10 +40,11 @@ def imreadraw(*args, **kwargs):
     Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
     that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``.
 
-    Returns a tuple `(im_arr, axes)` where `im_arr` is the image data as a NumPy array, and `axes` are the axes of the
-    image. Normalization is performed, treating sample axis ``S`` as an alias for the channel axis ``C``. For images
-    which cannot be read by `tifffile`, two- and three-dimensional data is supported. Two-dimensional images are
-    assumed to be in ``YX`` axes order, and three-dimensional images are assumed to be in ``YXC`` axes order.
+    Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy array, `axes` are the axes
+    of the image, and `metadata` is any additional metadata. Normalization is performed, treating sample axis ``S`` as
+    an alias for the channel axis ``C``. For images which cannot be read by `tifffile`, two- and three-dimensional data
+    is supported. Two-dimensional images are assumed to be in ``YX`` axes order, and three-dimensional images are
+    assumed to be in ``YXC`` axes order.
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
@@ -65,8 +69,11 @@ def imreadraw(*args, **kwargs):
                 # Read the image data
                 im_arr = im_file.asarray()
 
-                # Return the image data and axes
-                return im_arr, im_axes
+                # Read the metadata
+                metadata = _get_tiff_metadata(im_file.series[0])
+
+                # Return the image data, axes, and metadata
+                return im_arr, im_axes, metadata
 
         except tifffile.TiffFileError:
             pass  # not a TIFF file
@@ -83,8 +90,28 @@ def imreadraw(*args, **kwargs):
     else:
         im_axes = 'YXC'
 
-    # Return the image data and axes
-    return im_arr, im_axes
+    # Return the image data and axes (no metadata)
+    return im_arr, im_axes, dict()
+
+
+def _get_tiff_metadata(series: Any) -> Dict[str, Any]:
+    """
+    Extract metadata from a `tifffile.TiffFile` object.
+    """
+
+    metadata: Dict[str, Any] = dict()
+
+    # Extract resolution information if available
+    page0 = series.pages[0]
+    if 'XResolution' in page0.tags and 'YResolution' in page0.tags:
+        x_res = page0.tags['XResolution'].value
+        y_res = page0.tags['YResolution'].value
+        metadata['resolution'] = (
+            x_res[0] / x_res[1],  # units per pixel in X, numerator / denominator
+            y_res[0] / y_res[1],  # units per pixel in Y, numerator / denominator
+        )
+
+    return metadata
 
 
 def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', metadata: Optional[dict] = None):
