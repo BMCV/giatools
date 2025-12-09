@@ -50,7 +50,7 @@ class Image:
 
     The following metadata keys are covered by tests:
 
-    - **resolution**, `Tuple[float, float]`: Number of pixels per unit in X and Y dimensions.
+    - **resolution**, `Tuple[float, float]`: Pixels per unit in X and Y dimensions.
     - **z_spacing**, `float`: The pixel spacing in the Z dimension (if applicable).
     - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
