@@ -250,3 +250,7 @@ class Image__normalize_axes_like(unittest.TestCase):
         np.testing.assert_array_equal(self.img1.data, test1_data)
         self.assertEqual(self.img1.axes, test1_axes)
         self.assertEqual(self.img1.original_axes, test1_original_axes)
+
+    def test__ambigious_axes(self):
+        with self.assertRaises(AssertionError):
+            self.img1.normalize_axes_like('ZTCYXX')
