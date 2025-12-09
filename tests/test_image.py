@@ -5,6 +5,7 @@ import unittest.mock
 import numpy as np
 
 import giatools.image
+
 from .tools import (
     random_io_test,
     verify_metadata,
