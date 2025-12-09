@@ -154,6 +154,15 @@ class Image__squeeze(unittest.TestCase):
         self.assertEqual(img2_squeezed.data.shape, (32, 26))
         self.assertEqual(img2_squeezed.original_axes, test2_original_axes)
 
+    def test__immutability(self):
+        """
+        Verify that the original image is not modified.
+        """
+        self.img1.squeeze()
+        np.testing.assert_array_equal(self.img1.data, test1_data)
+        self.assertEqual(self.img1.axes, test1_axes)
+        self.assertEqual(self.img1.original_axes, test1_original_axes)
+
 
 class Image__squeeze_like(unittest.TestCase):
 
