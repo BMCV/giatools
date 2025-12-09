@@ -127,6 +127,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(axes, 'QYX')
         self.verify_metadata(metadata, resolution=(1, 1))
 
+
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)
 class imreadraw__without_tifffile(unittest.TestCase):
