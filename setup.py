@@ -2,12 +2,14 @@
 
 from distutils.core import setup
 
-import giatools
+version = dict()
+with open('giatools/version.py') as f:
+    exec(f.read(), version)
 
 
 setup(
     name='giatools',
-    version=giatools.VERSION,
+    version=version['__version__'],
     description='Tools required for Galaxy Image Analysis',
     author='Leonid Kostrykin',
     author_email='leonid.kostrykin@bioquant.uni-heidelberg.de',

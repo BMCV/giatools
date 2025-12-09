@@ -1,7 +1,2 @@
 from .image import Image  # noqa: F401
-
-VERSION_MAJOR = 0
-VERSION_MINOR = 4
-VERSION_PATCH = 1
-
-VERSION = '%d.%d.%d' % (VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH)
+from .version import __version__ as VERSION  # noqa: F401
