@@ -17,7 +17,6 @@ from .typing import (
     Self,
 )
 
-
 default_normalized_axes = 'QTZYXC'
 """
 The default axes used for normalization in :meth:`Image.read`.
