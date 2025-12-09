@@ -18,6 +18,12 @@ test2_axes = 'ZTYXC'
 test2_original_axes = 'YXC'
 
 
+class ModuleTests(unittest.TestCase):
+
+    def test__default_normalized_axes(self):
+        self.assertEqual(giatools.image.default_normalized_axes, 'QTZYXC')
+
+
 class Image__read(unittest.TestCase):
 
     def test__input1(self):
@@ -25,56 +31,56 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 63.66848655158571)
         self.assertEqual(img.data.shape, (1, 1, 1, 265, 329, 1))
         self.assertEqual(img.original_axes, 'YX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input2(self):
         img = giatools.image.Image.read('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.data.mean(), 9.543921821305842)
         self.assertEqual(img.data.shape, (1, 1, 1, 96, 97, 1))
         self.assertEqual(img.original_axes, 'YX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input3(self):
         img = giatools.image.Image.read('tests/data/input3_uint16_zyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 5, 198, 356, 1))
         self.assertEqual(img.data.mean(), 1259.6755334241288)
         self.assertEqual(img.original_axes, 'ZYX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input4(self):
         img = giatools.image.Image.read('tests/data/input4_uint8.png')
         self.assertEqual(img.data.shape, (1, 1, 1, 10, 10, 3))
         self.assertEqual(img.data.mean(), 130.04)
         self.assertEqual(img.original_axes, 'YXC')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input5(self):
         img = giatools.image.Image.read('tests/data/input5_uint8_cyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 1, 8, 16, 2))
         self.assertEqual(img.data.mean(), 22.25390625)
         self.assertEqual(img.original_axes, 'CYX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input6(self):
         img = giatools.image.Image.read('tests/data/input6_uint8_zyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 25, 8, 16, 1))
         self.assertEqual(img.data.mean(), 26.555)
         self.assertEqual(img.original_axes, 'ZYX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input7(self):
         img = giatools.image.Image.read('tests/data/input7_uint8_zcyx.tif')
         self.assertEqual(img.data.shape, (1, 1, 25, 50, 50, 2))
         self.assertEqual(img.data.mean(), 14.182152)
         self.assertEqual(img.original_axes, 'ZCYX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
     def test__input8(self):
         img = giatools.image.Image.read('tests/data/input8_uint16_tyx.tif')
         self.assertEqual(img.data.shape, (1, 5, 1, 49, 56, 1))
         self.assertEqual(img.data.mean(), 5815.486880466472)
         self.assertEqual(img.original_axes, 'TYX')
-        self.assertEqual(img.axes, 'QTZYXC')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
 
 
 @unittest.mock.patch('giatools.io.imwrite')

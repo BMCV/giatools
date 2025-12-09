@@ -19,6 +19,12 @@ from .typing import (
 )
 
 
+default_normalized_axes = 'QTZYXC'
+"""
+The default axes used for normalization in :meth:`Image.read`.
+"""
+
+
 class Image:
     """
     Represents an image (image pixel/voxel data and the corresponding axes metadata).
@@ -58,7 +64,7 @@ class Image:
         self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
-    def read(*args, normalize_axes: str = 'QTZYXC', **kwargs) -> Self:
+    def read(*args, normalize_axes: str = default_normalized_axes, **kwargs) -> Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`.
 
