@@ -169,7 +169,11 @@ def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', me
     """
 
     if filepath.lower().endswith('.tif'):
-        warnings.warn('.tif extension is deprecated, use .tiff instead.', DeprecationWarning)
+        warnings.warn(
+            '.tif extension is deprecated, use .tiff instead.',
+            DeprecationWarning,
+            stacklevel=giatools.util.distance_to_external_frame(),
+        )
 
     # Automatically dispatch to the proper backend
     if backend == 'auto':

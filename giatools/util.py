@@ -7,6 +7,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import contextlib
 import functools
+import inspect
 import os
 
 import numpy as np
@@ -79,3 +80,18 @@ def str_without_positions(s: str, positions: Iterable[int]) -> str:
     for pos in sorted(positions, reverse=True):
         s = s[:pos] + s[pos + 1:]
     return s
+
+
+def distance_to_external_frame():
+    """
+    Returns the number of stack levels until the first frame of the user's code.
+    """
+    for depth, frame_info in enumerate(inspect.stack()[1:], start=1):
+        frame = frame_info.frame
+        module = inspect.getmodule(frame)
+        module_name = module.__name__ if module else None
+
+        if module_name.split('.')[0] != 'giatools':
+            return depth
+
+    return None
