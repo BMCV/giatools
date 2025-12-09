@@ -48,8 +48,7 @@ def verify_metadata(testcase: unittest.TestCase, metadata: dict, **expected: Any
 def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
     def decorator(test_impl):
         def wrapper(self):
-            tempdir = tempfile.TemporaryDirectory()
-            try:
+            with tempfile.TemporaryDirectory() as temp_path:
 
                 # Create random image data
                 np.random.seed(0)
@@ -58,12 +57,10 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
                     data = (data * np.iinfo(dtype).max).astype(dtype)
 
                 # Write the image to a temporary file
-                filepath = os.path.join(tempdir.name, f'test.{ext}')
+                filepath = os.path.join(temp_path, f'test.{ext}')
 
                 # Run the test
                 test_impl(self, filepath, data)
 
-            finally:
-                tempdir.cleanup()
         return wrapper
     return decorator
