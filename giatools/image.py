@@ -47,6 +47,11 @@ class Image:
     metadata: Dict
     """
     Additional metadata of the image.
+
+    The following keys are covered by tests:
+    - `'resolution'`, `Tuple[float, float]`: The pixel spacing in the Y and X dimensions.
+    - `'z_spacing'`, `Optional[float]`: The pixel spacing in the Z dimension.
+    - `'unit'`, `Optional[str]`: The unit of measurement.
     """
 
     def __init__(
