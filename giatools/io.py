@@ -109,8 +109,8 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
         x_res = page0.tags['XResolution'].value
         y_res = page0.tags['YResolution'].value
         metadata['resolution'] = (
-            x_res[0] / x_res[1],  # units per pixel in X, numerator / denominator
-            y_res[0] / y_res[1],  # units per pixel in Y, numerator / denominator
+            x_res[0] / x_res[1],  # pixels per unit in X, numerator / denominator
+            y_res[0] / y_res[1],  # pixels per unit in Y, numerator / denominator
         )
 
     # Read `ImageDescription` tag
