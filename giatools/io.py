@@ -5,6 +5,8 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+import json
+
 import numpy as np
 import skimage.io
 
@@ -114,21 +116,36 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     # Read `ImageDescription` tag
     if 'ImageDescription' in page0.tags:
         description = page0.tags['ImageDescription'].value
-        for line in description.splitlines():
+
+        # Try to parse as JSON first
+        try:
+            description_json = json.loads(description)
 
             # Extract z-slice spacing, if available
-            if line.startswith('spacing='):
-                try:
-                    spacing = float(line.split('=')[1])
-                    metadata['z_spacing'] = spacing
-                except ValueError:
-                    pass
+            if 'spacing' in description_json:
+                metadata['z_spacing'] = float(description_json['spacing'])
 
             # Extract unit, if available
-            if line.startswith('unit='):
-                unit = line.split('=')[1]
-                if unit != 'pixel':
-                    metadata['unit'] = unit
+            if 'unit' in description_json:
+                metadata['unit'] = str(description_json['unit'])
+
+        # If unsuccessful, fall back to line-by-line parsing
+        except json.JSONDecodeError:
+            for line in description.splitlines():
+
+                # Extract z-slice spacing, if available
+                if line.startswith('spacing='):
+                    try:
+                        spacing = float(line.split('=')[1])
+                        metadata['z_spacing'] = spacing
+                    except ValueError:
+                        pass
+
+                # Extract unit, if available
+                if line.startswith('unit='):
+                    unit = line.split('=')[1]
+                    if unit != 'pixel':
+                        metadata['unit'] = unit
 
     # As a fallback, read unit from the dedicated tag, if available
     if 'unit' not in metadata and 'ResolutionUnit' in page0.tags:
@@ -171,10 +188,15 @@ def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', me
     # Dispatch via tifffile
     if backend == 'tifffile':
 
+        # Create a copy of the metadata to avoid modifying the original
+        metadata = dict(metadata) if metadata is not None else dict()
+
         # Update the metadata structure to what `tifffile` expects
         kwargs = dict(metadata=metadata)
         if 'resolution' in metadata:
             kwargs['resolution'] = metadata.pop('resolution')
+        if 'z_spacing' in metadata:
+            metadata['spacing'] = metadata.pop('z_spacing')
 
         # Write the image using tifffile
         tifffile.imwrite(filepath, im_arr, **kwargs)

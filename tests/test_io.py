@@ -1,3 +1,5 @@
+import copy
+import json
 import os
 import tempfile
 import unittest
@@ -10,7 +12,11 @@ import tifffile
 import giatools.io
 from giatools.typing import (
     Any,
+    Dict,
+    Literal,
+    Optional,
     Tuple,
+    Union,
 )
 
 # This tests require that the `tifffile` package is installed.
@@ -202,24 +208,57 @@ class imwriteTestCase(unittest.TestCase):
         return data, axes
 
     def _test(
-                self,
-                data_shape: Tuple,
-                axes: str,
-                dtype: np.dtype,
-                *,
-                ext: str,
-                backend: giatools.io.BackendType = 'auto',
-                validate_axes: bool = True,
-            ):
+        self,
+        data_shape: Tuple,
+        axes: str,
+        dtype: np.dtype,
+        metadata: Optional[Dict] = None,
+        *,
+        ext: str,
+        backend: giatools.io.BackendType = 'auto',
+        validate_axes: bool = True,
+        validate_metadata: Union[bool, Literal['auto']] = 'auto',
+    ):
+        # Create random image data
         data = np.random.rand(*data_shape)
         if not np.issubdtype(dtype, np.floating):
             data = (data * np.iinfo(dtype).max).astype(dtype)
+
+        # Write the image to a temporary file
         filepath = os.path.join(self.tempdir.name, f'test.{ext}')
-        giatools.io.imwrite(data, filepath, backend=backend, metadata=dict(axes=axes))
+        metadata = (dict() if metadata is None else metadata) | dict(axes=axes)
+        metadata_copy = copy.deepcopy(metadata)
+        giatools.io.imwrite(data, filepath, backend=backend, metadata=metadata)
+
+        # Validate immutability of metadata
+        self.assertEqual(metadata, metadata_copy)
+
+        # Read back the image data and the axes, and validate, if applicable
         data1, axes1 = self.read_image(filepath)
         np.testing.assert_array_equal(data1, data)
         if validate_axes:
             self.assertEqual(axes1, axes)
+
+        # Validate the metadata, if applicable
+        if validate_metadata is True or (validate_metadata == 'auto' and ext in ('tif', 'tiff')):
+            with tifffile.TiffFile(filepath) as im_file:
+                page0 = im_file.series[0].pages[0]
+                description = json.loads(page0.tags['ImageDescription'].value)
+                x_res = page0.tags['XResolution'].value
+                y_res = page0.tags['YResolution'].value
+
+            if 'resolution' in metadata:
+                np.testing.assert_allclose(
+                    (
+                        x_res[0] / x_res[1],
+                        y_res[0] / y_res[1],
+                    ),
+                    metadata['resolution'],
+                )
+            if 'z_spacing' in metadata:
+                self.assertEqual(float(description['spacing']), metadata['z_spacing'])
+            if 'unit' in metadata:
+                self.assertEqual(description['unit'], metadata['unit'])
 
     def test__unsupported_backend(self):
         with self.assertRaises(ValueError):
@@ -239,6 +278,20 @@ class imwrite__tifffile__mixin:
 
     def test__float32__tifffile__tiff(self):
         self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='tifffile')
+
+    def test__float32__tifffile__tiff__metadata(self):
+        self._test(
+            data_shape=(10, 10, 5),
+            axes='YXZ',
+            dtype=np.float32,
+            ext='tiff',
+            backend='tifffile',
+            metadata=dict(
+                resolution=(0.3, 0.4),
+                z_spacing=0.5,
+                unit='um',
+            ),
+        )
 
 
 class imwrite__skimage__mixin:
@@ -310,3 +363,58 @@ class imwrite__without_tifffile(imwriteTestCase, imwrite__skimage__mixin):
     def test__uint8__auto__png(self):
         assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
         self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
+
+
+class ModuleTestCase(unittest.TestCase):
+    """
+    Verify that written images can all be read back correctly.
+    """
+
+    def setUp(self):
+        super().setUp()
+        np.random.seed(0)
+        self.tempdir = tempfile.TemporaryDirectory()
+
+        # Verify that the `tifffile` package is installed
+        assert giatools.io.tifffile is not None
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def _test(
+        self,
+        data_shape: Tuple,
+        axes: str,
+        dtype: np.dtype,
+        metadata: Dict,
+        *,
+        ext: str,
+    ):
+        # Create random image data
+        data = np.random.rand(*data_shape)
+        if not np.issubdtype(dtype, np.floating):
+            data = (data * np.iinfo(dtype).max).astype(dtype)
+
+        # Write the image to a temporary file
+        filepath = os.path.join(self.tempdir.name, f'test.{ext}')
+        giatools.io.imwrite(data, filepath, metadata=metadata | dict(axes=axes))
+
+        # Read the image back and validate
+        data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
+        np.testing.assert_array_equal(data1, data)
+        self.assertEqual(axes1, axes)
+        print(metadata)
+        self.assertEqual(metadata1, metadata)
+
+    def test__tiff__float32(self):
+        self._test(
+            data_shape=(10, 10, 5, 2),
+            axes='YXZC',
+            dtype=np.float32,
+            ext='tiff',
+            metadata=dict(
+                resolution=(0.2, 0.4),
+                z_spacing=0.5,
+                unit='um',
+            ),
+        )
