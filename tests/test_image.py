@@ -245,6 +245,12 @@ class Image__normalize_axes_like(unittest.TestCase):
         self.img1 = giatools.image.Image(data=test1_data, axes=test1_axes, original_axes=test1_original_axes)
         self.img2 = giatools.image.Image(data=test2_data, axes=test2_axes, original_axes=test2_original_axes)
 
+    def test__identity(self):
+        img_normalized = self.img1.normalize_axes_like(test1_original_axes)
+        self.assertEqual(img_normalized.original_axes, test1_original_axes)
+        self.assertTrue(np.shares_memory(img_normalized.data, self.img1.data))
+        self.assertIs(img_normalized.metadata, self.img1.metadata)
+
     def test1(self):
         img_normalized = self.img1.normalize_axes_like(test1_original_axes)
         self.assertEqual(img_normalized.axes, test1_original_axes)
