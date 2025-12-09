@@ -55,7 +55,7 @@ class Image:
         self.data = data
         self.axes = axes
         self.original_axes = original_axes
-        self.metadata = metadata or dict()
+        self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
     def read(*args, normalize_axes: str = 'QTZYXC', **kwargs) -> Self:
@@ -85,7 +85,8 @@ class Image:
         """
         Squeeze the axes of the image to match the axes.
 
-        This image is not changed in place, a new image is returned (without copying the data).
+        This image is not changed in place, a new image is returned (without copying the data). The new image
+        references the original metadata.
 
         Raises:
             ValueError: If one of the axis cannot be squeezed or `axes` is not a subset of the image axes.
@@ -96,14 +97,20 @@ class Image:
 
         s = tuple(axis_pos for axis_pos, axis in enumerate(self.axes) if axis not in axes)
         squeezed_axes = util.str_without_positions(self.axes, s)
-        squeezed_image = Image(data=self.data.squeeze(axis=s), axes=squeezed_axes, original_axes=self.original_axes)
+        squeezed_image = Image(
+            data=self.data.squeeze(axis=s),
+            axes=squeezed_axes,
+            original_axes=self.original_axes,
+            metadata=self.metadata,
+        )
         return squeezed_image.reorder_axes_like(axes)
 
     def reorder_axes_like(self, axes: str) -> Self:
         """
         Reorder the axes of the image to match the given order.
 
-        This image is not changed in place, a new image is returned (without copying the data).
+        This image is not changed in place, a new image is returned (without copying the data). The new image
+        references the original metadata.
 
         Raises:
             ValueError: If there are spurious, missing, or ambiguous axes.
@@ -119,13 +126,14 @@ class Image:
                 reordered_data = np.moveaxis(reordered_data, src, dst)
                 reordered_axes = util.move_char(reordered_axes, src, dst)
         assert reordered_axes == axes, f'Failed to reorder axes "{self.axes}" to "{axes}", got "{reordered_axes}"'
-        return Image(data=reordered_data, axes=axes, original_axes=self.original_axes)
+        return Image(data=reordered_data, axes=axes, original_axes=self.original_axes, metadata=self.metadata)
 
     def normalize_axes_like(self, axes: str) -> Self:
         """
         Normalize the axes of the image.
 
-        This image is not changed in place, a new image is returned (without copying the data).
+        This image is not changed in place, a new image is returned (without copying the data). The new image
+        references the original metadata.
 
         Raises:
             AssertionError: If `axes` is ambiguous.
@@ -149,7 +157,8 @@ class Image:
         """
         Squeeze all singleton axes of the image.
 
-        This image is not changed in place, a new image is returned (without copying the data).
+        This image is not changed in place, a new image is returned (without copying the data). The new image
+        references the original metadata.
         """
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
