@@ -124,12 +124,10 @@ class imreadraw__with_tifffile(unittest.TestCase):
     def test__input9(self):
         """
         Test TIFF file with ``QYX`` axes.
-
-        Python 3.8 yields subtly different result, hence the tolerance for the `img.mean()` test.
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input9_qyx.tif')
         self.assertEqual(img.shape, (2, 256, 256))
-        self.assertAlmostEqual(img.mean(), 0.05388291, places=8)
+        self.assertAlmostEqual(img.mean(), 0.05388291)
         self.assertEqual(axes, 'QYX')
         self.verify_metadata(metadata, resolution=(1, 1))
 
@@ -139,7 +137,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input10_resolutionunit2.tiff')
         self.assertEqual(img.shape, (64, 64))
-        self.assertAlmostEqual(img.mean(), 128.549560546875, places=8)
+        self.assertAlmostEqual(img.mean(), 128.549560546875)
         self.assertEqual(axes, 'YX')
         self.verify_metadata(metadata, resolution=(300, 300), unit='inch')
 
