@@ -132,3 +132,12 @@ class Image:
 
         # Squeeze spurious axes and establish order
         return Image(data=complete_data, axes=complete_axes, original_axes=self.original_axes).squeeze_like(axes)
+
+    def squeeze(self) -> Self:
+        """
+        Squeeze all singleton axes of the image.
+
+        This image is not changed in place, a new image is returned (without copying the data).
+        """
+        squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
+        return self.squeeze_like(squeezed_axes)
