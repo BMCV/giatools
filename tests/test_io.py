@@ -43,14 +43,14 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (265, 329))
         self.assertEqual(axes, 'YX')
-        self.verify_metadata(metadata, resolution=None)
+        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input2(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tif')
         self.assertEqual(img.mean(), 9.543921821305842)
         self.assertEqual(img.shape, (96, 97))
         self.assertEqual(axes, 'YX')
-        self.verify_metadata(metadata, resolution=None)
+        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input3(self):
         """
@@ -63,7 +63,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
-        self.verify_metadata(metadata, resolution=(10000, 10000))
+        self.verify_metadata(metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
 
     def test__input4(self):
         """
@@ -73,7 +73,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(img.mean(), 130.04)
         self.assertEqual(axes, 'YXC')
-        self.verify_metadata(metadata, resolution=None)
+        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input5(self):
         """
@@ -83,7 +83,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (2, 8, 16))
         self.assertEqual(img.mean(), 22.25390625)
         self.assertEqual(axes, 'CYX')
-        self.verify_metadata(metadata, resolution=(0.734551, 0.367275))
+        self.verify_metadata(metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input6(self):
         """
@@ -93,7 +93,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (25, 8, 16))
         self.assertEqual(img.mean(), 26.555)
         self.assertEqual(axes, 'ZYX')
-        self.verify_metadata(metadata, resolution=(0.734551, 0.367275))
+        self.verify_metadata(metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input7(self):
         """
@@ -103,7 +103,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (25, 2, 50, 50))
         self.assertEqual(img.mean(), 14.182152)
         self.assertEqual(axes, 'ZCYX')
-        self.verify_metadata(metadata, resolution=(2.295473, 2.295473))
+        self.verify_metadata(metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
 
     def test__input8(self):
         """
@@ -113,7 +113,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (5, 49, 56))
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
-        self.verify_metadata(metadata, resolution=(1, 1))
+        self.verify_metadata(metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
     def test__input9(self):
         """

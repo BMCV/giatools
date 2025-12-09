@@ -70,7 +70,7 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
                 im_arr = im_file.asarray()
 
                 # Read the metadata
-                metadata = _get_tiff_metadata(im_file.series[0])
+                metadata = _get_tiff_metadata(im_file, im_file.series[0])
 
                 # Return the image data, axes, and metadata
                 return im_arr, im_axes, metadata
@@ -94,14 +94,14 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     return im_arr, im_axes, dict()
 
 
-def _get_tiff_metadata(series: Any) -> Dict[str, Any]:
+def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     """
     Extract metadata from a `tifffile.TiffFile` object.
     """
 
     metadata: Dict[str, Any] = dict()
 
-    # Extract resolution information if available
+    # Extract pixel resolution, if available
     page0 = series.pages[0]
     if 'XResolution' in page0.tags and 'YResolution' in page0.tags:
         x_res = page0.tags['XResolution'].value
@@ -110,6 +110,48 @@ def _get_tiff_metadata(series: Any) -> Dict[str, Any]:
             x_res[0] / x_res[1],  # units per pixel in X, numerator / denominator
             y_res[0] / y_res[1],  # units per pixel in Y, numerator / denominator
         )
+
+    # Read `ImageDescription` tag
+    if 'ImageDescription' in page0.tags:
+        description = page0.tags['ImageDescription'].value
+        for line in description.splitlines():
+
+            # Extract z-slice spacing, if available
+            if line.startswith('spacing='):
+                try:
+                    spacing = float(line.split('=')[1])
+                    metadata['z_spacing'] = spacing
+                except ValueError:
+                    pass
+
+            # Extract unit, if available
+            if line.startswith('unit='):
+                unit = line.split('=')[1]
+                if unit != 'pixel':
+                    metadata['unit'] = unit
+
+    # As a fallback, read unit from the dedicated tag, if available
+    if 'unit' not in metadata and 'ResolutionUnit' in page0.tags:
+        res_unit = page0.tags['ResolutionUnit'].value
+        if res_unit == 2:
+            metadata['unit'] = 'inch'
+        elif res_unit == 3:
+            metadata['unit'] = 'cm'
+
+    # As a fallback, use the ImageJ metadata, if available
+    imagej_metadata = getattr(tif, 'imagej_metadata', None)
+    if imagej_metadata is not None:
+        if 'z_spacing' not in metadata and 'spacing' in imagej_metadata:
+            try:
+                metadata['z_spacing'] = float(imagej_metadata['spacing'])
+            except ValueError:
+                pass
+        if 'unit' not in metadata and 'unit' in imagej_metadata:
+            metadata['unit'] = str(imagej_metadata['unit'])
+
+    # Normalize unit representation
+    if metadata.get('unit', None) == r'\u00B5m':
+        metadata['unit'] = 'um'
 
     return metadata
 
