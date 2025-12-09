@@ -67,3 +67,13 @@ class move_char(unittest.TestCase):
         self.assertEqual(giatools.util.move_char('ABC', 0, -2), 'BAC')
         self.assertEqual(giatools.util.move_char('ABC', 1, -2), 'ABC')
         self.assertEqual(giatools.util.move_char('ABC', 2, -2), 'ACB')
+
+
+class distance_to_external_frame(unittest.TestCase):
+
+    def test(self):
+        def inner_function():
+            return giatools.util.distance_to_external_frame()
+
+        self.assertEqual(giatools.util.distance_to_external_frame(), 1)
+        self.assertEqual(inner_function(), 1)

@@ -12,11 +12,15 @@ from . import (
     util,
 )
 from .typing import (
-    Any,
     Dict,
     Optional,
     Self,
 )
+
+default_normalized_axes = 'QTZYXC'
+"""
+The default axes used for normalization in :meth:`Image.read`.
+"""
 
 
 class Image:
@@ -43,6 +47,12 @@ class Image:
     metadata: Dict
     """
     Additional metadata of the image.
+
+    The following metadata keys are covered by tests:
+
+    - **resolution**, `Tuple[float, float]`: Pixels per unit in X and Y dimensions.
+    - **z_spacing**, `float`: The pixel spacing in the Z dimension (if applicable).
+    - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
 
     def __init__(
@@ -58,7 +68,7 @@ class Image:
         self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
-    def read(*args, normalize_axes: str = 'QTZYXC', **kwargs) -> Self:
+    def read(*args, normalize_axes: str = default_normalized_axes, **kwargs) -> Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`.
 
@@ -72,12 +82,11 @@ class Image:
         self,
         filepath: str,
         backend: io.BackendType = 'auto',
-        metadata: Optional[Dict[str, Any]] = None,
     ) -> Self:
         """
         Write the image to a file.
         """
-        full_metadata = dict(axes=self.axes) | (metadata if metadata else dict())
+        full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
         io.imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 
@@ -151,7 +160,12 @@ class Image:
                 complete_axes += axis
 
         # Squeeze spurious axes and establish order
-        return Image(data=complete_data, axes=complete_axes, original_axes=self.original_axes).squeeze_like(axes)
+        return Image(
+            data=complete_data,
+            axes=complete_axes,
+            original_axes=self.original_axes,
+            metadata=self.metadata,
+        ).squeeze_like(axes)
 
     def squeeze(self) -> Self:
         """
