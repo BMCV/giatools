@@ -133,6 +133,16 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(axes, 'QYX')
         self.verify_metadata(metadata, resolution=(1, 1))
 
+    def test__input10(self):
+        """
+        Test TIFF file with ``ResolutionUnit`` tag set to 2 (inches).
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input10_resolutionunit2.tiff')
+        self.assertEqual(img.shape, (64, 64))
+        self.assertAlmostEqual(img.mean(), 128.549560546875, places=8)
+        self.assertEqual(axes, 'YX')
+        self.verify_metadata(metadata, resolution=(300, 300), unit='inch')
+
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)
@@ -403,7 +413,6 @@ class ModuleTestCase(unittest.TestCase):
         data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
         np.testing.assert_array_equal(data1, data)
         self.assertEqual(axes1, axes)
-        print(metadata)
         self.assertEqual(metadata1, metadata)
 
     def test__tiff__float32(self):

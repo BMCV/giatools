@@ -129,7 +129,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             if 'unit' in description_json:
                 metadata['unit'] = str(description_json['unit'])
 
-        # If unsuccessful, fall back to line-by-line parsing
+        # If unsuccessful, fall back to line-by-line parsing (ImageJ-style)
         except json.JSONDecodeError:
             for line in description.splitlines():
 
@@ -154,17 +154,6 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             metadata['unit'] = 'inch'
         elif res_unit == 3:
             metadata['unit'] = 'cm'
-
-    # As a fallback, use the ImageJ metadata, if available
-    imagej_metadata = getattr(tif, 'imagej_metadata', None)
-    if imagej_metadata is not None:
-        if 'z_spacing' not in metadata and 'spacing' in imagej_metadata:
-            try:
-                metadata['z_spacing'] = float(imagej_metadata['spacing'])
-            except ValueError:
-                pass
-        if 'unit' not in metadata and 'unit' in imagej_metadata:
-            metadata['unit'] = str(imagej_metadata['unit'])
 
     # Normalize unit representation
     if metadata.get('unit', None) == r'\u00B5m':
