@@ -4,6 +4,7 @@ import unittest.mock
 import numpy as np
 
 import giatools.image
+from .tools import verify_metadata
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -32,6 +33,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.shape, (1, 1, 1, 265, 329, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input2(self):
         img = giatools.image.Image.read('tests/data/input2_uint8_yx.tiff')
@@ -39,6 +41,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.shape, (1, 1, 1, 96, 97, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input3(self):
         img = giatools.image.Image.read('tests/data/input3_uint16_zyx.tiff')
@@ -46,6 +49,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 1259.6755334241288)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
 
     def test__input4(self):
         img = giatools.image.Image.read('tests/data/input4_uint8.png')
@@ -53,6 +57,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 130.04)
         self.assertEqual(img.original_axes, 'YXC')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input5(self):
         img = giatools.image.Image.read('tests/data/input5_uint8_cyx.tiff')
@@ -60,6 +65,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 22.25390625)
         self.assertEqual(img.original_axes, 'CYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input6(self):
         img = giatools.image.Image.read('tests/data/input6_uint8_zyx.tiff')
@@ -67,6 +73,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 26.555)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input7(self):
         img = giatools.image.Image.read('tests/data/input7_uint8_zcyx.tif')
@@ -74,6 +81,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 14.182152)
         self.assertEqual(img.original_axes, 'ZCYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
 
     def test__input8(self):
         img = giatools.image.Image.read('tests/data/input8_uint16_tyx.tif')
@@ -81,6 +89,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 5815.486880466472)
         self.assertEqual(img.original_axes, 'TYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
 
 @unittest.mock.patch('giatools.io.imwrite')

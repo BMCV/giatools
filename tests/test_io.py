@@ -11,13 +11,13 @@ import tifffile
 
 import giatools.io
 from giatools.typing import (
-    Any,
     Dict,
     Literal,
     Optional,
     Tuple,
     Union,
 )
+from .tools import verify_metadata
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -29,34 +29,19 @@ class imreadraw__with_tifffile(unittest.TestCase):
         # Verify that the `tifffile` package is installed
         assert giatools.io.tifffile is not None
 
-    def verify_metadata(self, metadata: dict, **expected: Any):
-        """
-        Verify that the metadata is present and correct.
-        """
-        self.assertIsInstance(metadata, dict)
-        for key, value in expected.items():
-            if value is None:
-                self.assertNotIn(key, metadata)
-            else:
-                self.assertIn(key, metadata)
-                if isinstance(value, tuple):
-                    np.testing.assert_array_almost_equal(metadata[key], value)
-                else:
-                    self.assertEqual(metadata[key], value)
-
     def test__input1(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tiff')
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (265, 329))
         self.assertEqual(axes, 'YX')
-        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input2(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.mean(), 9.543921821305842)
         self.assertEqual(img.shape, (96, 97))
         self.assertEqual(axes, 'YX')
-        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input3(self):
         """
@@ -69,7 +54,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
-        self.verify_metadata(metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
+        verify_metadata(self, metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
 
     def test__input4(self):
         """
@@ -79,7 +64,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(img.mean(), 130.04)
         self.assertEqual(axes, 'YXC')
-        self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input5(self):
         """
@@ -89,7 +74,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (2, 8, 16))
         self.assertEqual(img.mean(), 22.25390625)
         self.assertEqual(axes, 'CYX')
-        self.verify_metadata(metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
+        verify_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input6(self):
         """
@@ -99,7 +84,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (25, 8, 16))
         self.assertEqual(img.mean(), 26.555)
         self.assertEqual(axes, 'ZYX')
-        self.verify_metadata(metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
+        verify_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input7(self):
         """
@@ -109,7 +94,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (25, 2, 50, 50))
         self.assertEqual(img.mean(), 14.182152)
         self.assertEqual(axes, 'ZCYX')
-        self.verify_metadata(metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
+        verify_metadata(self, metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
 
     def test__input8(self):
         """
@@ -119,7 +104,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (5, 49, 56))
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
-        self.verify_metadata(metadata, resolution=(1, 1), z_spacing=None, unit=None)
+        verify_metadata(self, metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
     def test__input9(self):
         """
@@ -129,7 +114,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (2, 256, 256))
         self.assertAlmostEqual(img.mean(), 0.05388291)
         self.assertEqual(axes, 'QYX')
-        self.verify_metadata(metadata, resolution=(1, 1))
+        verify_metadata(self, metadata, resolution=(1, 1))
 
     def test__input10(self):
         """
@@ -139,7 +124,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(img.shape, (64, 64))
         self.assertAlmostEqual(img.mean(), 128.549560546875)
         self.assertEqual(axes, 'YX')
-        self.verify_metadata(metadata, resolution=(300, 300), unit='inch')
+        verify_metadata(self, metadata, resolution=(300, 300), unit='inch')
 
 
 @unittest.mock.patch('skimage.io.imread')
