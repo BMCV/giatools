@@ -138,6 +138,23 @@ class Image__reorder_axes_like(unittest.TestCase):
         self.assertEqual(self.img1.original_axes, test1_original_axes)
 
 
+class Image__squeeze(unittest.TestCase):
+
+    def setUp(self):
+        self.img1 = giatools.image.Image(data=test1_data, axes=test1_axes, original_axes=test1_original_axes)
+        self.img2 = giatools.image.Image(data=test2_data, axes=test2_axes, original_axes=test2_original_axes)
+
+    def test__squeeze(self):
+        img1_squeezed = self.img1.squeeze()
+        self.assertEqual(img1_squeezed.axes, 'ZYXC')
+        self.assertEqual(img1_squeezed.data.shape, (2, 26, 32, 3))
+        self.assertEqual(img1_squeezed.original_axes, test1_original_axes)
+        img2_squeezed = self.img2.squeeze()
+        self.assertEqual(img2_squeezed.axes, 'YX')
+        self.assertEqual(img2_squeezed.data.shape, (32, 26))
+        self.assertEqual(img2_squeezed.original_axes, test2_original_axes)
+
+
 class Image__squeeze_like(unittest.TestCase):
 
     def setUp(self):
