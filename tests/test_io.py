@@ -17,7 +17,10 @@ from giatools.typing import (
     Tuple,
     Union,
 )
-from .tools import verify_metadata
+from .tools import (
+    random_io_test,
+    verify_metadata,
+)
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -364,53 +367,32 @@ class imwrite__without_tifffile(imwriteTestCase, imwrite__skimage__mixin):
 
 class ModuleTestCase(unittest.TestCase):
     """
-    Verify that written images can all be read back correctly.
+    Module-level tests for :mod:`giatools.io`.
     """
 
     def setUp(self):
         super().setUp()
-        np.random.seed(0)
-        self.tempdir = tempfile.TemporaryDirectory()
 
         # Verify that the `tifffile` package is installed
         assert giatools.io.tifffile is not None
 
-    def tearDown(self):
-        self.tempdir.cleanup()
+    @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
+    def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
+        """
+        Verify that written images can be read back correctly with correct data and metadata.
+        """
+        expected_axes = 'YXZC'
+        expected_metadata = dict(resolution=(0.2, 0.4), z_spacing=0.5, unit='km')
 
-    def _test(
-        self,
-        data_shape: Tuple,
-        axes: str,
-        dtype: np.dtype,
-        metadata: Dict,
-        *,
-        ext: str,
-    ):
-        # Create random image data
-        data = np.random.rand(*data_shape)
-        if not np.issubdtype(dtype, np.floating):
-            data = (data * np.iinfo(dtype).max).astype(dtype)
-
-        # Write the image to a temporary file
-        filepath = os.path.join(self.tempdir.name, f'test.{ext}')
-        giatools.io.imwrite(data, filepath, metadata=metadata | dict(axes=axes))
+        # Write the image and read back
+        giatools.io.imwrite(
+            expected_data,
+            filepath,
+            metadata=copy.deepcopy(expected_metadata) | dict(axes=expected_axes),
+        )
 
         # Read the image back and validate
         data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
-        np.testing.assert_array_equal(data1, data)
-        self.assertEqual(axes1, axes)
-        self.assertEqual(metadata1, metadata)
-
-    def test__tiff__float32(self):
-        self._test(
-            data_shape=(10, 10, 5, 2),
-            axes='YXZC',
-            dtype=np.float32,
-            ext='tiff',
-            metadata=dict(
-                resolution=(0.2, 0.4),
-                z_spacing=0.5,
-                unit='um',
-            ),
-        )
+        np.testing.assert_array_equal(data1, expected_data)
+        self.assertEqual(axes1, expected_axes)
+        self.assertEqual(metadata1, expected_metadata)

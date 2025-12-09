@@ -1,10 +1,14 @@
+import copy
 import unittest
 import unittest.mock
 
 import numpy as np
 
 import giatools.image
-from .tools import verify_metadata
+from .tools import (
+    random_io_test,
+    verify_metadata,
+)
 
 # This tests require that the `tifffile` package is installed.
 assert giatools.io.tifffile is not None
@@ -19,10 +23,41 @@ test2_axes = 'ZTYXC'
 test2_original_axes = 'YXC'
 
 
-class ModuleTests(unittest.TestCase):
+class ModuleTestCase(unittest.TestCase):
+    """
+    Module-level tests for :mod:`giatools.image`.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        # Verify that the `tifffile` package is installed
+        assert giatools.io.tifffile is not None
 
     def test__default_normalized_axes(self):
         self.assertEqual(giatools.image.default_normalized_axes, 'QTZYXC')
+
+    @random_io_test(shape=(5, 10, 15), dtype=np.uint8, ext='tiff')
+    def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
+        """
+        Verify that written images can be read back correctly with correct data and metadata.
+        """
+        expected_axes = 'ZYX'
+        expected_metadata = dict(resolution=(10, 10), z_spacing=0.2, unit='nm')
+        img0 = giatools.image.Image(
+            data=expected_data,
+            axes=expected_axes,
+            metadata=copy.deepcopy(expected_metadata),
+        )
+
+        # Write the image and read back
+        img0.write(filepath)
+        img1 = giatools.image.Image.read(filepath).normalize_axes_like(expected_axes)
+
+        # Verify that data and metadata are the same
+        np.testing.assert_array_equal(img1.data, expected_data)
+        self.assertEqual(img1.axes, expected_axes)
+        self.assertEqual(img1.metadata, expected_metadata)
 
 
 class Image__read(unittest.TestCase):

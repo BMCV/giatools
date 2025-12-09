@@ -1,10 +1,15 @@
 import contextlib
 import io
+import os
+import tempfile
 import unittest
 
 import numpy as np
 
-from giatools.typing import Any
+from giatools.typing import (
+    Any,
+    Tuple,
+)
 
 
 class CaptureStderr:
@@ -38,3 +43,27 @@ def verify_metadata(testcase: unittest.TestCase, metadata: dict, **expected: Any
                 np.testing.assert_array_almost_equal(metadata[key], value)
             else:
                 testcase.assertEqual(metadata[key], value)
+
+
+def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
+    def decorator(test_impl):
+        def wrapper(self):
+            tempdir = tempfile.TemporaryDirectory()
+            try:
+
+                # Create random image data
+                np.random.seed(0)
+                data = np.random.rand(*shape)
+                if not np.issubdtype(dtype, np.floating):
+                    data = (data * np.iinfo(dtype).max).astype(dtype)
+
+                # Write the image to a temporary file
+                filepath = os.path.join(tempdir.name, f'test.{ext}')
+
+                # Run the test
+                test_impl(self, filepath, data)
+
+            finally:
+                tempdir.cleanup()
+        return wrapper
+    return decorator
