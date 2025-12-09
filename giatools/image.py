@@ -78,12 +78,11 @@ class Image:
         self,
         filepath: str,
         backend: io.BackendType = 'auto',
-        metadata: Optional[Dict[str, Any]] = None,
     ) -> Self:
         """
         Write the image to a file.
         """
-        full_metadata = dict(axes=self.axes) | (metadata if metadata else dict())
+        full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
         io.imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 

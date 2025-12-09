@@ -111,6 +111,20 @@ class Image__write(unittest.TestCase):
         self.assertEqual(mock_imwrite.call_args_list[0][0][1], 'test_output.tiff')
         self.assertEqual(mock_imwrite.call_args_list[0][1], dict(backend='tifffile', metadata=dict(axes=test1_axes)))
 
+    def test__metadata(self, mock_imwrite):
+        self.img1.metadata['z_spacing'] = 0.5
+        self.img1.write('test_output.tiff')
+        mock_imwrite.assert_called_once()
+        np.testing.assert_array_equal(mock_imwrite.call_args_list[0][0][0], test1_data)
+        self.assertEqual(mock_imwrite.call_args_list[0][0][1], 'test_output.tiff')
+        self.assertEqual(
+            mock_imwrite.call_args_list[0][1],
+            dict(
+                backend='auto',
+                metadata=dict(axes=test1_axes, z_spacing=0.5),
+            ),
+        )
+
 
 class Image__reorder_axes_like(unittest.TestCase):
 
