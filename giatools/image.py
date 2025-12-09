@@ -157,7 +157,12 @@ class Image:
                 complete_axes += axis
 
         # Squeeze spurious axes and establish order
-        return Image(data=complete_data, axes=complete_axes, original_axes=self.original_axes).squeeze_like(axes)
+        return Image(
+            data=complete_data,
+            axes=complete_axes,
+            original_axes=self.original_axes,
+            metadata=self.metadata,
+        ).squeeze_like(axes)
 
     def squeeze(self) -> Self:
         """
