@@ -21,21 +21,21 @@ test2_original_axes = 'YXC'
 class Image__read(unittest.TestCase):
 
     def test__input1(self):
-        img = giatools.image.Image.read('tests/data/input1_uint8_yx.tif')
+        img = giatools.image.Image.read('tests/data/input1_uint8_yx.tiff')
         self.assertEqual(img.data.mean(), 63.66848655158571)
         self.assertEqual(img.data.shape, (1, 1, 1, 265, 329, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, 'QTZYXC')
 
     def test__input2(self):
-        img = giatools.image.Image.read('tests/data/input2_uint8_yx.tif')
+        img = giatools.image.Image.read('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.data.mean(), 9.543921821305842)
         self.assertEqual(img.data.shape, (1, 1, 1, 96, 97, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, 'QTZYXC')
 
     def test__input3(self):
-        img = giatools.image.Image.read('tests/data/input3_uint16_zyx.tif')
+        img = giatools.image.Image.read('tests/data/input3_uint16_zyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 5, 198, 356, 1))
         self.assertEqual(img.data.mean(), 1259.6755334241288)
         self.assertEqual(img.original_axes, 'ZYX')
@@ -49,14 +49,14 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, 'QTZYXC')
 
     def test__input5(self):
-        img = giatools.image.Image.read('tests/data/input5_uint8_cyx.tif')
+        img = giatools.image.Image.read('tests/data/input5_uint8_cyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 1, 8, 16, 2))
         self.assertEqual(img.data.mean(), 22.25390625)
         self.assertEqual(img.original_axes, 'CYX')
         self.assertEqual(img.axes, 'QTZYXC')
 
     def test__input6(self):
-        img = giatools.image.Image.read('tests/data/input6_uint8_zyx.tif')
+        img = giatools.image.Image.read('tests/data/input6_uint8_zyx.tiff')
         self.assertEqual(img.data.shape, (1, 1, 25, 8, 16, 1))
         self.assertEqual(img.data.mean(), 26.555)
         self.assertEqual(img.original_axes, 'ZYX')

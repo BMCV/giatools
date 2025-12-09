@@ -6,6 +6,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
 import json
+import warnings
 
 import numpy as np
 import skimage.io
@@ -166,6 +167,9 @@ def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', me
     """
     Save an image to a file using either `tifffile` or `skimage.io.imsave`.
     """
+
+    if filepath.lower().endswith('.tif'):
+        warnings.warn('.tif extension is deprecated, use .tiff instead.', DeprecationWarning)
 
     # Automatically dispatch to the proper backend
     if backend == 'auto':

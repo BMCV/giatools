@@ -45,14 +45,14 @@ class imreadraw__with_tifffile(unittest.TestCase):
                     self.assertEqual(metadata[key], value)
 
     def test__input1(self):
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tiff')
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (265, 329))
         self.assertEqual(axes, 'YX')
         self.verify_metadata(metadata, resolution=None, z_spacing=None, unit=None)
 
     def test__input2(self):
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.mean(), 9.543921821305842)
         self.assertEqual(img.shape, (96, 97))
         self.assertEqual(axes, 'YX')
@@ -65,7 +65,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
 
         For details see: https://github.com/BMCV/galaxy-image-analysis/pull/132#issuecomment-2371561435
         """
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input3_uint16_zyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input3_uint16_zyx.tiff')
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
@@ -85,7 +85,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         Test TIFF file with ``CYX`` axes.
         """
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input5_uint8_cyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input5_uint8_cyx.tiff')
         self.assertEqual(img.shape, (2, 8, 16))
         self.assertEqual(img.mean(), 22.25390625)
         self.assertEqual(axes, 'CYX')
@@ -95,7 +95,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         Test TIFF file with ``ZYX`` axes.
         """
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input6_uint8_zyx.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input6_uint8_zyx.tiff')
         self.assertEqual(img.shape, (25, 8, 16))
         self.assertEqual(img.mean(), 26.555)
         self.assertEqual(axes, 'ZYX')
@@ -276,7 +276,7 @@ class imwriteTestCase(unittest.TestCase):
                 data_shape=(10, 10, 2),
                 axes='YXC',
                 dtype=np.float32,
-                ext='tif',
+                ext='tiff',
                 backend='unsupported_backend',
             )
 
@@ -284,7 +284,8 @@ class imwriteTestCase(unittest.TestCase):
 class imwrite__tifffile__mixin:
 
     def test__float32__tifffile__tif(self):
-        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
+        with self.assertWarns(DeprecationWarning):
+            self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
 
     def test__float32__tifffile__tiff(self):
         self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='tifffile')
@@ -307,14 +308,15 @@ class imwrite__tifffile__mixin:
 class imwrite__skimage__mixin:
 
     def test__float32__skimage__tif(self):
-        self._test(
-            data_shape=(10, 10, 5, 2),
-            axes='YXZC',
-            dtype=np.float32,
-            ext='tif',
-            backend='skimage',
-            validate_axes=False,
-        )
+        with self.assertWarns(DeprecationWarning):
+            self._test(
+                data_shape=(10, 10, 5, 2),
+                axes='YXZC',
+                dtype=np.float32,
+                ext='tif',
+                backend='skimage',
+                validate_axes=False,
+            )
 
     def test__float32__skimage__tiff(self):
         self._test(
@@ -336,7 +338,8 @@ class imwrite__with_tifffile(imwriteTestCase, imwrite__tifffile__mixin, imwrite_
         assert giatools.io.tifffile is not None
 
     def test__float32__auto__tif(self):
-        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='auto')
+        with self.assertWarns(DeprecationWarning):
+            self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='auto')
 
     def test__float32__auto__tiff(self):
         self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='auto')
@@ -350,14 +353,15 @@ class imwrite__without_tifffile(imwriteTestCase, imwrite__skimage__mixin):
 
     def test__float32__auto__tif(self):
         assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
-        self._test(
-            data_shape=(10, 10, 5, 2),
-            axes='YXZC',
-            dtype=np.float32,
-            ext='tif',
-            backend='auto',
-            validate_axes=False,
-        )
+        with self.assertWarns(DeprecationWarning):
+            self._test(
+                data_shape=(10, 10, 5, 2),
+                axes='YXZC',
+                dtype=np.float32,
+                ext='tif',
+                backend='auto',
+                validate_axes=False,
+            )
 
     def test__float32__auto__tiff(self):
         assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
