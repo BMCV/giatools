@@ -111,8 +111,9 @@ class Image__reorder_axes_like(unittest.TestCase):
     def test__identity(self):
         img_reordered = self.img1.reorder_axes_like(test1_axes)
         self.assertEqual(img_reordered.axes, test1_axes)
-        self.assertEqual(img_reordered.data.shape, test1_data.shape)
         self.assertEqual(img_reordered.original_axes, test1_original_axes)
+        self.assertIs(img_reordered.data, self.img1.data)
+        self.assertIs(img_reordered.metadata, self.img1.metadata)
 
     def test__spurious_axis(self):
         with self.assertRaises(ValueError):
@@ -169,6 +170,12 @@ class Image__squeeze_like(unittest.TestCase):
     def setUp(self):
         self.img1 = giatools.image.Image(data=test1_data, axes=test1_axes, original_axes=test1_original_axes)
         self.img2 = giatools.image.Image(data=test2_data, axes=test2_axes, original_axes=test2_original_axes)
+
+    def test__identity(self):
+        img_squeezed = self.img1.squeeze_like('ZCYX')
+        self.assertEqual(img_squeezed.original_axes, test1_original_axes)
+        self.assertTrue(np.shares_memory(img_squeezed.data, self.img1.data))
+        self.assertIs(img_squeezed.metadata, self.img1.metadata)
 
     def test__no_squeeze(self):
         img_squeezed = self.img1.squeeze_like('ZTCYX')
@@ -243,3 +250,7 @@ class Image__normalize_axes_like(unittest.TestCase):
         np.testing.assert_array_equal(self.img1.data, test1_data)
         self.assertEqual(self.img1.axes, test1_axes)
         self.assertEqual(self.img1.original_axes, test1_original_axes)
+
+    def test__ambiguous_axes(self):
+        with self.assertRaises(AssertionError):
+            self.img1.normalize_axes_like('ZTCYXX')
