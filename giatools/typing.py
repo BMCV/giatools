@@ -4,3 +4,8 @@ if sys.version_info < (3, 11):
     from typing_extensions import *  # noqa: F401, F403
 else:
     from typing import *  # noqa: F401, F403
+
+if sys.version_info < (3, 10):
+    from typing import Iterator
+else:
+    from collections.abc import Iterator

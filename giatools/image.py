@@ -13,6 +13,7 @@ from . import (
 )
 from .typing import (
     Dict,
+    Iterator,
     Optional,
     Self,
 )
@@ -177,10 +178,18 @@ class Image:
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
-    def iterate_jointly(axes: str = 'YX'):
-        iter_axes = ''.join([axis for axis in self.axes if axis not in axes])
-        for pos in np.ndindex(
-            *[self.data.shape[self.axes.index(axis)] for axis in iter_axes]
-        ):
-            sl = np.s_[*pos[:3], ..., pos[3]]  # noqa: E999
-    ):
+    def iterate_jointly(axes: str = 'YX') -> Iterator[Tuple['Slice', np.ndarray]]:
+        """
+        """
+        ndindex, s_ = list(), list()
+        for axis_idx, axis in enumerate(axes):
+            if axis in iter_axes:
+                s_.append(None)
+            else: 
+                s_.append(len(ndindex))
+                ndindex.append(self.data.shape[axis_idx])
+        for pos in np.ndindex(*ndindex):
+            sl = np.s_[*[slice(None) if s is None for s in s_ else pos[s]]]
+            arr = self.data[sl]
+            assert arr.ndim == len(axes)  # sanity check, should always be True
+            yield sl, arr
