@@ -195,28 +195,6 @@ class Image:
         """
         if sys.version_info < (3, 11):
             raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
-
-        if len(axes) == 0 or not frozenset(axes).issubset(frozenset(self.axes)):
-            raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{self.axes}"')
-
-        # Prepare slicing
-        ndindex, s_ = list(), list()
-        for axis_idx, axis in enumerate(self.axes):
-            if axis in axes:
-                s_.append(None)
-            else:
-                s_.append(len(ndindex))
-                ndindex.append(self.data.shape[axis_idx])
-
-        # Iterate the given `axes` jointly
-        for pos in np.ndindex(*ndindex):
-
-            # Build slice
-            sl = np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]  # not supported in Python <3.11
-
-            # Extract array
-            arr = self.data[sl]
-            assert arr.ndim == len(axes)  # sanity check, should always be True
-
-            # Yield slice and array
-            yield sl, arr
+        else:
+            from . import image_py311
+            return image_py311.iterate_jointly(self, axes)
