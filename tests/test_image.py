@@ -347,7 +347,6 @@ class Image__iterate_jointly(unittest.TestCase):
             for _ in img.iterate_jointly('YX'):
                 pass
 
-
     def test__empty(self):
         img = self.create_test_image('YX', (10, 11))
         with self.assertRaises(ValueError):
