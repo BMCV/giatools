@@ -176,3 +176,11 @@ class Image:
         """
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
+
+    def iterate_jointly(axes: str = 'YX'):
+        iter_axes = ''.join([axis for axis in self.axes if axis not in axes])
+        for pos in np.ndindex(
+            *[self.data.shape[self.axes.index(axis)] for axis in iter_axes]
+        ):
+            sl = np.s_[*pos[:3], ..., pos[3]]  # noqa: E999
+    ):
