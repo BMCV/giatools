@@ -16,6 +16,8 @@ from .typing import (
     Iterator,
     Optional,
     Self,
+    Tuple,
+    Union,
 )
 
 default_normalized_axes = 'QTZYXC'
@@ -178,18 +180,32 @@ class Image:
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
-    def iterate_jointly(axes: str = 'YX') -> Iterator[Tuple['Slice', np.ndarray]]:
+    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], np.ndarray]]:
         """
+        Iterates over all slices of the image along the given axes.
+
+        This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
+        applying 2-D operations to all YX slices of a 3-D image or time series.
         """
         ndindex, s_ = list(), list()
+
+        # Prepare slicing
         for axis_idx, axis in enumerate(axes):
-            if axis in iter_axes:
+            if axis in self.axes:
                 s_.append(None)
-            else: 
+            else:
                 s_.append(len(ndindex))
                 ndindex.append(self.data.shape[axis_idx])
+
+        # Iterate the given `axes` jointly
         for pos in np.ndindex(*ndindex):
-            sl = np.s_[*[slice(None) if s is None for s in s_ else pos[s]]]
+
+            # Build slice
+            sl = np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]
+
+            # Extract array
             arr = self.data[sl]
             assert arr.ndim == len(axes)  # sanity check, should always be True
+
+            # Yield slice and array
             yield sl, arr
