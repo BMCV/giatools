@@ -5,6 +5,8 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+import sys
+
 import numpy as np
 
 from . import (
@@ -13,8 +15,11 @@ from . import (
 )
 from .typing import (
     Dict,
+    Iterator,
     Optional,
     Self,
+    Tuple,
+    Union,
 )
 
 default_normalized_axes = 'QTZYXC'
@@ -176,3 +181,20 @@ class Image:
         """
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
+
+    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], np.ndarray]]:
+        """
+        Iterates over all slices of the image along the given axes.
+
+        This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
+        applying 2-D operations to all YX slices of a 3-D image or time series.
+
+        .. note::
+
+            This method requires **Python 3.11** or later.
+        """
+        if sys.version_info < (3, 11):
+            raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
+        else:
+            from . import image_py311
+            return image_py311.iterate_jointly(self, axes)

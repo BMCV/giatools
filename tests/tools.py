@@ -1,6 +1,7 @@
 import contextlib
 import io
 import os
+import sys
 import tempfile
 import unittest
 
@@ -8,6 +9,7 @@ import numpy as np
 
 from giatools.typing import (
     Any,
+    Literal,
     Tuple,
 )
 
@@ -64,3 +66,28 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
 
         return wrapper
     return decorator
+
+
+def _select_python_version(op: Literal['min', 'max']):
+    def create_decorator(major: int, minor: int):
+        def decorator(test_impl):
+            def wrapper(self):
+                if op == 'min':
+                    if sys.version_info < (major, minor):
+                        self.skipTest(f'Requires Python {major}.{minor} or later')
+                    else:
+                        test_impl(self)
+                elif op == 'max':
+                    if sys.version_info > (major, minor):
+                        self.skipTest(f'Requires Python {major}.{minor} or earlier')
+                    else:
+                        test_impl(self)
+                else:
+                    raise ValueError(f'Unknown operation "{op}"')
+            return wrapper
+        return decorator
+    return create_decorator
+
+
+minimum_python_version = _select_python_version('min')
+maximum_python_version = _select_python_version('max')
