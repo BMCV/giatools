@@ -1,5 +1,4 @@
 import copy
-import sys
 import unittest
 import unittest.mock
 
@@ -9,6 +8,8 @@ import giatools.image
 from giatools.typing import Tuple
 
 from .tools import (
+    maximum_python_version,
+    minimum_python_version,
     random_io_test,
     verify_metadata,
 )
@@ -337,22 +338,21 @@ class Image__iterate_jointly(unittest.TestCase):
         data = np.random.randint(0, 255, shape, dtype=np.uint8)
         return giatools.image.Image(data=data, axes=axes)
 
+    @maximum_python_version(3, 10)
     def test__minimum_python_version(self):
         img = self.create_test_image('YX', (10, 11))
-        if sys.version_info < (3, 11):
-            with self.assertRaises(RuntimeError):
-                for _ in img.iterate_jointly('YX'):
-                    pass
-        else:
+        with self.assertRaises(RuntimeError):
             for _ in img.iterate_jointly('YX'):
                 pass
 
+    @minimum_python_version(3, 11)
     def test__empty(self):
         img = self.create_test_image('YX', (10, 11))
         with self.assertRaises(ValueError):
             for _ in img.iterate_jointly(''):
                 pass
 
+    @minimum_python_version(3, 11)
     def test__spurious_axis(self):
         img = self.create_test_image('YX', (10, 11))
         with self.assertRaises(ValueError):
@@ -371,20 +371,25 @@ class Image__iterate_jointly(unittest.TestCase):
             np.testing.assert_array_equal(arr, img.data[sl])
         np.testing.assert_array_equal(counter, np.ones(counter.shape, np.uint8))
 
+    @minimum_python_version(3, 11)
     def test__img_yx__iterate_y(self):
         self._test('YX', (10, 11), 'Y')
 
+    @minimum_python_version(3, 11)
     def test__img_yx__iterate_yx(self):
         self._test('YX', (10, 11), 'YX')
 
+    @minimum_python_version(3, 11)
     def test__img_zyx__iterate_yx(self):
         self._test('ZYX', (1, 11, 12), 'YX')
         self._test('ZYX', (5, 11, 12), 'YX')
 
+    @minimum_python_version(3, 11)
     def test__img_zyx__iterate_zyx(self):
         self._test('ZYX', (1, 11, 12), 'ZYX')
         self._test('ZYX', (5, 11, 12), 'ZYX')
 
+    @minimum_python_version(3, 11)
     def test__img_tzyxc__iterate_zyx(self):
         self._test('TZYXC', (1, 1, 11, 12, 3), 'ZYX')
         self._test('TZYXC', (1, 5, 11, 12, 3), 'ZYX')
