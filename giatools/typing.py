@@ -6,6 +6,6 @@ else:
     from typing import *  # noqa: F401, F403
 
 if sys.version_info < (3, 10):
-    from typing import Iterator
+    from typing import Iterator  # noqa: F401, F403
 else:
-    from collections.abc import Iterator
+    from collections.abc import Iterator  # noqa: F401, F403
