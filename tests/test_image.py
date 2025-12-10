@@ -1,4 +1,5 @@
 import copy
+import sys
 import unittest
 import unittest.mock
 
@@ -335,6 +336,17 @@ class Image__iterate_jointly(unittest.TestCase):
         np.random.seed(0)
         data = np.random.randint(0, 255, shape, dtype=np.uint8)
         return giatools.image.Image(data=data, axes=axes)
+
+    def test__minimum_python_version(self):
+        img = self.create_test_image('YX', (10, 11))
+        if sys.version_info < (3, 11):
+            with self.assertRaises(RuntimeError):
+                for _ in img.iterate_jointly('YX'):
+                    pass
+        else:
+            for _ in img.iterate_jointly('YX'):
+                pass
+
 
     def test__empty(self):
         img = self.create_test_image('YX', (10, 11))

@@ -5,6 +5,8 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+import sys
+
 import numpy as np
 
 from . import (
@@ -186,7 +188,14 @@ class Image:
 
         This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
         applying 2-D operations to all YX slices of a 3-D image or time series.
+
+        .. note::
+
+            This method requires **Python 3.11** or later.
         """
+        if sys.version_info < (3, 11):
+            raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
+
         if len(axes) == 0 or not frozenset(axes).issubset(frozenset(self.axes)):
             raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{self.axes}"')
 
@@ -203,7 +212,7 @@ class Image:
         for pos in np.ndindex(*ndindex):
 
             # Build slice
-            sl = np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]
+            sl = np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]  # not supported in Python <3.11
 
             # Extract array
             arr = self.data[sl]
