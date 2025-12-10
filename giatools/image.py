@@ -187,11 +187,13 @@ class Image:
         This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
         applying 2-D operations to all YX slices of a 3-D image or time series.
         """
-        ndindex, s_ = list(), list()
+        if len(axes) == 0 or not frozenset(axes).issubset(frozenset(self.axes)):
+            raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{self.axes}"')
 
         # Prepare slicing
-        for axis_idx, axis in enumerate(axes):
-            if axis in self.axes:
+        ndindex, s_ = list(), list()
+        for axis_idx, axis in enumerate(self.axes):
+            if axis in axes:
                 s_.append(None)
             else:
                 s_.append(len(ndindex))
