@@ -157,6 +157,10 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             if 'spacing' in description_json:
                 metadata['z_spacing'] = float(description_json['spacing'])
 
+            # Extract z-position, if available (this is a custom field written by giatools)
+            if 'z_position' in description_json:
+                metadata['z_position'] = float(description_json['z_position'])
+
             # Extract unit, if available
             if 'unit' in description_json:
                 metadata['unit'] = str(description_json['unit'])

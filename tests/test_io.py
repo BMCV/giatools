@@ -264,6 +264,8 @@ class imwriteTestCase(unittest.TestCase):
                 )
             if 'z_spacing' in metadata:
                 self.assertEqual(float(description['spacing']), metadata['z_spacing'])
+            if 'z_position' in metadata:
+                self.assertEqual(float(description['z_position']), metadata['z_position'])
             if 'unit' in metadata:
                 self.assertEqual(description['unit'], metadata['unit'])
 
@@ -297,6 +299,7 @@ class imwrite__tifffile__mixin:
             metadata=dict(
                 resolution=(0.3, 0.4),
                 z_spacing=0.5,
+                z_position=0.8,
                 unit='um',
             ),
         )
@@ -393,7 +396,7 @@ class ModuleTestCase(unittest.TestCase):
         Verify that written images can be read back correctly with correct data and metadata.
         """
         expected_axes = 'YXZC'
-        expected_metadata = dict(resolution=(0.2, 0.4), z_spacing=0.5, unit='km')
+        expected_metadata = dict(resolution=(0.2, 0.4), z_spacing=0.5, z_position=0.8, unit='km')
 
         # Write the image and read back
         giatools.io.imwrite(

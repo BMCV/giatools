@@ -57,6 +57,7 @@ class Image:
 
     - **resolution**, `Tuple[float, float]`: Pixels per unit in X and Y dimensions.
     - **z_spacing**, `float`: The pixel spacing in the Z dimension (if applicable).
+    - **z_position**, `float`: The position of the image in the Z dimension (if applicable).
     - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
 
