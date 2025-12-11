@@ -182,6 +182,8 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             if ome_pixels is not None and 'PhysicalSizeZUnit' in ome_pixels.attrib:
                 metadata['unit'] = str(ome_pixels.get('PhysicalSizeZUnit'))
 
+            # We currently do not read the `z_position` here, because OME-TIFF only allows per-plane z-positions.
+
         # Perform line-by-line parsing (ImageJ-style)
         elif description_format == 'line':
             for line in description.splitlines():
