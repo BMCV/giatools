@@ -130,6 +130,16 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(axes, 'YX')
         verify_metadata(self, metadata, resolution=(300, 300), unit='inch')
 
+    def test__input11(self):
+        """
+        Test OME-TIFF file with OME XML metadata.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', series=0)
+        self.assertEqual(img.shape, (4, 5, 5))
+        self.assertAlmostEqual(img.mean(), 1384.33)
+        self.assertEqual(axes, 'CYX')
+        verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)

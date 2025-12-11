@@ -7,6 +7,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import json
 import warnings
+from xml.etree import ElementTree
 
 import numpy as np
 import skimage.io
@@ -31,7 +32,7 @@ BackendType = Literal['auto', 'tifffile', 'skimage']
 
 
 @giatools.util.silent
-def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
+def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     """
     Wrapper for loading images, muting non-fatal errors.
 
@@ -41,7 +42,9 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
 
     Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
-    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``.
+    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If the reading the
+    image with `tifffile` is successful *and* the TIFF file contains multiple image series, the desired series can be
+    selected using the `series` parameter, or a `KeyError` is raised if `series` is invalid.
 
     Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy array, `axes` are the axes
     of the image, and `metadata` is any additional metadata. Normalization is performed, treating sample axis ``S`` as
@@ -53,10 +56,14 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
     if tifffile is not None:
         try:
-
             with tifffile.TiffFile(*args, **kwargs) as im_file:
-                assert len(im_file.series) == 1, f'Image has unsupported number of series: {len(im_file.series)}'
-                im_axes = im_file.series[0].axes.upper()
+
+                # Handle multi-series TIFF files
+                if 0 <= series < len(im_file.series):
+                    im_series = im_file.series[series]
+                else:
+                    raise KeyError(f'Series {series} out of range for image with {len(im_file.series)} series.')
+                im_axes = im_series.axes.upper()
 
                 # Verify that the image format is supported
                 assert (
@@ -73,7 +80,7 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
                 im_arr = im_file.asarray()
 
                 # Read the metadata
-                metadata = _get_tiff_metadata(im_file, im_file.series[0])
+                metadata = _get_tiff_metadata(im_file, im_series)
 
                 # Return the image data, axes, and metadata
                 return im_arr, im_axes, metadata
@@ -97,6 +104,29 @@ def imreadraw(*args, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     return im_arr, im_axes, dict()
 
 
+def _guess_tiff_description_format(description: str) -> Literal['json', 'xml', 'line']:
+    """
+    Guess the format of the given TIFF `ImageDescription` string.
+    """
+
+    # Try to parse as JSON first
+    try:
+        json.loads(description)
+        return 'json'
+    except json.JSONDecodeError:
+        pass
+
+    # Try to parse as XML next
+    try:
+        ElementTree.fromstring(description)
+        return 'xml'
+    except ElementTree.ParseError:
+        pass
+
+    # Fall back to line-by-line parsing
+    return 'line'
+
+
 def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     """
     Extract metadata from a `tifffile.TiffFile` object.
@@ -117,9 +147,10 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     # Read `ImageDescription` tag
     if 'ImageDescription' in page0.tags:
         description = page0.tags['ImageDescription'].value
+        description_format = _guess_tiff_description_format(description)
 
-        # Try to parse as JSON first
-        try:
+        # Parse as JSON
+        if description_format == 'json':
             description_json = json.loads(description)
 
             # Extract z-slice spacing, if available
@@ -130,8 +161,25 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             if 'unit' in description_json:
                 metadata['unit'] = str(description_json['unit'])
 
-        # If unsuccessful, fall back to line-by-line parsing (ImageJ-style)
-        except json.JSONDecodeError:
+        # Parse as XML (OME-style)
+        elif description_format == 'xml':
+            ome_xml = ElementTree.fromstring(description)
+            ome_ns = dict(ome='http://www.openmicroscopy.org/Schemas/OME/2016-06')
+            ome_pixels = ome_xml.find('.//ome:Pixels', ome_ns)
+
+            # Extract z-slice spacing, if available
+            if ome_pixels is not None and 'PhysicalSizeZ' in ome_pixels.attrib:
+                metadata['z_spacing'] = float(ome_pixels.get('PhysicalSizeZ'))
+
+            # OME-TIFF allows different units for z-, x, and y-axes. This needs to be handled properly in the future.
+            # For now, we only read the global unit of the z-axis and ignore the others.
+
+            # Extract unit, if available
+            if ome_pixels is not None and 'PhysicalSizeZUnit' in ome_pixels.attrib:
+                metadata['unit'] = str(ome_pixels.get('PhysicalSizeZUnit'))
+
+        # Perform line-by-line parsing (ImageJ-style)
+        elif description_format == 'line':
             for line in description.splitlines():
 
                 # Extract z-slice spacing, if available
@@ -157,7 +205,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             metadata['unit'] = 'cm'
 
     # Normalize unit representation
-    if metadata.get('unit', None) == r'\u00B5m':
+    if metadata.get('unit', None) in (r'\u00B5m', 'µm'):
         metadata['unit'] = 'um'
 
     return metadata

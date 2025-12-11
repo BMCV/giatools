@@ -42,7 +42,7 @@ def verify_metadata(testcase: unittest.TestCase, metadata: dict, **expected: Any
         else:
             testcase.assertIn(key, metadata)
             if isinstance(value, tuple):
-                np.testing.assert_array_almost_equal(metadata[key], value)
+                np.testing.assert_array_almost_equal(metadata[key], value, err_msg=f'Validation failed for "{key}"')
             else:
                 testcase.assertEqual(metadata[key], value)
 
