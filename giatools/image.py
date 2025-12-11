@@ -53,11 +53,11 @@ class Image:
     """
     Additional metadata of the image.
 
-    The following metadata keys are covered by tests:
+    The following metadata keys are covered by tests: (if applicable)
 
     - **resolution**, `Tuple[float, float]`: Pixels per unit in X and Y dimensions.
-    - **z_spacing**, `float`: The pixel spacing in the Z dimension (if applicable).
-    - **z_position**, `float`: The position of the image in the Z dimension (if applicable).
+    - **z_spacing**, `float`: The pixel spacing in the Z dimension.
+    - **z_position**, `float`: The position of the image in the Z dimension.
     - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
 
