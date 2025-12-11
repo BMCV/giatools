@@ -149,7 +149,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
         description = page0.tags['ImageDescription'].value
         description_format = _guess_tiff_description_format(description)
 
-        # Parse as JSON
+        # Parse as JSON (giatools-style)
         if description_format == 'json':
             description_json = json.loads(description)
 

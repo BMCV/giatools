@@ -132,7 +132,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
 
     def test__input11(self):
         """
-        Test OME-TIFF file with OME XML metadata.
+        Test multi-series OME-TIFF file with OME XML metadata.
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', series=0)
         self.assertEqual(img.shape, (4, 5, 5))
@@ -246,7 +246,7 @@ class imwriteTestCase(unittest.TestCase):
         if validate_axes:
             self.assertEqual(axes1, axes)
 
-        # Validate the metadata, if applicable
+        # Validate the metadata (written as JSON), if applicable
         if validate_metadata is True or (validate_metadata == 'auto' and ext in ('tif', 'tiff')):
             with tifffile.TiffFile(filepath) as im_file:
                 page0 = im_file.series[0].pages[0]
