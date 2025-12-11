@@ -157,6 +157,10 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             if 'spacing' in description_json:
                 metadata['z_spacing'] = float(description_json['spacing'])
 
+            # Extract z-position, if available (this is a custom field written by giatools)
+            if 'z_position' in description_json:
+                metadata['z_position'] = float(description_json['z_position'])
+
             # Extract unit, if available
             if 'unit' in description_json:
                 metadata['unit'] = str(description_json['unit'])
@@ -177,6 +181,8 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             # Extract unit, if available
             if ome_pixels is not None and 'PhysicalSizeZUnit' in ome_pixels.attrib:
                 metadata['unit'] = str(ome_pixels.get('PhysicalSizeZUnit'))
+
+            # We currently do not read the `z_position` here, because OME-TIFF only allows per-plane z-positions.
 
         # Perform line-by-line parsing (ImageJ-style)
         elif description_format == 'line':
