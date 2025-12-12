@@ -146,7 +146,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-02.zarr')
         self.assertEqual(img.shape, (200, 200))
-        self.assertAlmostEqual(float(img.mean()), 502.2611393006139)
+        self.assertAlmostEqual(img.mean().compute(), 502.2611393006139)
         self.assertEqual(axes, 'YX')
         #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
@@ -156,7 +156,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-04.zarr')
         self.assertEqual(img.shape, (2, 64, 64))
-        self.assertAlmostEqual(float(img.mean()), 0.0)
+        self.assertAlmostEqual(img.mean().compute(), 0.0)
         self.assertEqual(axes, 'ZYX')
         #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 

@@ -138,6 +138,28 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
+    def test__omezarr__examples__image02(self):
+        """
+        Test OME-Zarr file with YX axes.
+        """
+        img = giatools.image.Image.read('tests/data/ome-zarr-examples/image-02.zarr')
+        self.assertEqual(img.data.shape, (1, 1, 1, 200, 200, 1))
+        self.assertAlmostEqual(float(img.data.mean()), 502.2611393006139)
+        self.assertEqual(img.original_axes, 'YX')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+
+    def test__omezarr__examples__image04(self):
+        """
+        Test OME-Zarr file with ZYX axes.
+        """
+        img = giatools.image.Image.read('tests/data/ome-zarr-examples/image-04.zarr')
+        self.assertEqual(img.data.shape, (1, 1, 2, 64, 64, 1))
+        self.assertAlmostEqual(float(img.data.mean()), 0.0)
+        self.assertEqual(img.original_axes, 'ZYX')
+        self.assertEqual(img.axes, giatools.image.default_normalized_axes)
+        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+
 
 @unittest.mock.patch('giatools.io.imwrite')
 class Image__write(unittest.TestCase):
