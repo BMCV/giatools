@@ -1,0 +1,119 @@
+import numpy as np
+
+from ..typing import (
+    Any,
+    Dict,
+    Optional,
+    Self,
+    Tuple,
+    Type,
+)
+
+
+class UnsupportedFileError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Reader:
+
+    unsupported_file_errors = tuple()
+
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
+        self.file = None
+
+    def __enter__(self) -> Self:
+        self.file = self.open(*self._args, **self._kwargs)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if hasattr(self.file, 'close'):
+            self.file.close()
+        self.file = None
+
+    def open(self, *args, **kwargs) -> Any:
+        raise NotImplementedError()
+
+    def get_num_images(self) -> int:
+        raise NotImplementedError()
+
+    def select_image(self, position: int) -> Any:
+        raise NotImplementedError()
+
+    def get_axes(self, image: Any) -> str:
+        raise NotImplementedError()
+
+    def get_image_data(self, image: Any) -> np.ndarray:
+        raise NotImplementedError()
+
+    def get_image_metadata(self, image: Any) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+
+class Writer:
+
+    supported_extensions = tuple()
+
+    def write(self, im_arr: np.ndarray, filepath: str, metadata: dict):
+        raise NotImplementedError()
+
+
+class Backend:
+
+    def __init__(self, name: str, reader_class: Type[Reader], writer_class: Optional[Type[Writer]] = None):
+        self.name = name
+        self.reader_class = reader_class
+        self.writer_class = writer_class
+
+    def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[np.ndarray, str, Dict[str, Any]]]:
+        try:
+            with self.reader_class(*args, **kwargs) as reader:
+
+                # Handle files with multiple images
+                num_images = reader.get_num_images()
+                if 0 <= position < num_images:
+                    image = reader.select_image(position)
+                else:
+                    raise IndexError(f'Image {position} is out of range for file with {num_images} images.')
+                im_axes = reader.get_axes(image)
+
+                # Verify that the image format is supported
+                assert (
+                    frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
+                ), f'Image has unsupported axes: {im_axes}'
+
+                # Treat sample axis "S" as channel axis "C" and fail if both are present
+                assert (
+                    'C' not in im_axes or 'S' not in im_axes
+                ), f'Image has sample and channel axes which is not supported: {im_axes}'
+                im_axes = im_axes.replace('S', 'C')
+
+                # Get the reference to the image data
+                im_arr = reader.get_image_data(image)
+
+                # Read the metadata
+                metadata = reader.get_image_metadata(image)
+
+                # Return the image data, axes, and metadata
+                return im_arr, im_axes, metadata
+
+        except tuple(list(reader.unsupported_file_errors) + [UnsupportedFileError]):
+            return None  # Indicate that the file is unsupported
+
+    def can_write(self, suffix: str) -> bool:
+        if self.writer_class is None:
+            return False
+        if suffix.startswith('.'):
+            suffix = suffix[1:]
+        return suffix.lower() in [ext.lower() for ext in self.writer_class.supported_extensions]
+
+    def write(self, im_arr: np.ndarray, filepath: str, metadata: Optional[dict] = None):
+        writer = self.writer_class()
+
+        # Create a copy of the metadata to avoid modifying the original
+        metadata = dict(metadata) if metadata is not None else dict()
+
+        # Delegate the writing to the writer class
+        writer.write(im_arr, filepath, metadata)
