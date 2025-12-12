@@ -20,11 +20,6 @@ from .backend import (  # noqa: F401
     Backend,
     UnsupportedFileError,
 )
-
-try:
-    from .backends.omezarr import OMEZarrReader
-except ImportError:
-    OMEZarrReader = None  # type: ignore
 from .backends.skimage import (
     SKImageReader,
     SKImageWriter,
@@ -33,6 +28,12 @@ from .backends.tiff import (
     TiffReader,
     TiffWriter,
 )
+
+try:
+    from .backends.omezarr import OMEZarrReader
+except ImportError:
+    OMEZarrReader = None  # type: ignore
+
 
 #: List of the supported backends for reading and writing image files.
 #:
