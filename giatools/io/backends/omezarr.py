@@ -31,11 +31,11 @@ normalized_unit_representations = {
 class OMEZarrReader(Reader):
 
     def open(self, *args, **kwargs) -> Any:
-        omezzarr_store = ome_zarr.io.parse_url(*args, **kwargs)
-        if omezzarr_store is None:
+        omezarr_store = ome_zarr.io.parse_url(*args, **kwargs)
+        if omezarr_store is None:
             raise UnsupportedFileError()
         else:
-            omezarr_reader = ome_zarr.reader.Reader(omezzarr_store)
+            omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
             return list(omezarr_reader())
 
     def get_num_images(self) -> int:
