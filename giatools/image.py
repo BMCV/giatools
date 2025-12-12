@@ -91,7 +91,7 @@ class Image:
     def write(
         self,
         filepath: str,
-        backend: io.BackendType = 'auto',
+        backend: str = 'auto',
     ) -> Self:
         """
         Write the image to a file.

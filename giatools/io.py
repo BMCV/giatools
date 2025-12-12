@@ -10,6 +10,7 @@ import warnings
 import numpy as np
 
 from .backends import (
+    Backend,
     backends,
     UnsupportedFileError,
 )
@@ -102,30 +103,42 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
     _raise_unsupported_file_error(*args, **kwargs)
 
 
+def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
+    """
+    Select an appropriate backend for writing the file.
+    """
+
+    # Validate the backend name
+    supported_backends = [backend for backend in backends if backend.writer_class is not None]
+    supported_backend_names = [backend.name for backend in supported_backends]
+    if backend_name != 'auto' and backend_name not in supported_backend_names:
+        supported_backends_str = ', '.join((f'"{backend_name}"' for backend_name in supported_backend_names))
+        raise ValueError(f'Unknown backend "{backend_name}". Use {supported_backends_str}, or "auto".')
+
+    # Automatically select the proper backend
+    if backend_name == 'auto':
+        for backend in supported_backends:
+            if any(filepath.lower().endswith(f'.{ext}') for ext in backend.writer_class.supported_extensions):
+                return backend
+        else:
+            raise UnsupportedFileError(f'No backend found to write file: {filepath}')
+
+    # Select the backend based on the given name
+    else:
+        return next((backend for backend in supported_backends if backend.name == backend_name))
+
+
 def imwrite(im_arr: np.ndarray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
     """
     Save an image to a file.
     """
-    supported_backends = [backend for backend in backends if backend.writer_class is not None]
-    supported_backend_names = [backend.name for backend in supported_backends]
-    if backend != 'auto' and backend not in supported_backend_names:
-        supported_backends_str = ', '.join((f'"{backend_name}"' for backend_name in supported_backend_names))
-        raise ValueError(f'Unknown backend "{backend}". Use {supported_backends_str}, or "auto".')
-
     if filepath.lower().endswith('.tif'):
         warnings.warn(
             '.tif extension is deprecated, use .tiff instead.',
             DeprecationWarning,
             stacklevel=distance_to_external_frame(),
         )
-
-    # Automatically select the proper backend
-    if backend == 'auto':
-        for backend in supported_backends:
-            if any(filepath.lower().endswith(f'.{ext}') for ext in backend.writer_class.supported_extensions):
-                break
-        else:
-            raise UnsupportedFileError(f'No backend found to write file: {filepath}')
-
-    # Delegate to the selected backend
-    backend.write(im_arr, filepath, metadata=metadata)
+    _select_writing_backend(
+        filepath,
+        backend,
+    ).write(im_arr, filepath, metadata=metadata)

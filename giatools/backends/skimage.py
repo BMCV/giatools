@@ -22,7 +22,7 @@ class SKImageReader(Reader):
         return 1
 
     def select_image(self, position: int) -> Any:
-        image = __skimage_io_imread(*self.file[0], **self.file[1])
+        image = _skimage_io_imread(*self.file[0], **self.file[1])
         if image.ndim not in (2, 3):
             raise UnsupportedFileError(f'Image has unsupported dimension: {image.ndim}')
         return image
@@ -52,5 +52,5 @@ class SKImageWriter(Writer):
 
 
 @silent
-def __skimage_io_imread(*args, **kwargs) -> np.ndarray:
+def _skimage_io_imread(*args, **kwargs) -> np.ndarray:
     return skimage.io.imread(*args, **kwargs)

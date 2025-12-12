@@ -71,7 +71,7 @@ class Backend:
         try:
             with self.reader_class(*args, **kwargs) as reader:
                 return reader.get_num_images()
-        except tuple(list(reader.unsupported_file_errors) + [UnsupportedFileError]):
+        except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
     def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[np.ndarray, str, Dict[str, Any]]]:
@@ -106,7 +106,7 @@ class Backend:
                 # Return the image data, axes, and metadata
                 return im_arr, im_axes, metadata
 
-        except tuple(list(reader.unsupported_file_errors) + [UnsupportedFileError]):
+        except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
     def write(self, im_arr: np.ndarray, filepath: str, metadata: Optional[dict] = None):

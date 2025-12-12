@@ -201,7 +201,7 @@ class imwriteTestCase(unittest.TestCase):
         metadata: Optional[Dict] = None,
         *,
         ext: str,
-        backend: giatools.io.BackendType = 'auto',
+        backend: str = 'auto',
         validate_axes: bool = True,
         validate_metadata: Union[bool, Literal['auto']] = 'auto',
     ):
