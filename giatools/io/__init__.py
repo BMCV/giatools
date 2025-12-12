@@ -20,7 +20,11 @@ from .backend import (  # noqa: F401
     Backend,
     UnsupportedFileError,
 )
-from .backends.omezarr import OMEZarrReader
+
+try:
+    from .backends.omezarr import OMEZarrReader
+except ImportError:
+    OMEZarrReader = None  # type: ignore
 from .backends.skimage import (
     SKImageReader,
     SKImageWriter,
@@ -39,9 +43,18 @@ from .backends.tiff import (
 #: but for some formats it may not be able to extract all metadata, which is why it is less preferred.
 #:
 #: For writing, the appropriate backend is selected based on the file extension.
+#:
+#:     .. note::
+#:
+#:         The `omezarr` backend is only available on **Python 3.11** or later.
 backends = [
     Backend('tifffile', TiffReader, TiffWriter),
-    Backend('omezarr', OMEZarrReader),
+] + (
+    [
+        Backend('omezarr', OMEZarrReader),
+    ]
+    if OMEZarrReader is not None else []
+) + [
     Backend('skimage', SKImageReader, SKImageWriter),
 ]
 
