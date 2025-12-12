@@ -32,8 +32,13 @@ from .backends.tiff import (
 
 #: List of the supported backends for reading and writing image files.
 #:
-#: For reading, the backends are tried in succession until one is successful. For writing, the appropriate backend is
-#: selected based on the file extension.
+#: For reading, the backends are tried in succession until one is successful.
+#:
+#: The `tifffile` backend is likely to fail if the file is not a TIFF file. The `ome_zarr` backend is likely to fail if
+#: the file is not an OME-Zarr file. The `skimage.io.imread` backend is able to read a wide variety of image formats,
+#: but for some formats it may not be able to extract all metadata, which is why it is less preferred.
+#:
+#: For writing, the appropriate backend is selected based on the file extension.
 backends = [
     Backend('tifffile', TiffReader, TiffWriter),
     Backend('omezarr', OMEZarrReader),
@@ -55,10 +60,6 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict
     Wrapper for reading images, muting non-fatal errors.
 
     The backends defined in :py:data:`backends` are tried in succession until one is successful.
-
-    The `tifffile` backend is likely to fail if the file is not a TIFF file. The `ome_zarr` backend is likely to fail
-    if the file is not an OME-Zarr file. The `skimage.io.imread` backend is able to read a wide variety of image
-    formats, but for some formats it may not be able to extract all metadata, which is why it is less preferred.
 
     Some image files can store multiple images (e.g., multi-series TIFF files or multi-image OME-Zarr files). In these
     cases, the desired image can be selected by specifying the `position` parameter (default: `0`, the first image). An

@@ -67,6 +67,12 @@ class Backend:
         self.reader_class = reader_class
         self.writer_class = writer_class
 
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f'<{self.name} Backend>'
+
     def peek_num_images_in_file(self, *args, **kwargs) -> Optional[int]:
         try:
             with self.reader_class(*args, **kwargs) as reader:
