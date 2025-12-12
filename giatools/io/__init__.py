@@ -43,6 +43,10 @@ from .backends.tiff import (
 #: but for some formats it may not be able to extract all metadata, which is why it is less preferred.
 #:
 #: For writing, the appropriate backend is selected based on the file extension.
+#:
+#:     .. note::
+#:
+#:         The `omezarr` backend is only available on **Python 3.11** or later.
 backends = [
     Backend('tifffile', TiffReader, TiffWriter),
 ] + (
