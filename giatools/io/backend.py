@@ -1,8 +1,7 @@
-import numpy as np
-
 from ..typing import (
     Any,
     Dict,
+    NDArray,
     Optional,
     Self,
     Tuple,
@@ -50,7 +49,7 @@ class Reader:
     def get_axes(self, image: Any) -> str:
         raise NotImplementedError()
 
-    def get_image_data(self, image: Any) -> np.ndarray:
+    def get_image_data(self, image: Any) -> NDArray:
         raise NotImplementedError()
 
     def get_image_metadata(self, image: Any) -> Dict[str, Any]:
@@ -61,7 +60,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, im_arr: np.ndarray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
         raise NotImplementedError()
 
 
@@ -85,7 +84,7 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[np.ndarray, str, Dict[str, Any]]]:
+    def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
         try:
             with self.reader_class(*args, **kwargs) as reader:
 
@@ -122,7 +121,7 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: np.ndarray, filepath: str, metadata: Optional[dict] = None):
+    def write(self, im_arr: NDArray, filepath: str, metadata: Optional[dict] = None):
         writer = self.writer_class()
 
         # Create a copy of the metadata to avoid modifying the original

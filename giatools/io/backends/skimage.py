@@ -1,9 +1,9 @@
-import numpy as np
 import skimage.io
 
 from ...typing import (
     Any,
     Dict,
+    NDArray,
 )
 from ...util import silent
 from ..backend import (
@@ -33,7 +33,7 @@ class SKImageReader(Reader):
         else:
             return 'YXC'
 
-    def get_image_data(self, image: Any) -> np.ndarray:
+    def get_image_data(self, image: Any) -> NDArray:
         return image
 
     def get_image_metadata(self, image: Any) -> Dict[str, Any]:
@@ -47,12 +47,12 @@ class SKImageWriter(Writer):
         'jpg',
     )
 
-    def write(self, im_arr: np.ndarray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
         skimage.io.imsave(filepath, im_arr, check_contrast=False)
 
 
 @silent
-def _skimage_io_imread(*args, **kwargs) -> np.ndarray:
+def _skimage_io_imread(*args, **kwargs) -> NDArray:
     """
     Wrapper for skimage.io.imread that suppresses non-fatal errors on stdout and stderr.
 

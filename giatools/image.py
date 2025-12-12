@@ -13,6 +13,7 @@ from . import util
 from .typing import (
     Dict,
     Iterator,
+    NDArray,
     Optional,
     Self,
     Tuple,
@@ -30,7 +31,7 @@ class Image:
     Represents an image (image pixel/voxel data and the corresponding axes metadata).
     """
 
-    data: np.ndarray
+    data: NDArray
     """
     The image data as a numpy array.
     """
@@ -60,7 +61,7 @@ class Image:
 
     def __init__(
         self,
-        data: np.ndarray,
+        data: NDArray,
         axes: str,
         original_axes: Optional[str] = None,
         metadata: Optional[Dict] = None,

@@ -7,11 +7,10 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import warnings
 
-import numpy as np
-
 from ..typing import (
     Any,
     Dict,
+    NDArray,
     Optional,
     Tuple,
 )
@@ -69,7 +68,7 @@ def _raise_unsupported_file_error(*args, **kwargs):
     raise UnsupportedFileError(f'No backend could read the image{suffix}')
 
 
-def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
+def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
     """
     Wrapper for reading images, muting non-fatal errors.
 
@@ -152,7 +151,7 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         return next((backend for backend in supported_backends if backend.name == backend_name))
 
 
-def imwrite(im_arr: np.ndarray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
+def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
     """
     Save an image to a file.
     """

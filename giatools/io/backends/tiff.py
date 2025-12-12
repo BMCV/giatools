@@ -1,13 +1,13 @@
 import json
 from xml.etree import ElementTree
 
-import numpy as np
 import tifffile
 
 from ...typing import (
     Any,
     Dict,
     Literal,
+    NDArray,
 )
 from ..backend import (
     Reader,
@@ -34,7 +34,7 @@ class TiffReader(Reader):
     def get_axes(self, image: Any) -> str:
         return image.axes.upper()
 
-    def get_image_data(self, image: Any) -> np.ndarray:
+    def get_image_data(self, image: Any) -> NDArray:
         return image.asarray()
 
     def get_image_metadata(self, image: Any) -> Dict[str, Any]:
@@ -48,7 +48,7 @@ class TiffWriter(Writer):
         'tif',
     )
 
-    def write(self, im_arr: np.ndarray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
 
         # Update the metadata structure to what `tifffile` expects
         kwargs = dict(metadata=metadata)

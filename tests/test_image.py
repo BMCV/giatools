@@ -62,9 +62,11 @@ class ModuleTestCase(unittest.TestCase):
         """
         Verify that reading an OME-Zarr image and writing it as a TIFF works correctly.
         """
+        import dask.array as da
 
         # Read OME-Zarr image (img1) and write it as a TIFF
         img1 = giatools.image.Image.read('tests/data/ome-zarr-examples/image-02.zarr', normalize_axes=None)
+        self.assertIsInstance(img1.data, da.Array)
         with tempfile.TemporaryDirectory() as temp_path:
 
             # Write img1 as a TIFF file and read it back as img2
@@ -159,7 +161,9 @@ class Image__read(unittest.TestCase):
         """
         Test OME-Zarr file with YX axes.
         """
+        import dask.array as da
         img = giatools.image.Image.read('tests/data/ome-zarr-examples/image-02.zarr')
+        self.assertIsInstance(img.data, da.Array)
         self.assertEqual(img.data.shape, (1, 1, 1, 200, 200, 1))
         self.assertAlmostEqual(float(img.data.mean()), 502.2611393006139)
         self.assertEqual(img.original_axes, 'YX')
@@ -172,7 +176,9 @@ class Image__read(unittest.TestCase):
         """
         Test OME-Zarr file with ZYX axes.
         """
+        import dask.array as da
         img = giatools.image.Image.read('tests/data/ome-zarr-examples/image-04.zarr')
+        self.assertIsInstance(img.data, da.Array)
         self.assertEqual(img.data.shape, (1, 1, 2, 64, 64, 1))
         self.assertAlmostEqual(float(img.data.mean()), 0.0)
         self.assertEqual(img.original_axes, 'ZYX')
@@ -226,6 +232,7 @@ class Image__data(unittest.TestCase):
         np.random.seed(0)
         np_data = np.random.rand(40, 60)
         img = giatools.Image(data=da.from_array(np_data, chunks=(5, 5)), axes='YX')
+        self.assertIsInstance(img.data, da.Array)
         np.testing.assert_almost_equal(ndi.gaussian_filter(img.data, sigma=3).mean(), 0.5, decimal=2)
 
 

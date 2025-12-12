@@ -1,10 +1,10 @@
-import numpy as np
 import ome_zarr.io
 import ome_zarr.reader
 
 from ...typing import (
     Any,
     Dict,
+    NDArray,
 )
 from ..backend import (
     Reader,
@@ -47,7 +47,7 @@ class OMEZarrReader(Reader):
     def get_axes(self, image: Any) -> str:
         return _get_omezarr_axes(image)
 
-    def get_image_data(self, image: Any) -> np.ndarray:
+    def get_image_data(self, image: Any) -> NDArray:
         return image.data[0]  # top-level of the pyramid (dask array)
 
     def get_image_metadata(self, image: Any) -> Dict[str, Any]:
