@@ -1,4 +1,6 @@
 import copy
+import os
+import tempfile
 import unittest
 import unittest.mock
 
@@ -33,7 +35,7 @@ class ModuleTestCase(unittest.TestCase):
         self.assertEqual(giatools.image.default_normalized_axes, 'QTZYXC')
 
     @random_io_test(shape=(5, 10, 15), dtype=np.uint8, ext='tiff')
-    def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
+    def test__write_tiff_and_read(self, filepath: str, expected_data: np.ndarray):
         """
         Verify that written images can be read back correctly with correct data and metadata.
         """
@@ -54,7 +56,27 @@ class ModuleTestCase(unittest.TestCase):
         self.assertEqual(img1.axes, expected_axes)
         self.assertEqual(img1.metadata, expected_metadata)
 
-    # TODO: Add test for reading an OME-Zarr image and writing it as a TIFF
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__read_omezarr_and_write_tiff(self):
+        """
+        Verify that reading an OME-Zarr image and writing it as a TIFF works correctly.
+        """
+
+        # Read OME-Zarr image (img1) and write it as a TIFF
+        img1 = giatools.image.Image.read('tests/data/ome-zarr-examples/image-02.zarr', normalize_axes=None)
+        with tempfile.TemporaryDirectory() as temp_path:
+
+            # Write img1 as a TIFF file and read it back as img2
+            filepath = os.path.join(temp_path, 'output.tiff')
+            img1.write(filepath)
+            img2 = giatools.image.Image.read(filepath, normalize_axes=None)
+
+        # Read img2 from the TIFF file and compare img1 to img2
+        self.assertEqual(img1.data.shape, img2.data.shape)
+        self.assertEqual(img1.data.mean(), img2.data.mean())
+        self.assertEqual(img1.original_axes, img2.original_axes)
+        self.assertEqual(img1.axes, img2.axes)
 
 
 class Image__read(unittest.TestCase):
@@ -423,4 +445,17 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test('TZYXC', (5, 1, 11, 12, 3), 'ZYX')
         self._test('TZYXC', (5, 5, 11, 12, 3), 'ZYX')
 
-    # TODO: Add test with Dask array (OME-Zarr)
+    def _test_dask(self, axes: str, shape: Tuple[int, ...], joint_axes: str, chunks: Tuple[int, ...]):
+        assert set(joint_axes).issubset(set(axes))
+        import dask.array as da
+        img = self.create_test_image(axes, shape)
+        np_data, img.data = img.data, da.from_array(img.data, chunks=chunks)
+        counter = np.zeros(img.data.shape, np.uint32)
+        for sl, arr in img.iterate_jointly(joint_axes):
+            counter[sl] += 1
+            np.testing.assert_array_equal(arr, np_data[sl])
+        np.testing.assert_array_equal(counter, np.ones(counter.shape, np.uint8))
+
+    @minimum_python_version(3, 11)
+    def test__dask_array__zyx__iterate__yx(self):
+        self._test_dask('ZYX', (10, 20, 30), 'YX', (2, 5, 5))
