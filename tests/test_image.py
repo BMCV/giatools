@@ -74,6 +74,14 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
 
+    def test__input1__without_normalization(self):
+        img = giatools.image.Image.read('tests/data/input1_uint8_yx.tiff', normalize_axes=None)
+        self.assertEqual(img.data.mean(), 63.66848655158571)
+        self.assertEqual(img.data.shape, (265, 329))
+        self.assertEqual(img.original_axes, 'YX')
+        self.assertEqual(img.axes, 'YX')
+        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
+
     def test__input2(self):
         img = giatools.image.Image.read('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.data.mean(), 9.543921821305842)
