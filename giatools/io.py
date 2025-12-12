@@ -228,8 +228,19 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
 
         .. runblock:: pycon
 
-            >>> import os
-            >>> print(os.getcwd())
+            >>> from giatools.io import peek_num_images_in_file
+            >>> print(
+            ...     'Multi-series TIFF:',
+            ...     peek_num_images_in_file('data/input11.ome.tiff'),
+            ... )
+            >>> print(
+            ...     'Single-series TIFF:',
+            ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
+            ... )
+            >>> print(
+            ...     'PNG file:',
+            ...     peek_num_images_in_file('data/input4_uint8.png'),
+            ... )
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
