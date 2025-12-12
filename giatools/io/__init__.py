@@ -30,17 +30,15 @@ from .backends.tiff import (
     TiffWriter,
 )
 
+#: List of the supported backends for reading and writing image files.
+#:
+#: For reading, the backends are tried in succession until one is successful. For writing, the appropriate backend is
+#: selected based on the file extension.
 backends = [
     Backend('tifffile', TiffReader, TiffWriter),
     Backend('omezarr', OMEZarrReader),
     Backend('skimage', SKImageReader, SKImageWriter),
 ]
-"""
-Defines the supported backends for reading and writing image files.
-
-For reading, the backends are tried in succession until one is successful. For writing, the appropriate backend is
-selected based on the file extension.
-"""
 
 
 def _raise_unsupported_file_error(*args, **kwargs):
@@ -56,7 +54,7 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict
     """
     Wrapper for reading images, muting non-fatal errors.
 
-    The backends defined in :py:ref:`backends` are tried in succession until one is successful.
+    The backends defined in :py:data:`backends` are tried in succession until one is successful.
 
     The `tifffile` backend is likely to fail if the file is not a TIFF file. The `ome_zarr` backend is likely to fail
     if the file is not an OME-Zarr file. The `skimage.io.imread` backend is able to read a wide variety of image
