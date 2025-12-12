@@ -67,6 +67,13 @@ class Backend:
         self.reader_class = reader_class
         self.writer_class = writer_class
 
+    def peek_num_images_in_file(self, *args, **kwargs) -> Optional[int]:
+        try:
+            with self.reader_class(*args, **kwargs) as reader:
+                return reader.get_num_images()
+        except tuple(list(reader.unsupported_file_errors) + [UnsupportedFileError]):
+            return None  # Indicate that the file is unsupported
+
     def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[np.ndarray, str, Dict[str, Any]]]:
         try:
             with self.reader_class(*args, **kwargs) as reader:
@@ -101,13 +108,6 @@ class Backend:
 
         except tuple(list(reader.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
-
-    def can_write(self, suffix: str) -> bool:
-        if self.writer_class is None:
-            return False
-        if suffix.startswith('.'):
-            suffix = suffix[1:]
-        return suffix.lower() in [ext.lower() for ext in self.writer_class.supported_extensions]
 
     def write(self, im_arr: np.ndarray, filepath: str, metadata: Optional[dict] = None):
         writer = self.writer_class()

@@ -5,6 +5,7 @@ from ..typing import (
     Any,
     Dict,
 )
+from ..util import silent
 from .backend import (
     Reader,
     UnsupportedFileError,
@@ -21,7 +22,7 @@ class SKImageReader(Reader):
         return 1
 
     def select_image(self, position: int) -> Any:
-        image = skimage.io.imread(*self.file[0], **self.file[1])
+        image = __skimage_io_imread(*self.file[0], **self.file[1])
         if image.ndim not in (2, 3):
             raise UnsupportedFileError(f'Image has unsupported dimension: {image.ndim}')
         return image
@@ -48,3 +49,8 @@ class SKImageWriter(Writer):
 
     def write(self, im_arr: np.ndarray, filepath: str, metadata: dict):
         skimage.io.imsave(filepath, im_arr, check_contrast=False)
+
+
+@silent
+def __skimage_io_imread(*args, **kwargs) -> np.ndarray:
+    return skimage.io.imread(*args, **kwargs)
