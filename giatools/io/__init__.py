@@ -56,16 +56,7 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict
     """
     Wrapper for reading images, muting non-fatal errors.
 
-    When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported although the image file
-    will be read successfully. In those cases, Galaxy might detect the errors on stdout or stderr, and assume that the
-    tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this
-    wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
-
-    Different backends are tried in succession until one is successful:
-
-    1. `tifffile`
-    2. `ome_zarr`
-    3. `skimage.io.imread`
+    The backends defined in :py:ref:`backends` are tried in succession until one is successful.
 
     The `tifffile` backend is likely to fail if the file is not a TIFF file. The `ome_zarr` backend is likely to fail
     if the file is not an OME-Zarr file. The `skimage.io.imread` backend is able to read a wide variety of image

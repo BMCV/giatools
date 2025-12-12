@@ -53,4 +53,12 @@ class SKImageWriter(Writer):
 
 @silent
 def _skimage_io_imread(*args, **kwargs) -> np.ndarray:
+    """
+    Wrapper for skimage.io.imread that suppresses non-fatal errors on stdout and stderr.
+
+    When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported albeit the image file will
+    be read successfully. In those cases, Galaxy might detect the errors on stdout or stderr, and assume that the tool
+    has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this wrapper
+    around ``skimage.io.imread`` will mute all non-fatal errors.
+    """
     return skimage.io.imread(*args, **kwargs)
