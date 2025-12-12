@@ -9,18 +9,38 @@ import warnings
 
 import numpy as np
 
-from .backends import (
-    Backend,
-    backends,
-    UnsupportedFileError,
-)
-from .typing import (
+from ..typing import (
     Any,
     Dict,
     Optional,
     Tuple,
 )
-from .util import distance_to_external_frame
+from ..util import distance_to_external_frame
+from .backend import (  # noqa: F401
+    Backend,
+    UnsupportedFileError,
+)
+from .backends.omezarr import OMEZarrReader
+from .backends.skimage import (
+    SKImageReader,
+    SKImageWriter,
+)
+from .backends.tiff import (
+    TiffReader,
+    TiffWriter,
+)
+
+backends = [
+    Backend('tifffile', TiffReader, TiffWriter),
+    Backend('omezarr', OMEZarrReader),
+    Backend('skimage', SKImageReader, SKImageWriter),
+]
+"""
+Defines the supported backends for reading and writing image files.
+
+For reading, the backends are tried in succession until one is successful. For writing, the appropriate backend is
+selected based on the file extension.
+"""
 
 
 def _raise_unsupported_file_error(*args, **kwargs):

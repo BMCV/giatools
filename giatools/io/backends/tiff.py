@@ -4,12 +4,12 @@ from xml.etree import ElementTree
 import numpy as np
 import tifffile
 
-from ..typing import (
+from ...typing import (
     Any,
     Dict,
     Literal,
 )
-from .backend import (
+from ..backend import (
     Reader,
     Writer,
 )

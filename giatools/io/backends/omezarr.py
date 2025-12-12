@@ -2,12 +2,11 @@ import numpy as np
 import ome_zarr.io
 import ome_zarr.reader
 
-from ..typing import (
+from ...typing import (
     Any,
     Dict,
 )
-
-from .backend import (
+from ..backend import (
     Reader,
     UnsupportedFileError,
 )

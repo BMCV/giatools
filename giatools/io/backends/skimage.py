@@ -1,12 +1,12 @@
 import numpy as np
 import skimage.io
 
-from ..typing import (
+from ...typing import (
     Any,
     Dict,
 )
-from ..util import silent
-from .backend import (
+from ...util import silent
+from ..backend import (
     Reader,
     UnsupportedFileError,
     Writer,
