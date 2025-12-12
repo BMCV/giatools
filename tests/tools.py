@@ -1,5 +1,6 @@
 import contextlib
 import io
+import logging
 import os
 import sys
 import tempfile
@@ -91,3 +92,18 @@ def _select_python_version(op: Literal['min', 'max']):
 
 minimum_python_version = _select_python_version('min')
 maximum_python_version = _select_python_version('max')
+
+
+def without_logging(test_impl):
+    """
+    Disable logging for the duration of the test.
+    """
+    def wrapper(self):
+        logger = logging.getLogger()
+        previous_level = logger.level
+        logger.setLevel(logging.CRITICAL + 1)
+        try:
+            test_impl(self)
+        finally:
+            logger.setLevel(previous_level)
+    return wrapper

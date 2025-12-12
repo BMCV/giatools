@@ -10,12 +10,13 @@ import numpy as np
 from . import image
 from .typing import (
     Iterator,
+    NDArray,
     Tuple,
     Union,
 )
 
 
-def iterate_jointly(img: image.Image, axes: str) -> Iterator[Tuple[Tuple[Union[int, slice], ...], np.ndarray]]:
+def iterate_jointly(img: image.Image, axes: str) -> Iterator[Tuple[Tuple[Union[int, slice], ...], NDArray]]:
     if len(axes) == 0 or not frozenset(axes).issubset(frozenset(img.axes)):
         raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{img.axes}"')
 

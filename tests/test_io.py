@@ -19,19 +19,14 @@ from giatools.typing import (
 )
 
 from .tools import (
+    minimum_python_version,
     random_io_test,
     verify_metadata,
+    without_logging,
 )
 
-# This tests require that the `tifffile` package is installed.
-assert giatools.io.tifffile is not None
 
-
-class imreadraw__with_tifffile(unittest.TestCase):
-
-    def setUp(self):
-        # Verify that the `tifffile` package is installed
-        assert giatools.io.tifffile is not None
+class imreadraw(unittest.TestCase):
 
     def test__input1(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tiff')
@@ -140,61 +135,32 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(axes, 'CYX')
         verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image02(self):
+        """
+        Test OME-Zarr file with YX axes.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-02.zarr')
+        self.assertEqual(img.shape, (200, 200))
+        self.assertAlmostEqual(img.mean().compute(), 502.2611393006139)
+        self.assertEqual(axes, 'YX')
+        verify_metadata(self, metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
-@unittest.mock.patch('skimage.io.imread')
-@unittest.mock.patch('giatools.io.tifffile', None)
-class imreadraw__without_tifffile(unittest.TestCase):
-    """
-    Test loading an image without `tifffile` installed.
-    """
-
-    def verify_metadata(self, metadata: dict):
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image04(self):
         """
-        Verify that the metadata dictionary is empty.
+        Test OME-Zarr file with ZYX axes.
         """
-        self.assertIsInstance(metadata, dict)
-        self.assertEqual(len(metadata), 0)
-
-    def test__yx(self, mock_skimage_io_imread):
-        """
-        Test fallback to ``skimage.io.imread`` with a two-dimensional image.
-        """
-        np.random.seed(0)
-        mock_skimage_io_imread.return_value = np.random.rand(5, 5)
-        img, axis, metadata = giatools.io.imreadraw('tests/data/input1.tif')
-        mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
-        np.testing.assert_array_equal(img, mock_skimage_io_imread.return_value)
-        self.assertEqual(axis, 'YX')
-        self.verify_metadata(metadata)
-
-    def test__yxc(self, mock_skimage_io_imread):
-        """
-        Test fallback to ``skimage.io.imread`` with a three-dimensional image.
-        """
-        np.random.seed(0)
-        mock_skimage_io_imread.return_value = np.random.rand(5, 5, 3)
-        img, axis, metadata = giatools.io.imreadraw('tests/data/input1.tif')
-        mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
-        np.testing.assert_array_equal(img, mock_skimage_io_imread.return_value)
-        self.assertEqual(axis, 'YXC')
-        self.verify_metadata(metadata)
-
-    def test__unsupported_dimensions(self, mock_skimage_io_imread):
-        """
-        Test fallback to ``skimage.io.imread`` and failure if the image has more than 3 dimensions.
-        """
-        np.random.seed(0)
-        mock_skimage_io_imread.return_value = np.random.rand(1, 1, 5, 5, 3)
-        with self.assertRaises(AssertionError):
-            giatools.io.imreadraw('tests/data/input1.tif')
-        mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
+        img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-04.zarr')
+        self.assertEqual(img.shape, (2, 64, 64))
+        self.assertAlmostEqual(img.mean().compute(), 0.0)
+        self.assertEqual(axes, 'ZYX')
+        verify_metadata(self, metadata, resolution=(1, 1), z_spacing=1, unit='um')
 
 
-class peek_num_images_in_file__with_tifffile(unittest.TestCase):
-
-    def setUp(self):
-        # Verify that the `tifffile` package is installed
-        assert giatools.io.tifffile is not None
+class peek_num_images_in_file(unittest.TestCase):
 
     def test__tiff_multiseries(self):
         num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
@@ -209,30 +175,7 @@ class peek_num_images_in_file__with_tifffile(unittest.TestCase):
         self.assertEqual(num_images, 1)
 
 
-@unittest.mock.patch('giatools.io.tifffile', None)
-class peek_num_images_in_file__without_tifffile(unittest.TestCase):
-    """
-    Test peeking the number of images in a file without `tifffile` installed.
-
-    Example:
-
-    >>> giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
-    """
-
-    def test__tiff_multiseries(self):
-        num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
-        self.assertEqual(num_images, 1)
-
-    def test__tiff_single_series(self):
-        num_images = giatools.io.peek_num_images_in_file('tests/data/input1_uint8_yx.tiff')
-        self.assertEqual(num_images, 1)
-
-    def test__png(self):
-        num_images = giatools.io.peek_num_images_in_file('tests/data/input4_uint8.png')
-        self.assertEqual(num_images, 1)
-
-
-class imwriteTestCase(unittest.TestCase):
+class imwrite(unittest.TestCase):
 
     def setUp(self):
         np.random.seed(0)
@@ -264,7 +207,7 @@ class imwriteTestCase(unittest.TestCase):
         metadata: Optional[Dict] = None,
         *,
         ext: str,
-        backend: giatools.io.BackendType = 'auto',
+        backend: str = 'auto',
         validate_axes: bool = True,
         validate_metadata: Union[bool, Literal['auto']] = 'auto',
     ):
@@ -321,9 +264,6 @@ class imwriteTestCase(unittest.TestCase):
                 backend='unsupported_backend',
             )
 
-
-class imwrite__tifffile__mixin:
-
     def test__float32__tifffile__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
@@ -346,9 +286,6 @@ class imwrite__tifffile__mixin:
             ),
         )
 
-
-class imwrite__skimage__mixin:
-
     def test__float32__skimage__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(
@@ -370,15 +307,6 @@ class imwrite__skimage__mixin:
             validate_axes=False,
         )
 
-
-class imwrite__with_tifffile(imwriteTestCase, imwrite__tifffile__mixin, imwrite__skimage__mixin):
-
-    def setUp(self):
-        super().setUp()
-
-        # Verify that the `tifffile` package is installed
-        assert giatools.io.tifffile is not None
-
     def test__float32__auto__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='auto')
@@ -390,47 +318,10 @@ class imwrite__with_tifffile(imwriteTestCase, imwrite__tifffile__mixin, imwrite_
         self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
 
 
-@unittest.mock.patch('giatools.io.tifffile', None)
-class imwrite__without_tifffile(imwriteTestCase, imwrite__skimage__mixin):
-
-    def test__float32__auto__tif(self):
-        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
-        with self.assertWarns(DeprecationWarning):
-            self._test(
-                data_shape=(10, 10, 5, 2),
-                axes='YXZC',
-                dtype=np.float32,
-                ext='tif',
-                backend='auto',
-                validate_axes=False,
-            )
-
-    def test__float32__auto__tiff(self):
-        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
-        self._test(
-            data_shape=(10, 10, 5, 2),
-            axes='YXZC',
-            dtype=np.float32,
-            ext='tiff',
-            backend='auto',
-            validate_axes=False,
-        )
-
-    def test__uint8__auto__png(self):
-        assert giatools.io.tifffile is None  # Verify that the `tifffile` package is not installed
-        self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
-
-
 class ModuleTestCase(unittest.TestCase):
     """
     Module-level tests for :mod:`giatools.io`.
     """
-
-    def setUp(self):
-        super().setUp()
-
-        # Verify that the `tifffile` package is installed
-        assert giatools.io.tifffile is not None
 
     @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
     def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
