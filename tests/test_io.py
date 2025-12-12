@@ -190,6 +190,48 @@ class imreadraw__without_tifffile(unittest.TestCase):
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
 
 
+class peek_num_images_in_file__with_tifffile(unittest.TestCase):
+
+    def setUp(self):
+        # Verify that the `tifffile` package is installed
+        assert giatools.io.tifffile is not None
+
+    def test__tiff_multiseries(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+        self.assertEqual(num_images, 6)
+
+    def test__tiff_single_series(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input1_uint8_yx.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__png(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input4_uint8.png')
+        self.assertEqual(num_images, 1)
+
+
+@unittest.mock.patch('giatools.io.tifffile', None)
+class peek_num_images_in_file__without_tifffile(unittest.TestCase):
+    """
+    Test peeking the number of images in a file without `tifffile` installed.
+
+    Example:
+
+    >>> giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+    """
+
+    def test__tiff_multiseries(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__tiff_single_series(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input1_uint8_yx.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__png(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input4_uint8.png')
+        self.assertEqual(num_images, 1)
+
+
 class imwriteTestCase(unittest.TestCase):
 
     def setUp(self):

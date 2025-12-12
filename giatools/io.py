@@ -88,7 +88,7 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
         except tifffile.TiffFileError:
             pass  # not a TIFF file
 
-    # If the image is not a TIFF file, or `tifffile is not available`, fall back to `skimage.io.imread`
+    # If the image is not a TIFF file, or `tifffile` is not available, fall back to `skimage.io.imread`
     im_arr = skimage.io.imread(*args, **kwargs)
 
     # Verify that the image format is supported
@@ -215,6 +215,45 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
         metadata['unit'] = 'um'
 
     return metadata
+
+
+def peek_num_images_in_file(*args, **kwargs) -> int:
+    """
+    Peaks the number of images that can be loaded from a file.
+
+    It is first attempted to read the image metadata using `tifffile` (if available). If this is successful, the number
+    of series is returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools.io import peek_num_images_in_file
+            >>> print(
+            ...     'Images in multi-series TIFF:',
+            ...     peek_num_images_in_file('data/input11.ome.tiff'),
+            ... )
+            >>> print(
+            ...     'Images in single-series TIFF:',
+            ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
+            ... )
+            >>> print(
+            ...     'Images in PNG file:',
+            ...     peek_num_images_in_file('data/input4_uint8.png'),
+            ... )
+    """
+
+    # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
+    if tifffile is not None:
+        try:
+            with tifffile.TiffFile(*args, **kwargs) as im_file:
+                return len(im_file.series)
+
+        except tifffile.TiffFileError:
+            pass  # not a TIFF file
+
+    # If the image is not a TIFF file, or `tifffile` is not available, assume that there is only one image
+    return 1
 
 
 def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', metadata: Optional[dict] = None):
