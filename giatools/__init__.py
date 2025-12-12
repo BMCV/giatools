@@ -9,6 +9,7 @@ from .image import (  # noqa: F401
     Image,
     default_normalized_axes,
 )
+from .typing import NDArray  # noqa: F401
 from .version import __version__ as VERSION  # noqa: F401
 
 
