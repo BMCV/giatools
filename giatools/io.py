@@ -226,7 +226,18 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
 
     Example:
         >>> from giatools.io import peek_num_images_in_file
-        >>> print(peek_num_images_in_file('path/to/image.tiff'))
+        >>> print(
+        ...     'Multi-series TIFF:',
+        ...     peek_num_images_in_file('tests/data/input11.ome.tiff'),
+        ... )
+        >>> print(
+        ...     'Single-series TIFF:',
+        ...     peek_num_images_in_file('tests/data/input1_uint8_yx.tiff'),
+        ... )
+        >>> print(
+        ...     'PNG file:',
+        ...     peek_num_images_in_file('tests/data/input4_uint8.png'),
+        ... )
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
