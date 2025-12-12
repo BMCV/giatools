@@ -189,7 +189,7 @@ class Image:
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
-    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], np.ndarray]]:
+    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], NDArray]]:
         """
         Iterates over all slices of the image along the given axes.
 

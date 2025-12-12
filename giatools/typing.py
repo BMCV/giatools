@@ -19,4 +19,5 @@ try:
 except ImportError:
     DaskArray = np.ndarray
 
+#: Alias for a NumPy or Dask array
 NDArray = Union[np.ndarray, DaskArray]  # noqa: F405
