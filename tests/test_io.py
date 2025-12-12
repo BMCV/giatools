@@ -21,6 +21,7 @@ from giatools.typing import (
 from .tools import (
     random_io_test,
     verify_metadata,
+    without_logging,
 )
 
 
@@ -133,6 +134,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'CYX')
         verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    @without_logging
     def test__omezarr__examples__image02(self):
         """
         Test OME-Zarr file with YX axes.
@@ -143,6 +145,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'YX')
         #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    @without_logging
     def test__omezarr__examples__image04(self):
         """
         Test OME-Zarr file with ZYX axes.
@@ -169,7 +172,7 @@ class peek_num_images_in_file(unittest.TestCase):
         self.assertEqual(num_images, 1)
 
 
-class imwriteTestCase(unittest.TestCase):
+class imwrite(unittest.TestCase):
 
     def setUp(self):
         np.random.seed(0)
@@ -258,9 +261,6 @@ class imwriteTestCase(unittest.TestCase):
                 backend='unsupported_backend',
             )
 
-
-class imwrite__tifffile__mixin:
-
     def test__float32__tifffile__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
@@ -283,9 +283,6 @@ class imwrite__tifffile__mixin:
             ),
         )
 
-
-class imwrite__skimage__mixin:
-
     def test__float32__skimage__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(
@@ -306,9 +303,6 @@ class imwrite__skimage__mixin:
             backend='skimage',
             validate_axes=False,
         )
-
-
-class imwrite__with_tifffile(imwriteTestCase, imwrite__tifffile__mixin, imwrite__skimage__mixin):
 
     def test__float32__auto__tif(self):
         with self.assertWarns(DeprecationWarning):

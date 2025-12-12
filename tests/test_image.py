@@ -12,6 +12,7 @@ from .tools import (
     minimum_python_version,
     random_io_test,
     verify_metadata,
+    without_logging,
 )
 
 
@@ -129,6 +130,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
+    @without_logging
     def test__omezarr__examples__image02(self):
         """
         Test OME-Zarr file with YX axes.
@@ -140,6 +142,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    @without_logging
     def test__omezarr__examples__image04(self):
         """
         Test OME-Zarr file with ZYX axes.
