@@ -9,10 +9,7 @@ import sys
 
 import numpy as np
 
-from . import (
-    io,
-    util,
-)
+from . import util
 from .typing import (
     Dict,
     Iterator,
@@ -81,7 +78,8 @@ class Image:
 
         See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
-        data, axes, metadata = io.imreadraw(*args, **kwargs)
+        from .io import imreadraw
+        data, axes, metadata = imreadraw(*args, **kwargs)
         img = Image(data, axes, original_axes=axes, metadata=metadata)
         if normalize_axes is None:
             return img
@@ -96,8 +94,9 @@ class Image:
         """
         Write the image to a file.
         """
+        from .io import imwrite
         full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
-        io.imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
+        imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 
     def squeeze_like(self, axes: str) -> Self:
