@@ -140,6 +140,26 @@ class imreadraw__with_tifffile(unittest.TestCase):
         self.assertEqual(axes, 'CYX')
         verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    def test__omezarr__examples__image02(self):
+        """
+        Test OME-Zarr file with YX axes.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-02.zarr')
+        self.assertEqual(img.shape, (200, 200))
+        self.assertAlmostEqual(float(img.mean()), 502.2611393006139)
+        self.assertEqual(axes, 'YX')
+        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+
+    def test__omezarr__examples__image04(self):
+        """
+        Test OME-Zarr file with ZYX axes.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-04.zarr')
+        self.assertEqual(img.shape, (2, 64, 64))
+        self.assertAlmostEqual(float(img.mean()), 0.0)
+        self.assertEqual(axes, 'ZYX')
+        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+
 
 @unittest.mock.patch('skimage.io.imread')
 @unittest.mock.patch('giatools.io.tifffile', None)

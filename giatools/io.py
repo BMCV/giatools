@@ -10,6 +10,8 @@ import warnings
 from xml.etree import ElementTree
 
 import numpy as np
+import ome_zarr.io
+import ome_zarr.reader
 import skimage.io
 
 import giatools.util
@@ -62,7 +64,7 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict
                 if 0 <= position < len(im_file.series):
                     im_series = im_file.series[position]
                 else:
-                    raise IndexError(f'Series {position} out of range for image with {len(im_file.series)} series.')
+                    raise IndexError(f'Series {position} is out of range for image with {len(im_file.series)} series.')
                 im_axes = im_series.axes.upper()
 
                 # Verify that the image format is supported
@@ -85,10 +87,46 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict
                 # Return the image data, axes, and metadata
                 return im_arr, im_axes, metadata
 
-        except tifffile.TiffFileError:
+        except (
+            tifffile.TiffFileError,
+            IsADirectoryError,
+        ):
             pass  # not a TIFF file
 
-    # If the image is not a TIFF file, or `tifffile` is not available, fall back to `skimage.io.imread`
+    # If the image is not a TIFF file, or `tifffile` is not available, try to read it as an OME-Zarr file
+    if (omezarr_store := ome_zarr.io.parse_url(*args, **kwargs)) is not None:
+        omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
+        omezarr_nodes = list(omezarr_reader())
+
+        # Handle multi-image Zarrs
+        if 0 <= position < len(omezarr_nodes):
+            omezarr_node = omezarr_nodes[position]
+        else:
+            raise IndexError(f'Node {position} is out of range for Zarr with {len(omezarr_nodes)} nodes.')
+
+        # Verify that the image format is supported
+        assert 'axes' in omezarr_node.metadata, 'OME-Zarr node is missing axes information.'
+        im_axes = ''.join(axis['name'].upper() for axis in omezarr_node.metadata['axes'])
+        assert (
+            frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
+        ), f'Image has unsupported axes: {im_axes}'
+
+        # Treat sample axis "S" as channel axis "C" and fail if both are present
+        assert (
+            'C' not in im_axes or 'S' not in im_axes
+        ), f'Image has sample and channel axes which is not supported: {im_axes}'
+        im_axes = im_axes.replace('S', 'C')
+
+        # Read representation of the image data (no reading happens here)
+        im_arr = omezarr_node.data[0]  # top-level of the pyramid (dask array)
+
+        # TODO: Read the metadata
+        metadata = dict()  # _get_omezarr_metadata(omezarr_node)
+
+        # Return the image data, axes, and metadata
+        return im_arr, im_axes, metadata
+
+    # If neither of the previous attempts succeeded, fall back to `skimage.io.imread`
     im_arr = skimage.io.imread(*args, **kwargs)
 
     # Verify that the image format is supported

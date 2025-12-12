@@ -2,3 +2,4 @@ numpy>=1.18
 scikit-image>=0.18
 pandas>=1
 typing-extensions
+ome-zarr==0.12.2
