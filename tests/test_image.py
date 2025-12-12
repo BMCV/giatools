@@ -214,6 +214,21 @@ class Image__write(unittest.TestCase):
         )
 
 
+class Image__data(unittest.TestCase):
+    """
+    Test the data property of the Image class.
+    """
+
+    @minimum_python_version(3, 11)
+    def test__dask__filtering(self):
+        import dask.array as da
+        import scipy.ndimage as ndi
+        np.random.seed(0)
+        np_data = np.random.rand(40, 60)
+        img = giatools.Image(data=da.from_array(np_data, chunks=(5, 5)), axes='YX')
+        np.testing.assert_almost_equal(ndi.gaussian_filter(img.data, sigma=3).mean(), 0.5, decimal=2)
+
+
 class Image__reorder_axes_like(unittest.TestCase):
 
     def setUp(self):
