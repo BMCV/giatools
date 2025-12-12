@@ -9,4 +9,4 @@ extensions = [
     'sphinx_autorun',
 ]
 
-autodoc_type_aliases = {'NDArray': 'giatools.typing.NDArray'}
+autodoc_type_aliases = {'NDArray': 'giatools.NDArray'}
