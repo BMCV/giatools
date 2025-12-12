@@ -8,3 +8,5 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_autorun',
 ]
+
+autodoc_type_aliases = {'NDArray': 'giatools.typing.NDArray'}
