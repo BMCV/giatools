@@ -32,7 +32,7 @@ BackendType = Literal['auto', 'tifffile', 'skimage']
 
 
 @giatools.util.silent
-def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
+def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     """
     Wrapper for loading images, muting non-fatal errors.
 
@@ -42,9 +42,9 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
     wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
 
     Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
-    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If the reading the
+    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If reading the
     image with `tifffile` is successful *and* the TIFF file contains multiple image series, the desired series can be
-    selected using the `series` parameter, or a `KeyError` is raised if `series` is invalid.
+    selected using the `position` parameter, or a `IndexError` is raised if `position` is invalid.
 
     Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy array, `axes` are the axes
     of the image, and `metadata` is any additional metadata. Normalization is performed, treating sample axis ``S`` as
@@ -59,10 +59,10 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
             with tifffile.TiffFile(*args, **kwargs) as im_file:
 
                 # Handle multi-series TIFF files
-                if 0 <= series < len(im_file.series):
-                    im_series = im_file.series[series]
+                if 0 <= position < len(im_file.series):
+                    im_series = im_file.series[position]
                 else:
-                    raise KeyError(f'Series {series} out of range for image with {len(im_file.series)} series.')
+                    raise IndexError(f'Series {position} out of range for image with {len(im_file.series)} series.')
                 im_axes = im_series.axes.upper()
 
                 # Verify that the image format is supported

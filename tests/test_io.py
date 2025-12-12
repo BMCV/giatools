@@ -134,7 +134,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         Test multi-series OME-TIFF file with OME XML metadata.
         """
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', series=0)
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', position=0)
         self.assertEqual(img.shape, (4, 5, 5))
         self.assertAlmostEqual(img.mean(), 1384.33)
         self.assertEqual(axes, 'CYX')
