@@ -134,7 +134,7 @@ class imreadraw__with_tifffile(unittest.TestCase):
         """
         Test multi-series OME-TIFF file with OME XML metadata.
         """
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', series=0)
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input11.ome.tiff', position=0)
         self.assertEqual(img.shape, (4, 5, 5))
         self.assertAlmostEqual(img.mean(), 1384.33)
         self.assertEqual(axes, 'CYX')
@@ -188,6 +188,48 @@ class imreadraw__without_tifffile(unittest.TestCase):
         with self.assertRaises(AssertionError):
             giatools.io.imreadraw('tests/data/input1.tif')
         mock_skimage_io_imread.assert_called_once_with('tests/data/input1.tif')
+
+
+class peek_num_images_in_file__with_tifffile(unittest.TestCase):
+
+    def setUp(self):
+        # Verify that the `tifffile` package is installed
+        assert giatools.io.tifffile is not None
+
+    def test__tiff_multiseries(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+        self.assertEqual(num_images, 6)
+
+    def test__tiff_single_series(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input1_uint8_yx.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__png(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input4_uint8.png')
+        self.assertEqual(num_images, 1)
+
+
+@unittest.mock.patch('giatools.io.tifffile', None)
+class peek_num_images_in_file__without_tifffile(unittest.TestCase):
+    """
+    Test peeking the number of images in a file without `tifffile` installed.
+
+    Example:
+
+    >>> giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+    """
+
+    def test__tiff_multiseries(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__tiff_single_series(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input1_uint8_yx.tiff')
+        self.assertEqual(num_images, 1)
+
+    def test__png(self):
+        num_images = giatools.io.peek_num_images_in_file('tests/data/input4_uint8.png')
+        self.assertEqual(num_images, 1)
 
 
 class imwriteTestCase(unittest.TestCase):

@@ -74,15 +74,19 @@ class Image:
         self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
-    def read(*args, normalize_axes: str = default_normalized_axes, **kwargs) -> Self:
+    def read(*args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
         """
-        Read an image from file and normalize the image axes like `normalize_axes`.
+        Read an image from file and normalize the image axes like `normalize_axes`. Normalization will be (almost)
+        skipped if `normalize_axes` is `None`.
 
         See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
         data, axes, metadata = io.imreadraw(*args, **kwargs)
         img = Image(data, axes, original_axes=axes, metadata=metadata)
-        return img.normalize_axes_like(normalize_axes)
+        if normalize_axes is None:
+            return img
+        else:
+            return img.normalize_axes_like(normalize_axes)
 
     def write(
         self,

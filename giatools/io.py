@@ -32,7 +32,7 @@ BackendType = Literal['auto', 'tifffile', 'skimage']
 
 
 @giatools.util.silent
-def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
+def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     """
     Wrapper for loading images, muting non-fatal errors.
 
@@ -42,9 +42,9 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
     wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
 
     Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
-    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If the reading the
+    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If reading the
     image with `tifffile` is successful *and* the TIFF file contains multiple image series, the desired series can be
-    selected using the `series` parameter, or a `KeyError` is raised if `series` is invalid.
+    selected using the `position` parameter, or a `IndexError` is raised if `position` is invalid.
 
     Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy array, `axes` are the axes
     of the image, and `metadata` is any additional metadata. Normalization is performed, treating sample axis ``S`` as
@@ -59,10 +59,10 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
             with tifffile.TiffFile(*args, **kwargs) as im_file:
 
                 # Handle multi-series TIFF files
-                if 0 <= series < len(im_file.series):
-                    im_series = im_file.series[series]
+                if 0 <= position < len(im_file.series):
+                    im_series = im_file.series[position]
                 else:
-                    raise KeyError(f'Series {series} out of range for image with {len(im_file.series)} series.')
+                    raise IndexError(f'Series {position} out of range for image with {len(im_file.series)} series.')
                 im_axes = im_series.axes.upper()
 
                 # Verify that the image format is supported
@@ -88,7 +88,7 @@ def imreadraw(*args, series: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[s
         except tifffile.TiffFileError:
             pass  # not a TIFF file
 
-    # If the image is not a TIFF file, or `tifffile is not available`, fall back to `skimage.io.imread`
+    # If the image is not a TIFF file, or `tifffile` is not available, fall back to `skimage.io.imread`
     im_arr = skimage.io.imread(*args, **kwargs)
 
     # Verify that the image format is supported
@@ -215,6 +215,45 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
         metadata['unit'] = 'um'
 
     return metadata
+
+
+def peek_num_images_in_file(*args, **kwargs) -> int:
+    """
+    Peeks the number of images that can be loaded from a file.
+
+    It is first attempted to read the image metadata using `tifffile` (if available). If this is successful, the number
+    of series is returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools.io import peek_num_images_in_file
+            >>> print(
+            ...     'Images in multi-series TIFF:',
+            ...     peek_num_images_in_file('data/input11.ome.tiff'),
+            ... )
+            >>> print(
+            ...     'Images in single-series TIFF:',
+            ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
+            ... )
+            >>> print(
+            ...     'Images in PNG file:',
+            ...     peek_num_images_in_file('data/input4_uint8.png'),
+            ... )
+    """
+
+    # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
+    if tifffile is not None:
+        try:
+            with tifffile.TiffFile(*args, **kwargs) as im_file:
+                return len(im_file.series)
+
+        except tifffile.TiffFileError:
+            pass  # not a TIFF file
+
+    # If the image is not a TIFF file, or `tifffile` is not available, assume that there is only one image
+    return 1
 
 
 def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', metadata: Optional[dict] = None):
