@@ -19,6 +19,7 @@ from giatools.typing import (
 )
 
 from .tools import (
+    minimum_python_version,
     random_io_test,
     verify_metadata,
     without_logging,
@@ -134,6 +135,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'CYX')
         verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
 
+    @minimum_python_version(3, 11)
     @without_logging
     def test__omezarr__examples__image02(self):
         """
@@ -145,6 +147,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'YX')
         verify_metadata(self, metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
+    @minimum_python_version(3, 11)
     @without_logging
     def test__omezarr__examples__image04(self):
         """

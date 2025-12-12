@@ -131,6 +131,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit=None)
 
+    @minimum_python_version(3, 11)
     @without_logging
     def test__omezarr__examples__image02(self):
         """
@@ -143,6 +144,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
         verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
+    @minimum_python_version(3, 11)
     @without_logging
     def test__omezarr__examples__image04(self):
         """
