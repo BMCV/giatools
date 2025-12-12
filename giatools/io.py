@@ -228,15 +228,15 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
         >>> from giatools.io import peek_num_images_in_file
         >>> print(
         ...     'Multi-series TIFF:',
-        ...     peek_num_images_in_file('tests/data/input11.ome.tiff'),
+        ...     peek_num_images_in_file('data/input11.ome.tiff'),
         ... )
         >>> print(
         ...     'Single-series TIFF:',
-        ...     peek_num_images_in_file('tests/data/input1_uint8_yx.tiff'),
+        ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
         ... )
         >>> print(
         ...     'PNG file:',
-        ...     peek_num_images_in_file('tests/data/input4_uint8.png'),
+        ...     peek_num_images_in_file('data/input4_uint8.png'),
         ... )
     """
 
