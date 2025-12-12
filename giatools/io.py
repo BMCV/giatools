@@ -219,7 +219,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
 
 def peek_num_images_in_file(*args, **kwargs) -> int:
     """
-    Peaks the number of images that can be loaded from a file.
+    Peeks the number of images that can be loaded from a file.
 
     It is first attempted to read the image metadata using `tifffile` (if available). If this is successful, the number
     of series is returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
