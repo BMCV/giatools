@@ -55,6 +55,8 @@ class ModuleTestCase(unittest.TestCase):
         self.assertEqual(img1.axes, expected_axes)
         self.assertEqual(img1.metadata, expected_metadata)
 
+    # TODO: Add test for reading an OME-Zarr image and writing it as a TIFF
+
 
 class Image__read(unittest.TestCase):
 
@@ -140,7 +142,7 @@ class Image__read(unittest.TestCase):
         self.assertAlmostEqual(float(img.data.mean()), 502.2611393006139)
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
     @without_logging
     def test__omezarr__examples__image04(self):
@@ -152,7 +154,7 @@ class Image__read(unittest.TestCase):
         self.assertAlmostEqual(float(img.data.mean()), 0.0)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=1, unit='um')
 
 
 @unittest.mock.patch('giatools.io.imwrite')

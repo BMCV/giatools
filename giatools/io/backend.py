@@ -15,6 +15,11 @@ class UnsupportedFileError(Exception):
         super().__init__(*args, **kwargs)
 
 
+class CorruptedFileError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class Reader:
 
     unsupported_file_errors = tuple()
@@ -93,14 +98,16 @@ class Backend:
                 im_axes = reader.get_axes(image)
 
                 # Verify that the image format is supported
-                assert (
-                    frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
-                ), f'Image has unsupported axes: {im_axes}'
+                if 'Y' not in im_axes or 'X' not in im_axes:
+                    raise CorruptedFileError(f'OME-Zarr node is missing required X or Y axes (found {im_axes}).')
+                if not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')):
+                    raise CorruptedFileError(f'Image has unsupported axes: {im_axes}')
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
-                assert (
-                    'C' not in im_axes or 'S' not in im_axes
-                ), f'Image has sample and channel axes which is not supported: {im_axes}'
+                if 'C' in im_axes and 'S' in im_axes:
+                    raise CorruptedFileError(
+                        f'Image has both channel and sample axes which is not supported: {im_axes}',
+                    )
                 im_axes = im_axes.replace('S', 'C')
 
                 # Get the reference to the image data

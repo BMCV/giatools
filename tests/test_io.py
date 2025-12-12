@@ -143,7 +143,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (200, 200))
         self.assertAlmostEqual(img.mean().compute(), 502.2611393006139)
         self.assertEqual(axes, 'YX')
-        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+        verify_metadata(self, metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
     @without_logging
     def test__omezarr__examples__image04(self):
@@ -154,7 +154,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (2, 64, 64))
         self.assertAlmostEqual(img.mean().compute(), 0.0)
         self.assertEqual(axes, 'ZYX')
-        #verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1, unit='um')
+        verify_metadata(self, metadata, resolution=(1, 1), z_spacing=1, unit='um')
 
 
 class peek_num_images_in_file(unittest.TestCase):
