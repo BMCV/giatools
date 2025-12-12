@@ -213,6 +213,10 @@ class peek_num_images_in_file__with_tifffile(unittest.TestCase):
 class peek_num_images_in_file__without_tifffile(unittest.TestCase):
     """
     Test peeking the number of images in a file without `tifffile` installed.
+
+    Example:
+
+    >>> giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')
     """
 
     def test__tiff_multiseries(self):
