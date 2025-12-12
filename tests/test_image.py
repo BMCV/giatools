@@ -14,9 +14,6 @@ from .tools import (
     verify_metadata,
 )
 
-# This tests require that the `tifffile` package is installed.
-assert giatools.io.tifffile is not None
-
 
 # Define test image data
 test1_data = np.random.randint(0, 255, (1, 2, 26, 32, 3), dtype=np.uint8)
@@ -31,12 +28,6 @@ class ModuleTestCase(unittest.TestCase):
     """
     Module-level tests for :mod:`giatools.image`.
     """
-
-    def setUp(self):
-        super().setUp()
-
-        # Verify that the `tifffile` package is installed
-        assert giatools.io.tifffile is not None
 
     def test__default_normalized_axes(self):
         self.assertEqual(giatools.image.default_normalized_axes, 'QTZYXC')
@@ -425,3 +416,5 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test('TZYXC', (1, 5, 11, 12, 3), 'ZYX')
         self._test('TZYXC', (5, 1, 11, 12, 3), 'ZYX')
         self._test('TZYXC', (5, 5, 11, 12, 3), 'ZYX')
+
+    # TODO: Add test with Dask array (OME-Zarr)

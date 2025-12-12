@@ -13,6 +13,7 @@ import numpy as np
 import ome_zarr.io
 import ome_zarr.reader
 import skimage.io
+import tifffile
 
 import giatools.util
 
@@ -24,11 +25,6 @@ from .typing import (
     Tuple,
 )
 
-try:
-    import tifffile
-except ImportError:
-    tifffile = None
-
 
 BackendType = Literal['auto', 'tifffile', 'skimage']
 
@@ -36,64 +32,73 @@ BackendType = Literal['auto', 'tifffile', 'skimage']
 @giatools.util.silent
 def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[np.ndarray, str, Dict[str, Any]]:
     """
-    Wrapper for loading images, muting non-fatal errors.
+    Wrapper for reading images, muting non-fatal errors.
 
     When using ``skimage.io.imread`` to read an image file, sometimes errors can be reported although the image file
     will be read successfully. In those cases, Galaxy might detect the errors on stdout or stderr, and assume that the
     tool has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this
     wrapper around ``skimage.io.imread`` will mute all non-fatal errors.
 
-    Image loading is first attempted using `tifffile` (if available, more reliable for loading TIFF files), and if
-    that fails (e.g., because the file is not a TIFF file), falls back to ``skimage.io.imread``. If reading the
-    image with `tifffile` is successful *and* the TIFF file contains multiple image series, the desired series can be
-    selected using the `position` parameter, or a `IndexError` is raised if `position` is invalid.
+    Different backends are tried in succession until one is successful:
 
-    Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy array, `axes` are the axes
-    of the image, and `metadata` is any additional metadata. Normalization is performed, treating sample axis ``S`` as
-    an alias for the channel axis ``C``. For images which cannot be read by `tifffile`, two- and three-dimensional data
-    is supported. Two-dimensional images are assumed to be in ``YX`` axes order, and three-dimensional images are
-    assumed to be in ``YXC`` axes order.
+    1. `tifffile`
+    2. `ome_zarr`
+    3. `skimage.io.imread`
+
+    The `tifffile` backend is likely to fail if the file is not a TIFF file. The `ome_zarr` backend is likely to fail
+    if the file is not an OME-Zarr file. The `skimage.io.imread` backend is able to read a wide variety of image
+    formats, but for some formats it may not be able to extract all metadata, which is why it is less preferred.
+
+    Some image files can store multiple images (e.g., multi-series TIFF files or multi-image OME-Zarr files). In these
+    cases, the desired image can be selected by specifying the `position` parameter (default: `0`, the first image). An
+    `IndexError` is raised if `position` is invalid. The :py:func:`peek_num_images_in_file` function can be used to
+    determine the number of images in a file.
+
+    Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy or Dask array, `axes` are
+    the axes of the image, and `metadata` is any additional metadata. Minimal normalization is performed by treating
+    sample axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread`
+    backend, single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two
+    axes and ``YXC`` for arrays with three axes, respectively.
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
-    if tifffile is not None:
-        try:
-            with tifffile.TiffFile(*args, **kwargs) as im_file:
+    try:
+        with tifffile.TiffFile(*args, **kwargs) as im_file:
 
-                # Handle multi-series TIFF files
-                if 0 <= position < len(im_file.series):
-                    im_series = im_file.series[position]
-                else:
-                    raise IndexError(f'Series {position} is out of range for image with {len(im_file.series)} series.')
-                im_axes = im_series.axes.upper()
+            # Handle multi-series TIFF files
+            if 0 <= position < len(im_file.series):
+                im_series = im_file.series[position]
+            else:
+                raise IndexError(f'Series {position} is out of range for image with {len(im_file.series)} series.')
+            im_axes = im_series.axes.upper()
 
-                # Verify that the image format is supported
-                assert (
-                    frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
-                ), f'Image has unsupported axes: {im_axes}'
+            # Verify that the image format is supported
+            assert (
+                frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')
+            ), f'Image has unsupported axes: {im_axes}'
 
-                # Treat sample axis "S" as channel axis "C" and fail if both are present
-                assert (
-                    'C' not in im_axes or 'S' not in im_axes
-                ), f'Image has sample and channel axes which is not supported: {im_axes}'
-                im_axes = im_axes.replace('S', 'C')
+            # Treat sample axis "S" as channel axis "C" and fail if both are present
+            assert (
+                'C' not in im_axes or 'S' not in im_axes
+            ), f'Image has sample and channel axes which is not supported: {im_axes}'
+            im_axes = im_axes.replace('S', 'C')
 
-                # Read the image data
-                im_arr = im_file.asarray()
+            # Read the image data
+            im_arr = im_file.asarray()
 
-                # Read the metadata
-                metadata = _get_tiff_metadata(im_file, im_series)
+            # Read the metadata
+            metadata = _get_tiff_metadata(im_file, im_series)
 
-                # Return the image data, axes, and metadata
-                return im_arr, im_axes, metadata
+            # Return the image data, axes, and metadata
+            return im_arr, im_axes, metadata
 
-        except (
-            tifffile.TiffFileError,
-            IsADirectoryError,
-        ):
-            pass  # not a TIFF file
+    except (
+        tifffile.TiffFileError,
+        IsADirectoryError,
+    ):
+        pass  # not a TIFF file
 
-    # If the image is not a TIFF file, or `tifffile` is not available, try to read it as an OME-Zarr file
+    # If the image is not a TIFF file, try to read it as an OME-Zarr file
     if (omezarr_store := ome_zarr.io.parse_url(*args, **kwargs)) is not None:
         omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
         omezarr_nodes = list(omezarr_reader())
@@ -259,8 +264,8 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
     """
     Peeks the number of images that can be loaded from a file.
 
-    It is first attempted to read the image metadata using `tifffile` (if available). If this is successful, the number
-    of series is returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
+    It is first attempted to read the image metadata using `tifffile`. If this is successful, the number of series is
+    returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
 
     Example:
 
@@ -282,15 +287,14 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
-    if tifffile is not None:
-        try:
-            with tifffile.TiffFile(*args, **kwargs) as im_file:
-                return len(im_file.series)
+    try:
+        with tifffile.TiffFile(*args, **kwargs) as im_file:
+            return len(im_file.series)
 
-        except tifffile.TiffFileError:
-            pass  # not a TIFF file
+    except tifffile.TiffFileError:
+        pass  # not a TIFF file
 
-    # If the image is not a TIFF file, or `tifffile` is not available, assume that there is only one image
+    # If the image is not a TIFF file, assume that there is only one image
     return 1
 
 
@@ -308,7 +312,7 @@ def imwrite(im_arr: np.ndarray, filepath: str, backend: BackendType = 'auto', me
 
     # Automatically dispatch to the proper backend
     if backend == 'auto':
-        if tifffile is not None and (filepath.lower().endswith('.tif') or filepath.lower().endswith('.tiff')):
+        if (filepath.lower().endswith('.tif') or filepath.lower().endswith('.tiff')):
             backend = 'tifffile'
         else:
             backend = 'skimage'
