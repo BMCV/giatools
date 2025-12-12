@@ -225,8 +225,11 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
     of series is returned. If reading with `tifffile` fails, it is assumed that there is only one image contained.
 
     Example:
-        >>> import os
-        >>> print(os.getcwd())
+
+        .. runblock:: pycon
+
+            >>> import os
+            >>> print(os.getcwd())
     """
 
     # First, try to read the image using `tifffile` (will only succeed if it is a TIFF file)
