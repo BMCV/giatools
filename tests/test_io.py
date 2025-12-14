@@ -292,6 +292,16 @@ class imwrite(unittest.TestCase):
                 backend='auto',
             )
 
+    def test__incompatible_data_error(self):
+        with self.assertRaises(giatools.io.IncompatibleDataError):
+            self._test(
+                data_shape=(10, 10, 2, 2),
+                axes='YXCZ',  # Invalid axes for PNG
+                dtype=np.uint8,
+                ext='png',
+                backend='auto',
+            )
+
     def test__float32__tifffile__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')

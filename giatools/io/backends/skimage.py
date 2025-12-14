@@ -63,7 +63,7 @@ class SKImageWriter(Writer):
         if suffix in ('jpg', 'jpeg'):
             error = self._validate_jpg(im_arr, metadata)
         if error:
-            raise IncompatibleDataError(error, filepath=filepath)
+            raise IncompatibleDataError(filepath, error)
 
         # Write the image using skimage
         #

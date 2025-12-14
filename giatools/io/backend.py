@@ -31,8 +31,8 @@ class IncompatibleDataError(Exception):
     """
     Raised when a file cannot be written because the data or metadata is incompatible with the file format.
     """
-    def __init__(self, message: str, *args, **kwargs):
-        self.message = message
+    def __init__(self, filepath: str, *args, **kwargs):
+        self.filepath = filepath
         super().__init__(*args, **kwargs)
 
 
