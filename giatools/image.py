@@ -1,5 +1,3 @@
-#from __future__ import annotations  # properly format TypeAliases in Sphinx
-
 """
 Copyright 2017-2025 Leonid Kostrykin, Biomedical Computer Vision Group, Heidelberg University.
 

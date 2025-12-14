@@ -8,12 +8,3 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_autorun',
 ]
-
-# python_display_short_literal_types = True
-# autodoc_typehints = 'signature'
-# autodoc_typehints_format = 'short'
-# autodoc_type_aliases = {
-#     'NDArray': 'giatools.NDArray',
-#     'giatools.NDArray': 'giatools.NDArray',
-#     'giatools.typing.NDArray': 'giatools.NDArray',
-# }
