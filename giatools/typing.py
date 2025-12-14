@@ -13,7 +13,8 @@ else:
     from collections.abc import Iterator  # noqa: F401, F403
 
 try:
-    from dask.array import Array as DaskArray
+    from dask.array import Array as _DaskArray
+    class DaskArray(_DaskArray): ...  # noqa: E701
 except ImportError:
     class DaskArray: ...  # noqa: E701
 
