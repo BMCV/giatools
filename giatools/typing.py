@@ -18,5 +18,3 @@ except ImportError:
     class DaskArray: ...  # noqa: E701
 
 NDArray: TypeAlias = Union[np.ndarray, DaskArray]  # noqa: F405
-
-x: NDArray
