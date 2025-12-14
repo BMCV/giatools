@@ -11,4 +11,8 @@ extensions = [
 
 python_display_short_literal_types = True
 autodoc_typehints = "description"
-autodoc_type_aliases = {'NDArray': 'giatools.NDArray'}
+autodoc_type_aliases = {
+    'NDArray': 'giatools.NDArray',
+    'giatools.NDArray': 'giatools.NDArray',
+    'giatools.typing.NDArray': 'giatools.NDArray',
+}
