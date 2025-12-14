@@ -1,4 +1,4 @@
-from __future__ import annotations  # properly format TypeAliases in Sphinx
+#from __future__ import annotations  # properly format TypeAliases in Sphinx
 
 import sys
 
@@ -15,9 +15,10 @@ else:
     from collections.abc import Iterator  # noqa: F401, F403
 
 try:
-    from dask.array import Array as DaskArray
+    from dask.array import Array as _DaskArray
+    class DaskArray(_DaskArray): ...  # noqa: E701
 except ImportError:
     class DaskArray: ...  # noqa: E701
 
 NDArray: TypeAlias = Union[np.ndarray, DaskArray]  # noqa: F405
-NDArray.__doc__ = 'Type alias for NumPy arrays and Dask arrays.'
+#NDArray.__doc__ = 'Type alias for NumPy arrays and Dask arrays.'
