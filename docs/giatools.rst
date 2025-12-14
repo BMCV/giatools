@@ -6,6 +6,5 @@ giatools
    :undoc-members:
    :show-inheritance:
 
-.. autodata:: giatools.VERSION
-
-   The version of the giatools package.
+.. autodata:: giatools.default_normalized_axes
+   :alias: default_normalized_axes
