@@ -15,7 +15,7 @@ from ..typing import (
     Tuple,
 )
 from ..util import distance_to_external_frame
-from .backend import (  # noqa: F401
+from .backend import (
     Backend,
     UnsupportedFileError,
 )
@@ -32,6 +32,14 @@ try:
     from .backends.omezarr import OMEZarrReader
 except ImportError:
     OMEZarrReader = None  # type: ignore
+
+__all__ = [
+    'Backend',
+    'imreadraw',
+    'imwrite',
+    'peek_num_images_in_file',
+    'UnsupportedFileError',
+]
 
 
 #: List of the supported backends for reading and writing image files.
