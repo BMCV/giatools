@@ -33,7 +33,7 @@ class Image:
 
     data: NDArray
     """
-    The image data as a numpy array.
+    The image data as a NumPy array or a Dask array.
     """
 
     axes: str
