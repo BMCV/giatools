@@ -87,6 +87,12 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     sample axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread`
     backend, single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two
     axes and ``YXC`` for arrays with three axes, respectively.
+
+    Raises:
+        CorruptedFileError:
+            If the image cannot be read by the designated backend due to corruption or unsupported format flavor.
+        UnsupportedFileError:
+            If no backend could read the image.
     """
 
     for backend in backends:
@@ -119,6 +125,10 @@ def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
             ...     'Images in PNG file:',
             ...     peek_num_images_in_file('data/input4_uint8.png'),
             ... )
+
+    Raises:
+        UnsupportedFileError:
+            If no backend could read the image.
     """
     for backend in backends:
         ret = backend.peek_num_images_in_file(filepath, *args, **kwargs)
@@ -160,6 +170,11 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
 def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
     """
     Save an image to a file.
+
+    Raises:
+        UnsupportedFileError:
+            If no backend could write the image, either because no backend is available for the format (inferred from
+            the suffix of the file) or due to incompatibility of the data or metadata with the format.
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(
