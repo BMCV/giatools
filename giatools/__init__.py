@@ -33,3 +33,7 @@ def require_backend(name: str):
             break
     else:
         raise ImportError(f'The backend "{name}" is not available.')
+
+
+#: The version of the giatools package.
+VERSION
