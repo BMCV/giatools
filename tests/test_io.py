@@ -3,7 +3,6 @@ import json
 import os
 import tempfile
 import unittest
-import unittest.mock
 
 import numpy as np
 import skimage.io
