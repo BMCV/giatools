@@ -1,3 +1,5 @@
+import warnings
+
 import skimage.io
 
 from ...typing import (
@@ -53,7 +55,7 @@ class SKImageWriter(Writer):
         'jpeg',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
         suffix = filepath.split('.')[-1].lower()
 
         # Validate that the image data is compatible with the file format
@@ -66,7 +68,15 @@ class SKImageWriter(Writer):
             raise IncompatibleDataError(error, filepath=filepath)
 
         # Write the image using skimage
-        skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False)
+        #
+        # The plugin infrastructure in `skimage.io` is deprecated since version 0.25 and will be removed in 0.27 (or
+        # later). To avoid this warning, please do not pass additional keyword arguments for plugins (`**plugin_args`).
+        #
+        # TODO: Instead, use `imageio` or other I/O packages directly.
+        #
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=FutureWarning)
+            skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False, **kwargs)
 
     def _validate_png(self, im_arr: NDArray, metadata: dict) -> Union[str, None]:
         if not (

@@ -180,7 +180,7 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         return next((backend for backend in supported_backends if backend.name == backend_name))
 
 
-def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
+def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None, **kwargs):
     """
     Save an image to a file.
 
@@ -189,6 +189,8 @@ def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Opt
             If the image data or metadata is incompatible with the file format (inferred from the suffix of the file).
         UnsupportedFileError:
             If no backend is available to write the file format (inferred from the suffix of the file).
+        ValueError:
+            If `backend` is not ``"auto"`` and the specified backend is not available.
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(
@@ -199,4 +201,4 @@ def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Opt
     _select_writing_backend(
         filepath,
         backend,
-    ).write(im_arr, filepath, metadata=metadata)
+    ).write(im_arr, filepath, metadata=metadata, **kwargs)

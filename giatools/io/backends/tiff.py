@@ -48,10 +48,11 @@ class TiffWriter(Writer):
         'tif',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
 
         # Update the metadata structure to what `tifffile` expects
-        kwargs = dict(metadata=metadata)
+        kwargs = dict(kwargs)
+        kwargs['metadata'] = metadata
         if 'resolution' in metadata:
             kwargs['resolution'] = metadata.pop('resolution')
         if 'z_spacing' in metadata:

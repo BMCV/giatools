@@ -77,7 +77,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
         raise NotImplementedError()
 
 
@@ -145,11 +145,11 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: Optional[dict] = None):
+    def write(self, im_arr: NDArray, filepath: str, metadata: Optional[dict] = None, **kwargs):
         writer = self.writer_class()
 
         # Create a copy of the metadata to avoid modifying the original
         metadata = dict(metadata) if metadata is not None else dict()
 
         # Delegate the writing to the writer class
-        writer.write(im_arr, filepath, metadata)
+        writer.write(im_arr, filepath, metadata, **kwargs)

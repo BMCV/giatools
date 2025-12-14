@@ -5,6 +5,7 @@ import tempfile
 import unittest
 
 import numpy as np
+import scipy.ndimage as ndi
 import skimage.io
 import tifffile
 
@@ -54,13 +55,23 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'ZYX')
         verify_metadata(self, metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
 
-    def test__input4(self):
+    def test__input4__png(self):
         """
         Test an RGB PNG file, that cannot be loaded with `tifffile`, but works with ``skimage.io.imread``.
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input4_uint8.png')
         self.assertEqual(img.shape, (10, 10, 3))
-        self.assertEqual(img.mean(), 130.04)
+        self.assertEqual(round(img.mean(), 2), 130.04)
+        self.assertEqual(axes, 'YXC')
+        verify_metadata(self, metadata, resolution=None, z_spacing=None, unit=None)
+
+    def test__input4__jpg(self):
+        """
+        Test an JPG file, that cannot be loaded with `tifffile`, but works with ``skimage.io.imread``.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input4_uint8.jpg')
+        self.assertEqual(img.shape, (10, 10, 3))
+        self.assertEqual(round(img.mean(), 2), 130.06)
         self.assertEqual(axes, 'YXC')
         verify_metadata(self, metadata, resolution=None, z_spacing=None, unit=None)
 
@@ -183,7 +194,7 @@ class imwrite(unittest.TestCase):
     def tearDown(self):
         self.tempdir.cleanup()
 
-    def read_image(self, filepath: str) -> Tuple[np.ndarray, str]:
+    def _read_image(self, filepath: str) -> Tuple[np.ndarray, str]:
         """
         Read an image file and return the image data and axes.
 
@@ -205,13 +216,18 @@ class imwrite(unittest.TestCase):
         dtype: np.dtype,
         metadata: Optional[Dict] = None,
         *,
+        sigma: float = 0,
         ext: str,
         backend: str = 'auto',
         validate_axes: bool = True,
         validate_metadata: Union[bool, Literal['auto']] = 'auto',
+        rms_tol: Optional[float] = None,
+        **kwargs,
     ):
         # Create random image data
         data = np.random.rand(*data_shape)
+        if sigma > 0:
+            data = ndi.gaussian_filter(data, sigma=sigma)
         if not np.issubdtype(dtype, np.floating):
             data = (data * np.iinfo(dtype).max).astype(dtype)
 
@@ -219,14 +235,17 @@ class imwrite(unittest.TestCase):
         filepath = os.path.join(self.tempdir.name, f'test.{ext}')
         metadata = (dict() if metadata is None else metadata) | dict(axes=axes)
         metadata_copy = copy.deepcopy(metadata)
-        giatools.io.imwrite(data, filepath, backend=backend, metadata=metadata)
+        giatools.io.imwrite(data, filepath, backend=backend, metadata=metadata, **kwargs)
 
         # Validate immutability of metadata
         self.assertEqual(metadata, metadata_copy)
 
         # Read back the image data and the axes, and validate, if applicable
-        data1, axes1 = self.read_image(filepath)
-        np.testing.assert_array_equal(data1, data)
+        data1, axes1 = self._read_image(filepath)
+        if rms_tol is None:
+            np.testing.assert_array_equal(data1, data)
+        else:
+            self.assertLessEqual(np.sqrt((data1 - data) ** 2).mean(), rms_tol)
         if validate_axes:
             self.assertEqual(axes1, axes)
 
@@ -315,6 +334,18 @@ class imwrite(unittest.TestCase):
 
     def test__uint8__auto__png(self):
         self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
+
+    def test__uint8__auto__jpg(self):
+        self._test(
+            data_shape=(100, 150, 3),
+            axes='YXC',
+            dtype=np.uint8,
+            ext='jpg',
+            backend='auto',
+            sigma=3,
+            rms_tol=0.1,
+            quality=100,
+        )
 
 
 class ModuleTestCase(unittest.TestCase):
