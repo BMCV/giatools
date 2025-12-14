@@ -78,7 +78,7 @@ class SKImageWriter(Writer):
 
     def _validate_png(self, im_arr: NDArray, metadata: dict) -> Union[str, None]:
         if not (
-            metadata['axes'] == 'YX' or (metadata['axes'] == 'YXC' and im_arr.ndim in (1, 3, 4))
+            (metadata['axes'] == 'YX' and im_arr.ndim == 2) or (metadata['axes'] == 'YXC' and im_arr.ndim in (1, 3, 4))
         ):
             return 'PNG files only support single-channel, RGB, and RGBA images (YX or YXC axes layout).'
 

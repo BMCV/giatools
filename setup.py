@@ -15,5 +15,5 @@ setup(
     author_email='leonid.kostrykin@bioquant.uni-heidelberg.de',
     url='https://kostrykin.com',
     license='MIT',
-    packages=['giatools', 'giatools.io', 'giatools.io.backends'],
+    packages=['giatools', 'giatools.io', 'giatools.io._backends'],
 )

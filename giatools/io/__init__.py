@@ -21,17 +21,17 @@ from .backend import (
     IncompatibleDataError,
     UnsupportedFileError,
 )
-from .backends.skimage import (
+from ._backends.skimage import (
     SKImageReader,
     SKImageWriter,
 )
-from .backends.tiff import (
+from ._backends.tiff import (
     TiffReader,
     TiffWriter,
 )
 
 try:
-    from .backends.omezarr import OMEZarrReader
+    from ._backends.omezarr import OMEZarrReader
 except ImportError:
     OMEZarrReader = None  # type: ignore
 
