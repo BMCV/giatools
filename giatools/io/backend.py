@@ -20,7 +20,7 @@ class UnsupportedFileError(Exception):
 
 class CorruptFileError(Exception):
     """
-    Raised when a file is corrupted and cannot be read.
+    Raised when a file is corrupted (or follows an unexpected internal format flavor) and cannot be read.
     """
     def __init__(self, filepath: str, *args, **kwargs):
         self.filepath = filepath
