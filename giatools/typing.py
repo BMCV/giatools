@@ -12,9 +12,10 @@ if sys.version_info < (3, 10):
 else:
     from collections.abc import Iterator  # noqa: F401, F403
 
-try:
+if TYPE_CHECKING:  # noqa: F405
     from dask.array import Array as DaskArray
-except ImportError:
-    DaskArray = np.ndarray
+    NDArray: TypeAlias = Union[np.ndarray, DaskArray]  # noqa: F405
+else:
+    NDArray = np.ndarray
 
-NDArray = Union[np.ndarray, DaskArray]  # noqa: F405
+x: NDArray
