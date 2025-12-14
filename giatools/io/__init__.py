@@ -15,12 +15,6 @@ from ..typing import (
     Tuple,
 )
 from ..util import distance_to_external_frame
-from .backend import (
-    Backend,
-    CorruptFileError,
-    IncompatibleDataError,
-    UnsupportedFileError,
-)
 from ._backends.skimage import (
     SKImageReader,
     SKImageWriter,
@@ -28,6 +22,12 @@ from ._backends.skimage import (
 from ._backends.tiff import (
     TiffReader,
     TiffWriter,
+)
+from .backend import (
+    Backend,
+    CorruptFileError,
+    IncompatibleDataError,
+    UnsupportedFileError,
 )
 
 try:
