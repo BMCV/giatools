@@ -81,16 +81,16 @@ class Backend:
     def __repr__(self) -> str:
         return f'<{self.name} Backend>'
 
-    def peek_num_images_in_file(self, *args, **kwargs) -> Optional[int]:
+    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> Optional[int]:
         try:
-            with self.reader_class(*args, **kwargs) as reader:
+            with self.reader_class(filepath, *args, **kwargs) as reader:
                 return reader.get_num_images()
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
+    def read(self, filepath: str, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
         try:
-            with self.reader_class(*args, **kwargs) as reader:
+            with self.reader_class(filepath, *args, **kwargs) as reader:
 
                 # Handle files with multiple images
                 num_images = reader.get_num_images()
