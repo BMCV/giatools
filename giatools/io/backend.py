@@ -19,7 +19,11 @@ class UnsupportedFileError(Exception):
 
 
 class CorruptedFileError(Exception):
-    def __init__(self, *args, **kwargs):
+    """
+    Raised when a file is corrupted and cannot be read.
+    """
+    def __init__(self, filepath: str, *args, **kwargs):
+        self.filepath = filepath
         super().__init__(*args, **kwargs)
 
 
@@ -102,14 +106,21 @@ class Backend:
 
                 # Verify that the image format is supported
                 if 'Y' not in im_axes or 'X' not in im_axes:
-                    raise CorruptedFileError(f'OME-Zarr node is missing required X or Y axes (found {im_axes}).')
+                    raise CorruptedFileError(
+                        f'OME-Zarr node is missing required X or Y axes (found {im_axes}).',
+                        filepath=filepath,
+                    )
                 if not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')):
-                    raise CorruptedFileError(f'Image has unsupported axes: {im_axes}')
+                    raise CorruptedFileError(
+                        f'Image has unsupported axes: {im_axes}',
+                        filepath=filepath,
+                    )
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
                 if 'C' in im_axes and 'S' in im_axes:
                     raise CorruptedFileError(
                         f'Image has both channel and sample axes which is not supported: {im_axes}',
+                        filepath=filepath,
                     )
                 im_axes = im_axes.replace('S', 'C')
 
