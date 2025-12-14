@@ -89,7 +89,7 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     axes and ``YXC`` for arrays with three axes, respectively.
 
     Raises:
-        CorruptedFileError:
+        CorruptFileError:
             If the image cannot be read by the designated backend due to corruption or unsupported format flavor.
         UnsupportedFileError:
             If no backend could read the image.
