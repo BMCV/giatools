@@ -17,6 +17,8 @@ from ..typing import (
 from ..util import distance_to_external_frame
 from .backend import (
     Backend,
+    CorruptFileError,
+    IncompatibleDataError,
     UnsupportedFileError,
 )
 from .backends.skimage import (
@@ -35,8 +37,10 @@ except ImportError:
 
 __all__ = [
     'Backend',
+    'CorruptFileError',
     'imreadraw',
     'imwrite',
+    'IncompatibleDataError',
     'peek_num_images_in_file',
     'UnsupportedFileError',
 ]
