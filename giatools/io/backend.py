@@ -27,6 +27,15 @@ class CorruptedFileError(Exception):
         super().__init__(*args, **kwargs)
 
 
+class IncompatibleDataError(Exception):
+    """
+    Raised when a file cannot be written because the data or metadata is incompatible with the file format.
+    """
+    def __init__(self, message: str, *args, **kwargs):
+        self.message = message
+        super().__init__(*args, **kwargs)
+
+
 class Reader:
 
     unsupported_file_errors = tuple()

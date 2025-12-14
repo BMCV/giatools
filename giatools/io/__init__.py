@@ -172,9 +172,10 @@ def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Opt
     Save an image to a file.
 
     Raises:
+        IncompatibleDataError:
+            If the image data or metadata is incompatible with the file format (inferred from the suffix of the file).
         UnsupportedFileError:
-            If no backend could write the image, either because no backend is available for the format (inferred from
-            the suffix of the file) or due to incompatibility of the data or metadata with the format.
+            If no backend is available to write the file format (inferred from the suffix of the file).
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(

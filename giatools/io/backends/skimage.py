@@ -8,6 +8,7 @@ from ...typing import (
 )
 from ...util import silent
 from ..backend import (
+    IncompatibleDataError,
     Reader,
     UnsupportedFileError,
     Writer,
@@ -62,7 +63,7 @@ class SKImageWriter(Writer):
         if suffix in ('jpg', 'jpeg'):
             error = self._validate_jpg(im_arr, metadata)
         if error:
-            raise UnsupportedFileError(error, filepath=filepath)
+            raise IncompatibleDataError(error, filepath=filepath)
 
         # Write the image using skimage
         skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False)
