@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Copyright 2017-2025 Leonid Kostrykin, Biomedical Computer Vision Group, Heidelberg University.
 
