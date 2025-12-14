@@ -71,7 +71,7 @@ def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> Dict[str, Any]:
 
     # Extract the `unit`, if it is constant across all axes
     units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
-    if len(units) == 1 and (unit := normalized_unit_representations.get(next(iter(units))), ''):
+    if len(units) == 1 and (unit := normalized_unit_representations.get(next(iter(units)), '')):
         metadata['unit'] = unit
 
     # Extract the pixel/voxel sizes
