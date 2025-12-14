@@ -5,11 +5,11 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-from .image import (  # noqa: F401
+from .image import (
     Image,
     default_normalized_axes,
 )
-from .version import __version__ as VERSION  # noqa: F401
+from .version import __version__ as VERSION
 
 __all__ = [
     'default_normalized_axes',
@@ -33,7 +33,3 @@ def require_backend(name: str):
             break
     else:
         raise ImportError(f'The backend "{name}" is not available.')
-
-
-#: The version of the giatools package.
-VERSION

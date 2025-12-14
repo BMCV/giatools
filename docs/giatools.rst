@@ -5,6 +5,3 @@ giatools
    :members:
    :undoc-members:
    :show-inheritance:
-
-.. autodata:: giatools.default_normalized_axes
-   :alias: default_normalized_axes
