@@ -128,7 +128,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
                         spacing = float(line.split('=')[1])
                         metadata['z_spacing'] = spacing
                     except ValueError:
-                        pass
+                        pass  # Ignore lines where spacing value is not a valid float
 
                 # Extract unit, if available
                 if line.startswith('unit='):
