@@ -13,7 +13,7 @@ python_display_short_literal_types = True
 autodoc_typehints = 'signature'
 autodoc_typehints_format = 'short'
 autodoc_type_aliases = {
-    'NDArray': 'NDArray',
-    'giatools.NDArray': 'NDArray',
+#    'NDArray': 'NDArray',
+#    'giatools.NDArray': 'NDArray',
     'giatools.typing.NDArray': 'NDArray',
 }
