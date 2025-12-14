@@ -9,4 +9,6 @@ extensions = [
     'sphinx_autorun',
 ]
 
+python_display_short_literal_types = True
+autodoc_typehints = "description"
 autodoc_type_aliases = {'NDArray': 'giatools.NDArray'}
