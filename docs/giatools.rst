@@ -7,3 +7,5 @@ giatools
    :show-inheritance:
 
 .. autodata:: giatools.default_normalized_axes
+
+.. autodata:: giatools.VERSION
