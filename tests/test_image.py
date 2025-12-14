@@ -188,6 +188,7 @@ class Image__read(unittest.TestCase):
 
 @unittest.mock.patch('giatools.io.imwrite')
 class Image__write(unittest.TestCase):
+
     def setUp(self):
         self.img1 = giatools.image.Image(data=test1_data.copy(), axes=test1_axes, original_axes=test1_original_axes)
 
@@ -218,6 +219,12 @@ class Image__write(unittest.TestCase):
                 metadata=dict(axes=test1_axes, z_spacing=0.5),
             ),
         )
+
+    def test__invalid_axes(self, mock_imwrite):
+        img_invalid = giatools.image.Image(data=test1_data.squeeze().copy(), axes='ZYX')
+        with self.assertRaises(ValueError):
+            img_invalid.write('test_output.tiff')
+        mock_imwrite.assert_not_called()
 
 
 class Image__data(unittest.TestCase):

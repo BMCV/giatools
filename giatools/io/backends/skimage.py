@@ -4,9 +4,11 @@ from ...typing import (
     Any,
     Dict,
     NDArray,
+    Union,
 )
 from ...util import silent
 from ..backend import (
+    IncompatibleDataError,
     Reader,
     UnsupportedFileError,
     Writer,
@@ -24,7 +26,10 @@ class SKImageReader(Reader):
     def select_image(self, position: int) -> Any:
         image = _skimage_io_imread(*self.file[0], **self.file[1])
         if image.ndim not in (2, 3):
-            raise UnsupportedFileError(f'Image has unsupported dimension: {image.ndim}')
+            raise UnsupportedFileError(
+                f'Image has unsupported dimension: {image.ndim}',
+                filepath=self.file[0][0],
+            )
         return image
 
     def get_axes(self, image: Any) -> str:
@@ -45,10 +50,35 @@ class SKImageWriter(Writer):
     supported_extensions = (
         'png',
         'jpg',
+        'jpeg',
     )
 
     def write(self, im_arr: NDArray, filepath: str, metadata: dict):
-        skimage.io.imsave(filepath, im_arr, check_contrast=False)
+        suffix = filepath.split('.')[-1].lower()
+
+        # Validate that the image data is compatible with the file format
+        error = None
+        if suffix == 'png':
+            error = self._validate_png(im_arr, metadata)
+        if suffix in ('jpg', 'jpeg'):
+            error = self._validate_jpg(im_arr, metadata)
+        if error:
+            raise IncompatibleDataError(error, filepath=filepath)
+
+        # Write the image using skimage
+        skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False)
+
+    def _validate_png(self, im_arr: NDArray, metadata: dict) -> Union[str, None]:
+        if not (
+            metadata['axes'] == 'YX' or (metadata['axes'] == 'YXC' and im_arr.ndim in (1, 3, 4))
+        ):
+            return 'PNG files only support single-channel, RGB, and RGBA images (YX or YXC axes layout).'
+
+    def _validate_jpg(self, im_arr: NDArray, metadata: dict):
+        if not (
+            metadata['axes'] == 'YXC' and im_arr.ndim == 3
+        ):
+            return 'JPEG files only support RGB images (YXC axes layout).'
 
 
 @silent

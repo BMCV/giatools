@@ -10,12 +10,29 @@ from ..typing import (
 
 
 class UnsupportedFileError(Exception):
-    def __init__(self, *args, **kwargs):
+    """
+    Raised when a file cannot be read or written.
+    """
+    def __init__(self, filepath: str, *args, **kwargs):
+        self.filepath = filepath
         super().__init__(*args, **kwargs)
 
 
-class CorruptedFileError(Exception):
-    def __init__(self, *args, **kwargs):
+class CorruptFileError(Exception):
+    """
+    Raised when a file is corrupted and cannot be read.
+    """
+    def __init__(self, filepath: str, *args, **kwargs):
+        self.filepath = filepath
+        super().__init__(*args, **kwargs)
+
+
+class IncompatibleDataError(Exception):
+    """
+    Raised when a file cannot be written because the data or metadata is incompatible with the file format.
+    """
+    def __init__(self, message: str, *args, **kwargs):
+        self.message = message
         super().__init__(*args, **kwargs)
 
 
@@ -77,16 +94,16 @@ class Backend:
     def __repr__(self) -> str:
         return f'<{self.name} Backend>'
 
-    def peek_num_images_in_file(self, *args, **kwargs) -> Optional[int]:
+    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> Optional[int]:
         try:
-            with self.reader_class(*args, **kwargs) as reader:
+            with self.reader_class(filepath, *args, **kwargs) as reader:
                 return reader.get_num_images()
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def read(self, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
+    def read(self, filepath: str, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
         try:
-            with self.reader_class(*args, **kwargs) as reader:
+            with self.reader_class(filepath, *args, **kwargs) as reader:
 
                 # Handle files with multiple images
                 num_images = reader.get_num_images()
@@ -98,14 +115,21 @@ class Backend:
 
                 # Verify that the image format is supported
                 if 'Y' not in im_axes or 'X' not in im_axes:
-                    raise CorruptedFileError(f'OME-Zarr node is missing required X or Y axes (found {im_axes}).')
+                    raise CorruptFileError(
+                        f'OME-Zarr node is missing required X or Y axes (found {im_axes}).',
+                        filepath=filepath,
+                    )
                 if not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')):
-                    raise CorruptedFileError(f'Image has unsupported axes: {im_axes}')
+                    raise CorruptFileError(
+                        f'Image has unsupported axes: {im_axes}',
+                        filepath=filepath,
+                    )
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
                 if 'C' in im_axes and 'S' in im_axes:
-                    raise CorruptedFileError(
+                    raise CorruptFileError(
                         f'Image has both channel and sample axes which is not supported: {im_axes}',
+                        filepath=filepath,
                     )
                 im_axes = im_axes.replace('S', 'C')
 

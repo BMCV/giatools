@@ -17,7 +17,6 @@ else:
 try:
     from dask.array import Array as DaskArray
 except ImportError:
-    DaskArray = np.ndarray
+    class DaskArray: ...  # noqa: E701
 
-#: Alias for a NumPy or Dask array
-NDArray = Union[np.ndarray, DaskArray]  # noqa: F405
+NDArray: TypeAlias = Union[np.ndarray, DaskArray]  # noqa: F405

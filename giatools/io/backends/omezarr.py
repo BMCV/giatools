@@ -31,11 +31,11 @@ normalized_unit_representations = {
 class OMEZarrReader(Reader):
 
     def open(self, *args, **kwargs) -> Any:
-        omezzarr_store = ome_zarr.io.parse_url(*args, **kwargs)
-        if omezzarr_store is None:
-            raise UnsupportedFileError()
+        omezarr_store = ome_zarr.io.parse_url(*args, **kwargs)
+        if omezarr_store is None:
+            raise UnsupportedFileError(filepath=args[0])
         else:
-            omezarr_reader = ome_zarr.reader.Reader(omezzarr_store)
+            omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
             return list(omezarr_reader())
 
     def get_num_images(self) -> int:
@@ -71,7 +71,7 @@ def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> Dict[str, Any]:
 
     # Extract the `unit`, if it is constant across all axes
     units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
-    if len(units) == 1 and (unit := normalized_unit_representations.get(next(iter(units))), ''):
+    if len(units) == 1 and (unit := normalized_unit_representations.get(next(iter(units)), '')):
         metadata['unit'] = unit
 
     # Extract the pixel/voxel sizes

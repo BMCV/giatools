@@ -59,16 +59,19 @@ backends = [
 ]
 
 
-def _raise_unsupported_file_error(*args, **kwargs):
+def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
     args_str = ', '.join(repr(arg) for arg in args)
     kwargs_str = ', '.join(f'{key}={value!r}' for key, value in kwargs.items())
-    suffix = ', '.join((args_str, kwargs_str))
-    if suffix:
-        suffix = f': {suffix}'
-    raise UnsupportedFileError(f'No backend could read the image{suffix}')
+    details = ', '.join((args_str, kwargs_str))
+    if details:
+        details = f' ({details})'
+    raise UnsupportedFileError(
+        f'No backend could read {filepath}{details}',
+        filepath=filepath,
+    )
 
 
-def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
+def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
     """
     Wrapper for reading images, muting non-fatal errors.
 
@@ -84,18 +87,24 @@ def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[st
     sample axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread`
     backend, single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two
     axes and ``YXC`` for arrays with three axes, respectively.
+
+    Raises:
+        CorruptFileError:
+            If the image cannot be read by the designated backend due to corruption or an unsupported format flavor.
+        UnsupportedFileError:
+            If no backend could read the image.
     """
 
     for backend in backends:
-        ret = backend.read(*args, position=position, **kwargs)
+        ret = backend.read(filepath, *args, position=position, **kwargs)
         if ret is not None:
             return ret
 
     # Raise an error if no backend could read the image
-    _raise_unsupported_file_error(*args, **kwargs)
+    _raise_unsupported_file_error(filepath, *args, **kwargs)
 
 
-def peek_num_images_in_file(*args, **kwargs) -> int:
+def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
     """
     Peeks the number of images that can be loaded from a file.
 
@@ -116,14 +125,18 @@ def peek_num_images_in_file(*args, **kwargs) -> int:
             ...     'Images in PNG file:',
             ...     peek_num_images_in_file('data/input4_uint8.png'),
             ... )
+
+    Raises:
+        UnsupportedFileError:
+            If no backend could read the image.
     """
     for backend in backends:
-        ret = backend.peek_num_images_in_file(*args, **kwargs)
+        ret = backend.peek_num_images_in_file(filepath, *args, **kwargs)
         if ret is not None:
             return ret
 
     # Raise an error if no backend could read the image
-    _raise_unsupported_file_error(*args, **kwargs)
+    _raise_unsupported_file_error(filepath, *args, **kwargs)
 
 
 def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
@@ -144,7 +157,10 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
             if any(filepath.lower().endswith(f'.{ext}') for ext in backend.writer_class.supported_extensions):
                 return backend
         else:
-            raise UnsupportedFileError(f'No backend found to write file: {filepath}')
+            raise UnsupportedFileError(
+                f'No backend found to write file: {filepath}',
+                filepath=filepath,
+            )
 
     # Select the backend based on the given name
     else:
@@ -154,6 +170,12 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
 def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Optional[dict] = None):
     """
     Save an image to a file.
+
+    Raises:
+        IncompatibleDataError:
+            If the image data or metadata is incompatible with the file format (inferred from the suffix of the file).
+        UnsupportedFileError:
+            If no backend is available to write the file format (inferred from the suffix of the file).
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(

@@ -35,7 +35,7 @@ class Image:
 
     data: NDArray
     """
-    The image data as a numpy array.
+    The image data as a NumPy array or a Dask array.
     """
 
     axes: str
@@ -74,7 +74,7 @@ class Image:
         self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
-    def read(*args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
+    def read(filepath: str, *args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`. Normalization will be (almost)
         skipped if `normalize_axes` is `None`.
@@ -82,7 +82,7 @@ class Image:
         See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
         from .io import imreadraw
-        data, axes, metadata = imreadraw(*args, **kwargs)
+        data, axes, metadata = imreadraw(filepath, *args, **kwargs)
         img = Image(data, axes, original_axes=axes, metadata=metadata)
         if normalize_axes is None:
             return img
@@ -96,7 +96,14 @@ class Image:
     ) -> Self:
         """
         Write the image to a file.
+
+        Raises:
+            ValueError: If the number of axes does not match the number of data dimensions.
         """
+        if len(self.axes) != len(self.data.shape):
+            raise ValueError(
+                f'Number of axes "{self.axes}" does not match number of data dimensions {self.data.shape}'
+            )
         from .io import imwrite
         full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
         imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
