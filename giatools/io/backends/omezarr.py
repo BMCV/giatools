@@ -33,7 +33,7 @@ class OMEZarrReader(Reader):
     def open(self, *args, **kwargs) -> Any:
         omezarr_store = ome_zarr.io.parse_url(*args, **kwargs)
         if omezarr_store is None:
-            raise UnsupportedFileError()
+            raise UnsupportedFileError(filepath=args[0])
         else:
             omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
             return list(omezarr_reader())

@@ -65,7 +65,10 @@ def _raise_unsupported_file_error(*args, **kwargs):
     suffix = ', '.join((args_str, kwargs_str))
     if suffix:
         suffix = f': {suffix}'
-    raise UnsupportedFileError(f'No backend could read the image{suffix}')
+    raise UnsupportedFileError(
+        f'No backend could read the image{suffix}',
+        filepath=args[0],
+    )
 
 
 def imreadraw(*args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
@@ -144,7 +147,10 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
             if any(filepath.lower().endswith(f'.{ext}') for ext in backend.writer_class.supported_extensions):
                 return backend
         else:
-            raise UnsupportedFileError(f'No backend found to write file: {filepath}')
+            raise UnsupportedFileError(
+                f'No backend found to write file: {filepath}',
+                filepath=filepath,
+            )
 
     # Select the backend based on the given name
     else:

@@ -10,7 +10,11 @@ from ..typing import (
 
 
 class UnsupportedFileError(Exception):
-    def __init__(self, *args, **kwargs):
+    """
+    Raised when a file cannot be read or written.
+    """
+    def __init__(self, filepath: str, *args, **kwargs):
+        self.filepath = filepath
         super().__init__(*args, **kwargs)
 
 
