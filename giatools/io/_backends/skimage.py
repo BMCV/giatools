@@ -84,7 +84,7 @@ class SKImageWriter(Writer):
 
     def _validate_jpg(self, im_arr: NDArray, metadata: dict):
         if not (
-            metadata['axes'] == 'YXC' and im_arr.ndim == 3
+            metadata['axes'] == 'YXC' and im_arr.ndim == 3 and im_arr.shape[2] == 3
         ):
             return 'JPEG files only support RGB images (YXC axes layout).'
 
