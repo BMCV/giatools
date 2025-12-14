@@ -94,7 +94,14 @@ class Image:
     ) -> Self:
         """
         Write the image to a file.
+
+        Raises:
+            ValueError: If the number of axes does not match the number of data dimensions.
         """
+        if len(self.axes) != len(self.data.shape):
+            raise ValueError(
+                f'Number of axes "{self.axes}" does not match number of data dimensions {self.data.shape}'
+            )
         from .io import imwrite
         full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
         imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
