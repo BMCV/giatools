@@ -26,12 +26,10 @@ class SKImageReader(Reader):
         return 1
 
     def select_image(self, position: int) -> Any:
-        image = _skimage_io_imread(*self.file[0], **self.file[1])
+        filepath = self.file[0][0]
+        image = _skimage_io_imread(filepath, *self.file[0][1:], **self.file[1])
         if image.ndim not in (2, 3):
-            raise UnsupportedFileError(
-                f'Image has unsupported dimension: {image.ndim}',
-                filepath=self.file[0][0],
-            )
+            raise UnsupportedFileError(filepath, f'Image has unsupported dimension: {image.ndim}')
         return image
 
     def get_axes(self, image: Any) -> str:

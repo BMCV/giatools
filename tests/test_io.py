@@ -282,6 +282,16 @@ class imwrite(unittest.TestCase):
                 backend='unsupported_backend',
             )
 
+    def test__unsupported_file_error(self):
+        with self.assertRaises(giatools.io.UnsupportedFileError):
+            self._test(
+                data_shape=(10, 10, 2),
+                axes='YXC',
+                dtype=np.float32,
+                ext='unsupported_extension',
+                backend='auto',
+            )
+
     def test__float32__tifffile__tif(self):
         with self.assertWarns(DeprecationWarning):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
@@ -336,16 +346,18 @@ class imwrite(unittest.TestCase):
         self._test(data_shape=(10, 10, 2), axes='YXC', dtype=np.uint8, ext='png', backend='auto')
 
     def test__uint8__auto__jpg(self):
-        self._test(
-            data_shape=(100, 150, 3),
-            axes='YXC',
-            dtype=np.uint8,
-            ext='jpg',
-            backend='auto',
-            sigma=3,
-            rms_tol=0.1,
-            quality=100,
-        )
+        for ext in ('jpg', 'jpeg'):
+            with self.subTest(ext=ext):
+                self._test(
+                    data_shape=(100, 150, 3),
+                    axes='YXC',
+                    dtype=np.uint8,
+                    ext=ext,
+                    backend='auto',
+                    sigma=3,
+                    rms_tol=0.1,
+                    quality=100,
+                )
 
 
 class ModuleTestCase(unittest.TestCase):
