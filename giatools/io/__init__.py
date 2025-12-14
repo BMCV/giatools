@@ -90,7 +90,7 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
 
     Raises:
         CorruptFileError:
-            If the image cannot be read by the designated backend due to corruption or unsupported format flavor.
+            If the image cannot be read by the designated backend due to corruption or an unsupported format flavor.
         UnsupportedFileError:
             If no backend could read the image.
     """
