@@ -11,6 +11,13 @@ from .image import (  # noqa: F401
 )
 from .version import __version__ as VERSION  # noqa: F401
 
+__all__ = [
+    'default_normalized_axes',
+    'Image',
+    'require_backend',
+    'VERSION',
+]
+
 
 def require_backend(name: str):
     """
