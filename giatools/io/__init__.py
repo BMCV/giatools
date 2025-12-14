@@ -156,11 +156,12 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         for backend in supported_backends:
             if any(filepath.lower().endswith(f'.{ext}') for ext in backend.writer_class.supported_extensions):
                 return backend
-        else:
-            raise UnsupportedFileError(
-                f'No backend found to write file: {filepath}',
-                filepath=filepath,
-            )
+
+        # No backend was returned (block above), so no backend was found
+        raise UnsupportedFileError(
+            f'No backend found to write file: {filepath}',
+            filepath=filepath,
+        )
 
     # Select the backend based on the given name
     else:
