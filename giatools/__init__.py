@@ -23,6 +23,6 @@ def require_backend(name: str):
 
     for backend in backends:
         if backend.name == name:
-            return
+            break
     else:
         raise ImportError(f'The backend "{name}" is not available.')
