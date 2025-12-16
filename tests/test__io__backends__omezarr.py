@@ -2,7 +2,6 @@ import unittest
 import unittest.mock
 
 import giatools.io
-import giatools.io._backends.omezarr
 
 from .tools import (
     minimum_python_version,
@@ -16,6 +15,7 @@ class OMEZarrReader(unittest.TestCase):
     @minimum_python_version(3, 11)
     @without_logging
     def test__valid__zarr(self):
+        import giatools.io._backends.omezarr
         with giatools.io._backends.omezarr.OMEZarrReader('tests/data/ome-zarr-examples/image-02.zarr') as reader:
             self.assertEqual(reader.get_num_images(), 2)
             im = reader.select_image(0)
@@ -28,6 +28,7 @@ class OMEZarrReader(unittest.TestCase):
     @minimum_python_version(3, 11)
     @without_logging
     def test__invalid__zarr(self):
+        import giatools.io._backends.omezarr
         with giatools.io._backends.omezarr.OMEZarrReader('tests/data/ome-zarr-examples/image-02.zarr') as reader:
             self.assertEqual(reader.get_num_images(), 2)
             im = reader.select_image(1)
@@ -37,6 +38,7 @@ class OMEZarrReader(unittest.TestCase):
     @minimum_python_version(3, 11)
     @without_logging
     def test__invalid(self):
+        import giatools.io._backends.omezarr
         for filename in (
             'input4_uint8.png',
             'input1_uint8_yx.tiff',
@@ -49,6 +51,7 @@ class OMEZarrReader(unittest.TestCase):
     @minimum_python_version(3, 11)
     @without_logging
     def test__get_image_metadata(self):
+        import giatools.io._backends.omezarr
         for zarr_unit, unit in (
             ('nm', 'nm'),
             ('nanometer', 'nm'),
