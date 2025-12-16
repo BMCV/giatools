@@ -228,7 +228,7 @@ class Image:
 
                 >>> from giatools import Image
                 >>> import numpy as np
-                >>> image = Image(np.zeros(10, 20, 30), axes='CYX')
+                >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
                 >>> print(image.is_isotropic())
                 >>> image.metadata.pixel_size = (1.0, 1.1)
                 >>> print(image.is_isotropic())
