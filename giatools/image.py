@@ -221,6 +221,23 @@ class Image:
 
         Returns:
             `True` if the image is isotropic, `False` if not, or `None` if the resolution is not fully known.
+
+        Example:
+
+            .. runblock:: pycon
+
+                >>> from giatools import Image
+                >>> import numpy as np
+                >>> image = Image(np.zeros(10, 20, 30), axes='CYX')
+                >>> print(image.is_isotropic())
+                >>> image.metadata.pixel_size = (1.0, 1.1)
+                >>> print(image.is_isotropic())
+                >>> image.metadata.pixel_size = (1.0, 1.0)
+                >>> print(image.is_isotropic())
+                >>> image.axes = 'ZYX'
+                >>> print(image.is_isotropic())
+                >>> image.metadata.z_spacing = 1.0
+                >>> print(image.is_isotropic())
         """
         if self.metadata.pixel_size is None or ('Z' in self.axes and self.metadata.z_spacing is None):
             return None
