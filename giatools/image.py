@@ -5,13 +5,14 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import sys
+import sys as _sys
 
-import numpy as np
+import attrs as _attrs
+import numpy as _np
 
-from . import util
+from . import metadata as _metadata
+from . import util as _util
 from .typing import (
-    Dict,
     Iterator,
     NDArray,
     Optional,
@@ -41,16 +42,9 @@ class Image:
     The image data as a NumPy array or a Dask array.
     """
 
-    metadata: Dict
+    metadata: _metadata.Metadata
     """
     Additional metadata of the image.
-
-    The following metadata keys are covered by tests: (if applicable)
-
-    - **resolution**, `Tuple[float, float]`: Pixels per unit in X and Y dimensions.
-    - **z_spacing**, `float`: The pixel spacing in the Z dimension.
-    - **z_position**, `float`: The position of the image in the Z dimension.
-    - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
 
     original_axes: Optional[str]
@@ -63,13 +57,18 @@ class Image:
         self,
         data: NDArray,
         axes: str,
-        metadata: Optional[Dict] = None,
+        metadata: Optional[Union[dict, _metadata.Metadata]] = None,
         original_axes: Optional[str] = None,
     ):
         self.data = data
         self.axes = axes
         self.original_axes = original_axes
-        self.metadata = dict() if metadata is None else metadata
+        if metadata is None:
+            self.metadata = _metadata.Metadata()
+        elif isinstance(metadata, dict):
+            self.metadata = _metadata.Metadata(**metadata)
+        else:
+            self.metadata = metadata
 
     @staticmethod
     def read(filepath: str, *args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
@@ -81,7 +80,7 @@ class Image:
         """
         from .io import imreadraw
         data, axes, metadata = imreadraw(filepath, *args, **kwargs)
-        img = Image(data, axes, original_axes=axes, metadata=metadata)
+        img = Image(data, axes, original_axes=axes, metadata=_metadata.Metadata(**metadata))
         if normalize_axes is None:
             return img
         else:
@@ -103,7 +102,10 @@ class Image:
                 f'Number of axes "{self.axes}" does not match number of data dimensions {self.data.shape}'
             )
         from .io import imwrite
-        full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
+        full_metadata = dict(axes=self.axes) | _attrs.asdict(
+            self.metadata,
+            filter=lambda attr, value: value is not None,
+        )
         imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 
@@ -122,7 +124,7 @@ class Image:
             raise ValueError(f'Cannot squeeze axes "{axes}" from image with axes "{self.axes}"')
 
         s = tuple(axis_pos for axis_pos, axis in enumerate(self.axes) if axis not in axes)
-        squeezed_axes = util.str_without_positions(self.axes, s)
+        squeezed_axes = _util.str_without_positions(self.axes, s)
         squeezed_image = Image(
             data=self.data.squeeze(axis=s),
             axes=squeezed_axes,
@@ -149,8 +151,8 @@ class Image:
         for dst, axis in enumerate(axes):
             src = reordered_axes.index(axis)
             if src != dst:
-                reordered_data = np.moveaxis(reordered_data, src, dst)
-                reordered_axes = util.move_char(reordered_axes, src, dst)
+                reordered_data = _np.moveaxis(reordered_data, src, dst)
+                reordered_axes = _util.move_char(reordered_axes, src, dst)
         assert reordered_axes == axes, f'Failed to reorder axes "{self.axes}" to "{axes}", got "{reordered_axes}"'
         return Image(data=reordered_data, axes=axes, original_axes=self.original_axes, metadata=self.metadata)
 
@@ -191,7 +193,7 @@ class Image:
         This image is not changed in place, a new image is returned (without copying the data). The new image
         references the original metadata.
         """
-        squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
+        squeezed_axes = ''.join(_np.array(list(self.axes))[_np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
     def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], NDArray]]:
@@ -205,7 +207,7 @@ class Image:
 
             This method requires **Python 3.11** or later.
         """
-        if sys.version_info < (3, 11):
+        if _sys.version_info < (3, 11):
             raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
         else:
             from . import image_py311

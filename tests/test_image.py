@@ -40,7 +40,7 @@ class ModuleTestCase(unittest.TestCase):
         Verify that written images can be read back correctly with correct data and metadata.
         """
         expected_axes = 'ZYX'
-        expected_metadata = dict(resolution=(10, 10), z_spacing=0.2, unit='nm')
+        expected_metadata = dict(resolution=(10., 10.), z_spacing=0.2, unit='nm')
         img0 = giatools.image.Image(
             data=expected_data,
             axes=expected_axes,
@@ -54,7 +54,7 @@ class ModuleTestCase(unittest.TestCase):
         # Verify that data and metadata are the same
         np.testing.assert_array_equal(img1.data, expected_data)
         self.assertEqual(img1.axes, expected_axes)
-        self.assertEqual(img1.metadata, expected_metadata)
+        verify_metadata(self, img1.metadata, **expected_metadata)
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -89,7 +89,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.shape, (1, 1, 1, 265, 329, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata)
 
     def test__input1__without_normalization(self):
         img = giatools.image.Image.read('tests/data/input1_uint8_yx.tiff', normalize_axes=None)
@@ -97,7 +97,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.shape, (265, 329))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, 'YX')
-        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata)
 
     def test__input2(self):
         img = giatools.image.Image.read('tests/data/input2_uint8_yx.tiff')
@@ -105,7 +105,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.shape, (1, 1, 1, 96, 97, 1))
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata)
 
     def test__input3(self):
         img = giatools.image.Image.read('tests/data/input3_uint16_zyx.tiff')
@@ -113,7 +113,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 1259.6755334241288)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=(10000, 10000), z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata, resolution=(10000., 10000.))
 
     def test__input4(self):
         img = giatools.image.Image.read('tests/data/input4_uint8.png')
@@ -121,7 +121,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 130.04)
         self.assertEqual(img.original_axes, 'YXC')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=None, z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata)
 
     def test__input5(self):
         img = giatools.image.Image.read('tests/data/input5_uint8_cyx.tiff')
@@ -153,7 +153,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 5815.486880466472)
         self.assertEqual(img.original_axes, 'TYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit=None)
+        verify_metadata(self, img.metadata, resolution=(1., 1.))
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -168,7 +168,7 @@ class Image__read(unittest.TestCase):
         self.assertAlmostEqual(float(img.data.mean()), 502.2611393006139)
         self.assertEqual(img.original_axes, 'YX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=None, unit='um')
+        verify_metadata(self, img.metadata, resolution=(1., 1.), unit='um')
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -183,7 +183,7 @@ class Image__read(unittest.TestCase):
         self.assertAlmostEqual(float(img.data.mean()), 0.0)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=(1, 1), z_spacing=1, unit='um')
+        verify_metadata(self, img.metadata, resolution=(1., 1.), z_spacing=1., unit='um')
 
 
 @unittest.mock.patch('giatools.io.imwrite')
@@ -207,7 +207,7 @@ class Image__write(unittest.TestCase):
         self.assertEqual(mock_imwrite.call_args_list[0][1], dict(backend='tifffile', metadata=dict(axes=test1_axes)))
 
     def test__metadata(self, mock_imwrite):
-        self.img1.metadata['z_spacing'] = 0.5
+        self.img1.metadata.z_spacing = 0.5
         self.img1.write('test_output.tiff')
         mock_imwrite.assert_called_once()
         np.testing.assert_array_equal(mock_imwrite.call_args_list[0][0][0], test1_data)

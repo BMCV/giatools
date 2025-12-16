@@ -5,7 +5,7 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import attrs
+import attrs as _attrs
 
 from .typing import (
     Literal,
@@ -26,21 +26,21 @@ Unit = Literal[
 ]
 
 
-@attrs.define
+@_attrs.define
 class Metadata:
     """
     Image metadata.
     """
 
-    resolution: Optional[Tuple[float, float]] = attrs.field(
+    resolution: Optional[Tuple[float, float]] = _attrs.field(
         default=None,
-        validator=attrs.validators.optional(
+        validator=_attrs.validators.optional(
             [
-                attrs.validators.instance_of(tuple),
-                attrs.validators.min_len(2),
-                attrs.validators.max_len(2),
-                attrs.validators.deep_iterable(
-                    member_validator=attrs.validators.instance_of(float),
+                _attrs.validators.instance_of(tuple),
+                _attrs.validators.min_len(2),
+                _attrs.validators.max_len(2),
+                _attrs.validators.deep_iterable(
+                    member_validator=_attrs.validators.instance_of(float),
                     iterable_validator=None,
                 ),
             ],
@@ -73,30 +73,30 @@ class Metadata:
                 1 / value[1],
             )
 
-    z_spacing: Optional[float] = attrs.field(
+    z_spacing: Optional[float] = _attrs.field(
         default=None,
-        validator=attrs.validators.optional(
-            attrs.validators.instance_of(float),
+        validator=_attrs.validators.optional(
+            _attrs.validators.instance_of(float),
         ),
     )
     """
     The pixel spacing in the Z dimension.
     """
 
-    z_position: Optional[float] = attrs.field(
+    z_position: Optional[float] = _attrs.field(
         default=None,
-        validator=attrs.validators.optional(
-            attrs.validators.instance_of(float),
+        validator=_attrs.validators.optional(
+            _attrs.validators.instance_of(float),
         ),
     )
     """
     The position of the image in the Z dimension.
     """
 
-    unit: Optional[Unit] = attrs.field(
+    unit: Optional[Unit] = _attrs.field(
         default=None,
-        validator=attrs.validators.optional(
-            attrs.validators.in_(get_args(Unit)),
+        validator=_attrs.validators.optional(
+            _attrs.validators.in_(get_args(Unit)),
         ),
     )
     """

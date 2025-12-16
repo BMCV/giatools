@@ -18,7 +18,7 @@ class OMEZarrReader(unittest.TestCase):
             self.assertEqual(reader.get_num_images(), 2)
             im = reader.select_image(0)
             self.assertEqual(reader.get_axes(im), 'YX')
-            verify_metadata(self, reader.get_image_metadata(im), resolution=(1, 1), z_spacing=None, unit='um')
+            verify_metadata(self, reader.get_image_metadata(im), resolution=(1., 1.), unit='um')
             arr = reader.get_image_data(im)
             self.assertEqual(arr.shape, (200, 200))
             self.assertAlmostEqual(round(arr.mean().compute(), 2), 502.26)
