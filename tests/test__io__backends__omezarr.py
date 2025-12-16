@@ -1,8 +1,6 @@
 import unittest
 import unittest.mock
 
-import giatools.io
-
 from .tools import (
     minimum_python_version,
     verify_metadata,
