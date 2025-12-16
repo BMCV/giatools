@@ -127,6 +127,6 @@ def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
                 with self.subTest(extension=ext):
                     kwargs = dict(kwargs)
                     kwargs[name] = f'{prefix}.{ext}'
-                    return test_func(self, *args, **kwargs)
+                    test_func(self, *args, **kwargs)
         return wrapper
     return decorator
