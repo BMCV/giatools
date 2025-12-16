@@ -5,7 +5,7 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import warnings
+import warnings as _warnings
 
 from ..typing import (
     Any,
@@ -13,14 +13,14 @@ from ..typing import (
     NDArray,
     Tuple,
 )
-from ..util import distance_to_external_frame
+from ..util import distance_to_external_frame as _distance_to_external_frame
 from ._backends.skimage import (
-    SKImageReader,
-    SKImageWriter,
+    SKImageReader as _SKImageReader,
+    SKImageWriter as _SKImageWriter,
 )
 from ._backends.tiff import (
-    TiffReader,
-    TiffWriter,
+    TiffReader as _TiffReader,
+    TiffWriter as _TiffWriter,
 )
 from .backend import (
     Backend,
@@ -30,9 +30,9 @@ from .backend import (
 )
 
 try:
-    from ._backends.omezarr import OMEZarrReader
+    from ._backends.omezarr import OMEZarrReader as _OMEZarrReader
 except ImportError:
-    OMEZarrReader = None  # type: ignore
+    _OMEZarrReader = None  # type: ignore
 
 __all__ = [
     'backends',
@@ -59,14 +59,14 @@ __all__ = [
 #:
 #:         The `omezarr` backend is only available on **Python 3.11** or later.
 backends = [
-    Backend('tifffile', TiffReader, TiffWriter),
+    Backend('tifffile', _TiffReader, _TiffWriter),
 ] + (
     [
-        Backend('omezarr', OMEZarrReader),
+        Backend('omezarr', _OMEZarrReader),
     ]
-    if OMEZarrReader is not None else []
+    if _OMEZarrReader is not None else []
 ) + [
-    Backend('skimage', SKImageReader, SKImageWriter),
+    Backend('skimage', _SKImageReader, _SKImageWriter),
 ]
 
 
@@ -191,10 +191,10 @@ def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto
             are invalid (e.g., `None`, invalid axes or dimensions).
     """
     if filepath.lower().endswith('.tif'):
-        warnings.warn(
+        _warnings.warn(
             '.tif extension is deprecated, use .tiff instead.',
             DeprecationWarning,
-            stacklevel=distance_to_external_frame(),
+            stacklevel=_distance_to_external_frame(),
         )
     _select_writing_backend(
         filepath,
