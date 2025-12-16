@@ -14,6 +14,7 @@ from .typing import (
     get_args,
 )
 
+#: Valid units for metadata
 Unit = Literal[
     'inch',
     'nm',
@@ -27,6 +28,9 @@ Unit = Literal[
 
 @attrs.define
 class Metadata:
+    """
+    Image metadata.
+    """
 
     resolution: Optional[Tuple[float, float]] = attrs.field(
         default=None,
@@ -42,6 +46,9 @@ class Metadata:
             ],
         )
     )
+    """
+    Pixels per unit in X and Y dimensions.
+    """
 
     z_spacing: Optional[float] = attrs.field(
         default=None,
@@ -49,6 +56,9 @@ class Metadata:
             attrs.validators.instance_of(float),
         ),
     )
+    """
+    The pixel spacing in the Z dimension.
+    """
 
     z_position: Optional[float] = attrs.field(
         default=None,
@@ -56,6 +66,9 @@ class Metadata:
             attrs.validators.instance_of(float),
         ),
     )
+    """
+    The position of the image in the Z dimension.
+    """
 
     unit: Optional[Unit] = attrs.field(
         default=None,
@@ -63,3 +76,6 @@ class Metadata:
             attrs.validators.in_(get_args(Unit)),
         ),
     )
+    """
+    The unit of measurement (e.g., inch, nm, um, mm, cm, m, km).
+    """
