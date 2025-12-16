@@ -149,14 +149,13 @@ class Backend:
             return None  # Indicate that the file is unsupported
 
     def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
-        writer = self.writer_class()
+        if metadata is None:
+            raise ValueError('Metadata must be provided when writing images.')
 
         # Create a copy of the metadata to avoid modifying the original
         metadata = dict(metadata) if metadata is not None else dict()
 
         # Validate metadata
-        if metadata is None:
-            raise ValueError('Metadata must be provided when writing images.')
         im_axes = metadata.get('axes', '')
         if 'Y' not in im_axes or 'X' not in im_axes:
             raise ValueError(f'Image is missing required X or Y axes (found {im_axes}).')
@@ -174,6 +173,7 @@ class Backend:
         im_axes = im_axes.replace('S', 'C')
 
         # Delegate the writing to the writer class
+        writer = self.writer_class()
         writer.write(im_arr, filepath, metadata, **kwargs)
 
 

@@ -48,6 +48,15 @@ class BackendTestCase(unittest.TestCase):
         return self.writer_cls.return_value.write
 
 
+class Backend(BackendTestCase):
+
+    def test__str__(self):
+        self.assertEqual(str(self.backend), 'name')
+
+    def test__repr__(self):
+        self.assertEqual(repr(self.backend), "<name Backend>")
+
+
 class Backend__peek_num_images_in_file(BackendTestCase):
 
     def test__missing_file(self):
@@ -76,7 +85,7 @@ class Backend__read(BackendTestCase):
 
     def test__missing_file(self):
         with self.assertRaises(FileNotFoundError):
-            self.backend.peek_num_images_in_file('nonexistent_file.tiff')
+            self.backend.read('nonexistent_file.tiff')
 
     @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
     def test__unsupported_file(self, mock_os_path_exists):
@@ -148,3 +157,37 @@ class Backend__write(BackendTestCase):
                 self.assertIsNot(self.writer_write.call_args.args[2], metadata)
                 self.assertEqual(self.writer_write.call_args.args[2], metadata_copy)
                 self.assertEqual(self.writer_write.call_args.kwargs, dict(kwarg=kwarg))
+
+
+class Reader(unittest.TestCase):
+
+    def test_open(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().open()
+
+    def test_get_num_images(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().get_num_images()
+
+    def test_select_image(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().select_image(0)
+
+    def test_get_axes(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().get_axes(unittest.mock.MagicMock())
+
+    def test_get_image_data(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().get_image_data(unittest.mock.MagicMock())
+
+    def test_get_image_metadata(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Reader().get_image_metadata(unittest.mock.MagicMock())
+
+
+class Writer(unittest.TestCase):
+
+    def test_write(self):
+        with self.assertRaises(NotImplementedError):
+            giatools.io.backend.Writer().write(unittest.mock.MagicMock(), 'some_file', dict())
