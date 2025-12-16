@@ -8,12 +8,11 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 import attrs
 
 from .typing import (
-    get_args,
     Literal,
     Optional,
     Tuple,
+    get_args,
 )
-
 
 Unit = Literal[
     'inch',
