@@ -37,22 +37,54 @@ class Image:
     axes: str
     """
     The axes of the image data as a string.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.axes)
     """
 
     data: NDArray
     """
     The image data as a NumPy array or a Dask array.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.data.shape)
     """
 
     metadata: _metadata.Metadata
     """
     Additional metadata of the image.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.metadata)
     """
 
     original_axes: Optional[str]
     """
     The original axes of the image data as a string, if available. This is useful for keeping track of the original
     axes when normalizing or reordering axes.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.original_axes)
     """
 
     def __init__(
