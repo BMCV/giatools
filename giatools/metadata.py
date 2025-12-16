@@ -53,7 +53,8 @@ class Metadata:
     @property
     def pixel_size(self) -> Optional[Tuple[float, float]]:
         """
-        The pixel size in X and Y dimensions. This is identical to the pixel spacing in X and Y dimensions.
+        The pixel size in X and Y dimensions (units per pixel). This is identical to the pixel spacing in X and Y
+        dimensions.
         """
         return (
             1 / self.resolution[0],
@@ -99,5 +100,5 @@ class Metadata:
         ),
     )
     """
-    The unit of measurement (e.g., inch, nm, um, mm, cm, m, km).
+    The unit of measurement.
     """
