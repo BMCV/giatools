@@ -127,7 +127,7 @@ class Backend__write(BackendTestCase):
         for axes in invalid_axes:
             with self.subTest(axes=axes):
                 with self.assertRaises(ValueError):
-                    self.backend.write(self.im_arr, 'some_file', axes=axes)
+                    self.backend.write(self.im_arr, 'some_file', metadata=dict(axes=axes))
 
     def test__missing_metadata(self):
         for metadata in (None, dict()):

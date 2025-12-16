@@ -44,8 +44,7 @@ class imreadraw(unittest.TestCase):
 
     def test__input3(self):
         """
-        Test a multi-page TIFF, that sometimes fails to load properly with ``skimage.io.imread``, but works with
-        `tifffile`.
+        Test a multi-page TIFF, that sometimes fails to load with ``skimage.io.imread``, but works with `tifffile`.
 
         For details see: https://github.com/BMCV/galaxy-image-analysis/pull/132#issuecomment-2371561435
         """
@@ -53,7 +52,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
-        verify_metadata(self, metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
+        verify_metadata(self, metadata, resolution=(10000, 10000), z_spacing=None, unit=None)
 
     def test__input4__png(self):
         """

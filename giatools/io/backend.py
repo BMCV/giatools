@@ -148,15 +148,30 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: Optional[dict] = None, **kwargs):
+    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
         writer = self.writer_class()
 
         # Create a copy of the metadata to avoid modifying the original
         metadata = dict(metadata) if metadata is not None else dict()
 
-        # TODO: Treat sample axis "S" as channel axis "C" and fail if both are present
+        # Validate metadata
+        if metadata is None:
+            raise ValueError('Metadata must be provided when writing images.')
+        im_axes = metadata.get('axes', '')
+        if 'Y' not in im_axes or 'X' not in im_axes:
+            raise ValueError(f'Image is missing required X or Y axes (found {im_axes}).')
+        if (
+            not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS'))
+            or len(im_axes) != len(frozenset(im_axes))
+        ):
+            raise ValueError(f'Image has unsupported axes: {im_axes}')
 
-        # TODO: Validate metadata
+        # Treat sample axis "S" as channel axis "C" and fail if both are present
+        if 'C' in im_axes and 'S' in im_axes:
+            raise ValueError(
+                f'Image has both channel and sample axes which is not supported: {im_axes}',
+            )
+        im_axes = im_axes.replace('S', 'C')
 
         # Delegate the writing to the writer class
         writer.write(im_arr, filepath, metadata, **kwargs)

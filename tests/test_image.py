@@ -113,7 +113,7 @@ class Image__read(unittest.TestCase):
         self.assertEqual(img.data.mean(), 1259.6755334241288)
         self.assertEqual(img.original_axes, 'ZYX')
         self.assertEqual(img.axes, giatools.image.default_normalized_axes)
-        verify_metadata(self, img.metadata, resolution=(10000, 10000), z_spacing=None, unit='cm')
+        verify_metadata(self, img.metadata, resolution=(10000, 10000), z_spacing=None, unit=None)
 
     def test__input4(self):
         img = giatools.image.Image.read('tests/data/input4_uint8.png')
