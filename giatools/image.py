@@ -214,3 +214,22 @@ class Image:
         else:
             from . import image_py311
             return image_py311.iterate_jointly(self, axes)
+
+    def is_isotropic(self, tol=1e-2) -> Optional[bool]:
+        """
+        Determines whether the image pixels/voxels are isotropic.
+
+        Returns:
+            `True` if the image is isotropic, `False` if not, or `None` if the resolution is not fully known.
+        """
+        if self.metadata.pixel_size is None or ('Z' in self.axes and self.metadata.z_spacing is None):
+            return None
+
+        # Determine the pixel/voxel size
+        voxel_size = list(self.metadata.pixel_size)
+        if 'Z' in self.axes:
+            voxel_size += [self.metadata.z_spacing]
+
+        # Check for isotropy
+        anisotropy = max(voxel_size) / min(voxel_size)
+        return anisotropy <= 1 + tol
