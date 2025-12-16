@@ -12,5 +12,6 @@ API
    giatools
    giatools.image
    giatools.io
+   giatools.metadata
    giatools.pandas
    giatools.util
