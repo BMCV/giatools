@@ -9,7 +9,6 @@ from .tools import (
     mock_array,
 )
 
-
 valid_tiff_units = (
     ('inch', 'inch'),
     ('nm', 'nm'),

@@ -4,7 +4,6 @@ import unittest.mock
 import giatools.io
 import giatools.io.backend
 
-
 invalid_axes = (
     'YYX',   # error: Y axis given twice
     'YXCS',  # error: C and S are mutually exclusive
