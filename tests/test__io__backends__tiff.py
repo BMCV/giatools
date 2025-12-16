@@ -3,6 +3,8 @@ import unittest.mock
 
 import giatools.io
 import giatools.io._backends.tiff
+import giatools.metadata
+from giatools.typing import get_args
 
 from .tools import (
     filenames,
@@ -26,6 +28,9 @@ valid_tiff_units = (
     ('km', 'km'),
     ('kilometers', 'km'),
 )
+
+# Consistency check
+assert frozenset(u[1] for u in valid_tiff_units) == frozenset(get_args(giatools.metadata.Unit))
 
 
 @unittest.mock.patch('giatools.io._backends.tiff.tifffile.imwrite')

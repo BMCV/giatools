@@ -1,5 +1,6 @@
 import os
 
+from ..metadata import Unit
 from ..typing import (
     Any,
     Dict,
@@ -177,7 +178,7 @@ class Backend:
         writer.write(im_arr, filepath, metadata, **kwargs)
 
 
-def normalize_unit(unit: str) -> Optional[str]:
+def normalize_unit(unit: str) -> Optional[Unit]:
     """
     Normalizes a unit string to a standard representation.
     """

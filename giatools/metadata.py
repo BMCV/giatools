@@ -28,7 +28,7 @@ Unit = Literal[
 @attrs.define
 class Metadata:
 
-    resolution: Tuple[float, float] | None = attrs.field(
+    resolution: Optional[Tuple[float, float]] = attrs.field(
         default=None,
         validator=attrs.validators.optional(
             [
@@ -43,14 +43,18 @@ class Metadata:
         )
     )
 
-    z_spacing: float | None = attrs.field(
+    z_spacing: Optional[float] = attrs.field(
         default=None,
-        validator=attrs.validators.instance_of(float | None),
+        validator=attrs.validators.optional(
+            attrs.validators.instance_of(float),
+        ),
     )
 
-    z_position: float | None = attrs.field(
+    z_position: Optional[float] = attrs.field(
         default=None,
-        validator=attrs.validators.instance_of(float | None),
+        validator=attrs.validators.optional(
+            attrs.validators.instance_of(float),
+        ),
     )
 
     unit: Optional[Unit] = attrs.field(
