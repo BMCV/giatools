@@ -7,6 +7,7 @@ from ...typing import (
     NDArray,
 )
 from ..backend import (
+    CorruptFileError,
     Reader,
     UnsupportedFileError,
 )
@@ -58,7 +59,8 @@ def _get_omezarr_axes(omezarr_node: ome_zarr.reader.Node) -> str:
     """
     Extract axes string from an `ome_zarr.reader.Node` object.
     """
-    assert 'axes' in omezarr_node.metadata, 'OME-Zarr node is missing axes information.'
+    if 'axes' not in omezarr_node.metadata:
+        raise CorruptFileError('OME-Zarr node is missing axes information.')
     return ''.join(axis['name'].upper() for axis in omezarr_node.metadata['axes'])
 
 

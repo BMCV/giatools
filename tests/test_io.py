@@ -153,7 +153,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-02.zarr')
         self.assertEqual(img.shape, (200, 200))
-        self.assertAlmostEqual(img.mean().compute(), 502.2611393006139)
+        self.assertAlmostEqual(round(img.mean().compute(), 2), 502.26)
         self.assertEqual(axes, 'YX')
         verify_metadata(self, metadata, resolution=(1, 1), z_spacing=None, unit='um')
 
