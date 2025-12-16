@@ -8,9 +8,9 @@ from ...typing import (
 )
 from ..backend import (
     CorruptFileError,
-    normalize_unit,
     Reader,
     UnsupportedFileError,
+    normalize_unit,
 )
 
 

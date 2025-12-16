@@ -10,9 +10,9 @@ from ...typing import (
     NDArray,
 )
 from ..backend import (
-    normalize_unit,
     Reader,
     Writer,
+    normalize_unit,
 )
 
 
