@@ -124,7 +124,7 @@ class SKImageWriter__write(unittest.TestCase):
 
 class SKImageReader(unittest.TestCase):
 
-    def test__valid(self):
+    def test__valid__png(self):
         with giatools.io._backends.skimage.SKImageReader('tests/data/input4_uint8.png') as reader:
             self.assertEqual(reader.get_num_images(), 1)
             im = reader.select_image(0)
@@ -133,6 +133,16 @@ class SKImageReader(unittest.TestCase):
             arr = reader.get_image_data(im)
             self.assertEqual(arr.shape, (10, 10, 3))
             self.assertEqual(round(arr.mean(), 2), 130.04)
+
+    def test__valid__tiff(self):
+        with giatools.io._backends.skimage.SKImageReader('tests/data/input1_uint8_yx.tiff') as reader:
+            self.assertEqual(reader.get_num_images(), 1)
+            im = reader.select_image(0)
+            self.assertEqual(reader.get_axes(im), 'YX')
+            self.assertEqual(reader.get_image_metadata(im), dict())
+            arr = reader.get_image_data(im)
+            self.assertEqual(arr.shape, (265, 329))
+            self.assertEqual(round(arr.mean(), 2), 63.67)
 
     def test__invalid(self):
         with giatools.io._backends.skimage.SKImageReader('tests/data/input7_uint8_zcyx.tif') as reader:
