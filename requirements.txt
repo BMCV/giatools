@@ -4,3 +4,4 @@ pandas>=1
 typing-extensions
 ome-zarr==0.12.2; python_version >= '3.11'
 tifffile
+attrs>=25.4
