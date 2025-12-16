@@ -200,7 +200,7 @@ class Image:
 
     def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], NDArray]]:
         """
-        Iterates over all slices of the image along the given axes.
+        Iterate over all slices of the image along the given axes.
 
         This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
         applying 2-D operations to all YX slices of a 3-D image or time series.
@@ -217,7 +217,7 @@ class Image:
 
     def is_isotropic(self, tol=1e-2) -> Optional[bool]:
         """
-        Determines whether the image pixels/voxels are isotropic.
+        Determine whether the image pixels/voxels are isotropic.
 
         Returns:
             `True` if the image is isotropic, `False` if not, or `None` if the resolution is not fully known.
