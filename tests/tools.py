@@ -107,3 +107,26 @@ def without_logging(test_impl):
         finally:
             logger.setLevel(previous_level)
     return wrapper
+
+
+def mock_array(*shape, name: str = 'array'):
+    def decorator(test_func):
+        def wrapper(*args, **kwargs):
+            array = unittest.mock.MagicMock(shape=shape, ndim=len(shape))
+            kwargs = dict(kwargs)
+            kwargs[name] = array
+            return test_func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
+    def decorator(test_func):
+        def wrapper(self, *args, **kwargs):
+            for ext in extensions:
+                with self.subTest(extension=ext):
+                    kwargs = dict(kwargs)
+                    kwargs[name] = f'{prefix}.{ext}'
+                    return test_func(self, *args, **kwargs)
+        return wrapper
+    return decorator

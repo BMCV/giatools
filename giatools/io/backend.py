@@ -1,3 +1,5 @@
+import os
+
 from ..typing import (
     Any,
     Dict,
@@ -95,6 +97,8 @@ class Backend:
         return f'<{self.name} Backend>'
 
     def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> Optional[int]:
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f'File not found: {filepath}')
         try:
             with self.reader_class(filepath, *args, **kwargs) as reader:
                 return reader.get_num_images()
@@ -102,6 +106,8 @@ class Backend:
             return None  # Indicate that the file is unsupported
 
     def read(self, filepath: str, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f'File not found: {filepath}')
         try:
             with self.reader_class(filepath, *args, **kwargs) as reader:
 
@@ -115,21 +121,18 @@ class Backend:
 
                 # Verify that the image format is supported
                 if 'Y' not in im_axes or 'X' not in im_axes:
-                    raise CorruptFileError(
-                        f'OME-Zarr node is missing required X or Y axes (found {im_axes}).',
-                        filepath=filepath,
-                    )
-                if not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS')):
-                    raise CorruptFileError(
-                        f'Image has unsupported axes: {im_axes}',
-                        filepath=filepath,
-                    )
+                    raise CorruptFileError(filepath, f'Image is missing required X or Y axes (found {im_axes}).')
+                if (
+                    not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS'))
+                    or len(im_axes) != len(frozenset(im_axes))
+                ):
+                    raise CorruptFileError(filepath, f'Image has unsupported axes: {im_axes}')
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
                 if 'C' in im_axes and 'S' in im_axes:
                     raise CorruptFileError(
+                        filepath,
                         f'Image has both channel and sample axes which is not supported: {im_axes}',
-                        filepath=filepath,
                     )
                 im_axes = im_axes.replace('S', 'C')
 
@@ -150,6 +153,10 @@ class Backend:
 
         # Create a copy of the metadata to avoid modifying the original
         metadata = dict(metadata) if metadata is not None else dict()
+
+        # TODO: Treat sample axis "S" as channel axis "C" and fail if both are present
+
+        # TODO: Validate metadata
 
         # Delegate the writing to the writer class
         writer.write(im_arr, filepath, metadata, **kwargs)

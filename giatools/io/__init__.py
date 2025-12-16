@@ -100,6 +100,8 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     Raises:
         CorruptFileError:
             If the image cannot be read by the designated backend due to corruption or an unsupported format flavor.
+        FileNotFoundError:
+            If the specified file does not exist.
         UnsupportedFileError:
             If no backend could read the image.
     """
@@ -136,6 +138,8 @@ def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
             ... )
 
     Raises:
+        FileNotFoundError:
+            If the specified file does not exist.
         UnsupportedFileError:
             If no backend could read the image.
     """
@@ -184,7 +188,8 @@ def imwrite(im_arr: NDArray, filepath: str, backend: str = 'auto', metadata: Opt
         UnsupportedFileError:
             If no backend is available to write the file format (inferred from the suffix of the file).
         ValueError:
-            If `backend` is not ``"auto"`` and the specified backend is not available.
+            If `backend` is not ``"auto"`` and the specified backend is not available, or if the image data or metadata
+            are invalid (e.g., invalid axes or dimensions).
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(

@@ -4,28 +4,10 @@ import unittest.mock
 import giatools.io
 import giatools.io._backends.skimage
 
-
-def mock_array(*shape, name: str = 'array'):
-    def decorator(test_func):
-        def wrapper(*args, **kwargs):
-            array = unittest.mock.MagicMock(shape=shape, ndim=len(shape))
-            kwargs = dict(kwargs)
-            kwargs[name] = array
-            return test_func(*args, **kwargs)
-        return wrapper
-    return decorator
-
-
-def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
-    def decorator(test_func):
-        def wrapper(self, *args, **kwargs):
-            for ext in extensions:
-                with self.subTest(extension=ext):
-                    kwargs = dict(kwargs)
-                    kwargs[name] = f'{prefix}.{ext}'
-                    return test_func(self, *args, **kwargs)
-        return wrapper
-    return decorator
+from .tools import (
+    filenames,
+    mock_array,
+)
 
 
 @unittest.mock.patch('giatools.io._backends.skimage.skimage.io.imsave')
