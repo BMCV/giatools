@@ -28,4 +28,4 @@ class no_pandas(unittest.TestCase):
 
     def test(self):
         importlib.reload(giatools.pandas)
-        assert giatools.pandas.pd is None
+        self.assertEqual(giatools.pandas.DataFrame.__bases__, (object,))

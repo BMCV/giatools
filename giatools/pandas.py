@@ -1,8 +1,8 @@
 from typing import Iterable
 
 try:
-    from pandas import DataFrame as _DataFrame
-    class DataFrame(_DataFrame): ...  # noqa: E701
+    import pandas as _pd
+    class DataFrame(_pd.DataFrame): ...  # noqa: E701
 except ImportError:
     class DataFrame: ...  # noqa: E701
 
