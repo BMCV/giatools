@@ -10,8 +10,10 @@ import sys as _sys
 import attrs as _attrs
 import numpy as _np
 
-from . import metadata as _metadata
-from . import util as _util
+from . import (
+    metadata as _metadata,
+    util as _util,
+)
 from .typing import (
     Iterator,
     NDArray,
