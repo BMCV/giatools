@@ -16,20 +16,45 @@ from ..backend import (
     Writer,
 )
 
+# https://gist.github.com/leommoore/f9e57ba2aa4bf197ebc5
+supported_magic_numbers = (
+    b'\x89\x50\x4e\x47',  # PNG
+    b'\xff\xd8\xff',      # JPEG
+    b'\x4d\x4d\x00\x2a',  # TIFF (big-endian)
+    b'\x49\x49\x2a\x00',  # TIFF (little-endian)
+)
+
+
+def _can_read_file(self, filepath: str) -> bool:
+    max_prefix_length = max(len(magic) for magic in supported_magic_numbers)
+    with open(filepath, 'rb') as f:
+        prefix = f.read(max_prefix_length)
+        return any(prefix.startswith(magic) for magic in supported_magic_numbers)
+
 
 class SKImageReader(Reader):
 
-    def open(self, *args, **kwargs) -> Any:
-        return (args, kwargs)  # deferred loading
+    unsupported_file_errors = (
+        OSError,  # raised by _skimage_io_imread
+    )
+
+    def open(self, filepath: str, *args, **kwargs) -> Any:
+        if _can_read_file(self, filepath):
+            return (filepath, args, kwargs)  # deferred loading
+        else:
+            raise UnsupportedFileError(filepath, 'File format not supported by this backend.')
+
+    @property
+    def filepath(self) -> str:
+        return self.file[0]
 
     def get_num_images(self) -> int:
         return 1
 
     def select_image(self, position: int) -> Any:
-        filepath = self.file[0][0]
-        image = _skimage_io_imread(filepath, *self.file[0][1:], **self.file[1])
+        image = _skimage_io_imread(self.filepath, *self.file[1], **self.file[2])
         if image.ndim not in (2, 3):
-            raise UnsupportedFileError(filepath, f'Image has unsupported dimension: {image.ndim}')
+            raise UnsupportedFileError(self.filepath, f'Image has unsupported dimension: {image.ndim}')
         return image
 
     def get_axes(self, image: Any) -> str:
@@ -98,5 +123,8 @@ def _skimage_io_imread(*args, **kwargs) -> NDArray:
     be read successfully. In those cases, Galaxy might detect the errors on stdout or stderr, and assume that the tool
     has failed: https://docs.galaxyproject.org/en/latest/dev/schema.html#error-detection To prevent this, this wrapper
     around ``skimage.io.imread`` will mute all non-fatal errors.
+
+    Raises:
+        OSError: If the image file cannot be read.
     """
     return skimage.io.imread(*args, **kwargs)

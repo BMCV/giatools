@@ -16,10 +16,16 @@ from ..backend import (
 
 class OMEZarrReader(Reader):
 
-    def open(self, *args, **kwargs) -> Any:
-        omezarr_store = ome_zarr.io.parse_url(*args, **kwargs)
+    def open(self, filepath: str, *args, **kwargs) -> Any:
+        try:
+            omezarr_store = ome_zarr.io.parse_url(filepath, *args, **kwargs)
+        except TypeError:  # this is too generic to be added to `unsupported_file_errors`
+            raise UnsupportedFileError(
+                filepath,
+                f'This backend does not accept the given arguments: args={args}, kwargs={kwargs}',
+            )
         if omezarr_store is None:
-            raise UnsupportedFileError(filepath=args[0])
+            raise UnsupportedFileError(filepath=filepath)
         else:
             omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
             return list(omezarr_reader())

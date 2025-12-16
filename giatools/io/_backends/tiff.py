@@ -13,6 +13,7 @@ from ..backend import (
     Reader,
     Writer,
     normalize_unit,
+    UnsupportedFileError,
 )
 
 
@@ -23,8 +24,14 @@ class TiffReader(Reader):
         IsADirectoryError,
     )
 
-    def open(self, *args, **kwargs) -> Any:
-        return tifffile.TiffFile(*args, **kwargs)
+    def open(self, filepath: str, *args, **kwargs) -> Any:
+        try:
+            return tifffile.TiffFile(filepath, *args, **kwargs)
+        except TypeError:  # this is too generic to be added to `unsupported_file_errors`
+            raise UnsupportedFileError(
+                filepath,
+                f'This backend does not accept the given arguments: args={args}, kwargs={kwargs}',
+            )
 
     def get_num_images(self) -> int:
         return len(self.file.series)

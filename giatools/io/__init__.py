@@ -73,9 +73,9 @@ backends = [
 def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
     args_str = ', '.join(repr(arg) for arg in args)
     kwargs_str = ', '.join(f'{key}={value!r}' for key, value in kwargs.items())
-    details = ', '.join((args_str, kwargs_str))
+    details = ', '.join(filter(lambda s: len(s), (args_str, kwargs_str)))
     if details:
-        details = f' ({details})'
+        details = f' with {details}'
     raise UnsupportedFileError(filepath, f'No backend could read {filepath}{details}')
 
 

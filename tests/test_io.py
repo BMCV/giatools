@@ -28,6 +28,23 @@ from .tools import (
 
 class imreadraw(unittest.TestCase):
 
+    @random_io_test(shape=(10, 10, 3), dtype=np.uint8, ext='not-an-image')
+    def test__invalid_file(self, filepath, data):
+        with open(filepath, 'w') as f:
+            f.write(str(data))
+        with self.assertRaisesRegex(giatools.io.UnsupportedFileError, f'No backend could read {filepath}'):
+            giatools.io.imreadraw(filepath)
+
+    @random_io_test(shape=(10, 10, 3), dtype=np.uint8, ext='not-an-image')
+    def test__invalid_file__with_kwargs(self, filepath, data):
+        with open(filepath, 'w') as f:
+            f.write(str(data))
+        with self.assertRaisesRegex(
+            giatools.io.UnsupportedFileError,
+            fr'^No backend could read {filepath} with some_kwarg=True$',
+        ):
+            giatools.io.imreadraw(filepath, some_kwarg=True)
+
     def test__input1(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tiff')
         self.assertEqual(img.mean(), 63.66848655158571)
@@ -170,6 +187,13 @@ class imreadraw(unittest.TestCase):
 
 
 class peek_num_images_in_file(unittest.TestCase):
+
+    @random_io_test(shape=(10, 10, 3), dtype=np.uint8, ext='not-an-image')
+    def test__invalid_file(self, filepath, data):
+        with open(filepath, 'w') as f:
+            f.write(str(data))
+        with self.assertRaisesRegex(giatools.io.UnsupportedFileError, f'No backend could read {filepath}'):
+            giatools.io.peek_num_images_in_file(filepath)
 
     def test__tiff_multiseries(self):
         num_images = giatools.io.peek_num_images_in_file('tests/data/input11.ome.tiff')

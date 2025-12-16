@@ -59,7 +59,7 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
                 if not np.issubdtype(dtype, np.floating):
                     data = (data * np.iinfo(dtype).max).astype(dtype)
 
-                # Write the image to a temporary file
+                # Supply a temporary file to write the image to
                 filepath = os.path.join(temp_path, f'test.{ext}')
 
                 # Run the test
