@@ -50,6 +50,28 @@ class Metadata:
     Pixels per unit in X and Y dimensions.
     """
 
+    @property
+    def pixel_size(self) -> Optional[Tuple[float, float]]:
+        """
+        The pixel size in X and Y dimensions. This is identical to the pixel spacing in X and Y dimensions.
+        """
+        return (
+            1 / self.resolution[0],
+            1 / self.resolution[1],
+        ) if self.resolution is not None else None
+
+    @pixel_size.setter
+    def pixel_size(self, value: Optional[Tuple[float, float]]):
+        if value is None:
+            self.resolution = None
+        else:
+            if len(value) != 2 or not all(isinstance(val, float) for val in value):
+                raise ValueError('Pixel size must be a tuple of two non-None floats or None.')
+            self.resolution = (
+                1 / value[0],
+                1 / value[1],
+            )
+
     z_spacing: Optional[float] = attrs.field(
         default=None,
         validator=attrs.validators.optional(

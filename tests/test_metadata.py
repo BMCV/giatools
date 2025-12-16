@@ -81,3 +81,37 @@ class Metadata__unit(MetadataTestCase):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     self.metadata.unit = value
+
+
+class Metadata__pixel_size(MetadataTestCase):
+
+    def test__set__valid(self):
+        for pixel_size, expected_resolution in [
+            ((0.5, 0.25), (2.0, 4.0)),
+            ((2.0, 4.0), (0.5, 0.25)),
+            (None, None),
+        ]:
+            with self.subTest(pixel_size=pixel_size):
+                self.metadata.pixel_size = pixel_size
+                self.assertEqual(self.metadata.pixel_size, pixel_size)
+                self.assertEqual(self.metadata.resolution, expected_resolution)
+
+    def test__set__invalid_length(self):
+        for pixel_size in [(2.0,), (2.0, 2.0, 2.0)]:
+            with self.subTest(pixel_size=pixel_size):
+                with self.assertRaises(ValueError):
+                    self.metadata.pixel_size = pixel_size
+
+    def test__set__invalid_type(self):
+        for pixel_size in (
+            (0.5, None),
+            (None, 0.25),
+            (None, None),
+            (0.5, '0.25'),
+            ('0.5', 0.25),
+            (1, 0.25),
+            (0.25, 1),
+        ):
+            with self.subTest(pixel_size=pixel_size):
+                with self.assertRaises(ValueError):
+                    self.metadata.pixel_size = pixel_size
