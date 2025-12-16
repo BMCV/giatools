@@ -79,3 +79,19 @@ class OMEZarrReader(unittest.TestCase):
                 self.assertEqual(metadata['unit'], unit)
                 self.assertEqual(metadata['resolution'], (0.5, 0.5))
                 self.assertNotIn('z_spacing', metadata)
+
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__get_image_metadata__invalid(self):
+        import giatools.io._backends.omezarr
+        image = unittest.mock.MagicMock()
+        image.metadata = {
+            'axes': [
+                {'name': 'Y', 'unit': None},
+                {'name': 'X', 'unit': None},
+            ],
+            'coordinateTransformations': None
+        }
+        reader = giatools.io._backends.omezarr.OMEZarrReader()
+        metadata = reader.get_image_metadata(image)
+        self.assertEqual(metadata, dict())

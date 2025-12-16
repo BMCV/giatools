@@ -83,7 +83,7 @@ def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> Dict[str, Any]:
                 break
 
     # Ignore if the metadata is malformed
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         pass
 
     return metadata
