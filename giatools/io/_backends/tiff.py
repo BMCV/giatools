@@ -10,6 +10,7 @@ from ...typing import (
     NDArray,
 )
 from ..backend import (
+    normalize_unit,
     Reader,
     Writer,
 )
@@ -74,10 +75,11 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     if 'XResolution' in page0.tags and 'YResolution' in page0.tags:
         x_res = page0.tags['XResolution'].value
         y_res = page0.tags['YResolution'].value
-        metadata['resolution'] = (
-            x_res[0] / x_res[1],  # pixels per unit in X, numerator / denominator
-            y_res[0] / y_res[1],  # pixels per unit in Y, numerator / denominator
-        )
+        if x_res[1] != 0 and y_res[1] != 0:
+            metadata['resolution'] = (
+                x_res[0] / x_res[1],  # pixels per unit in X, numerator / denominator
+                y_res[0] / y_res[1],  # pixels per unit in Y, numerator / denominator
+            )
 
     # Read `ImageDescription` tag
     if 'ImageDescription' in page0.tags:
@@ -89,16 +91,22 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             description_json = json.loads(description)
 
             # Extract z-slice spacing, if available
-            if 'spacing' in description_json:
-                metadata['z_spacing'] = float(description_json['spacing'])
+            if (val := description_json.get('spacing', None)) is not None:
+                try:
+                    metadata['z_spacing'] = float(val)
+                except ValueError:
+                    pass  # ignore invalid values
 
             # Extract z-position, if available (this is a custom field written by giatools)
-            if 'z_position' in description_json:
-                metadata['z_position'] = float(description_json['z_position'])
+            if (val := description_json.get('z_position', None)) is not None:
+                try:
+                    metadata['z_position'] = float(val)
+                except ValueError:
+                    pass  # ignore invalid values
 
             # Extract unit, if available
-            if 'unit' in description_json:
-                metadata['unit'] = str(description_json['unit'])
+            if (val := description_json.get('unit', None)) is not None and isinstance(val, str) and val != 'pixel':
+                metadata['unit'] = val
 
         # Parse as XML (OME-style)
         elif description_format == 'xml':
@@ -107,8 +115,11 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             ome_pixels = ome_xml.find('.//ome:Pixels', ome_ns)
 
             # Extract z-slice spacing, if available
-            if ome_pixels is not None and 'PhysicalSizeZ' in ome_pixels.attrib:
-                metadata['z_spacing'] = float(ome_pixels.get('PhysicalSizeZ'))
+            if ome_pixels is not None and (val := ome_pixels.attrib.get('PhysicalSizeZ', None)) is not None:
+                try:
+                    metadata['z_spacing'] = float(val)
+                except ValueError:
+                    pass  # ignore invalid values
 
             # OME-TIFF allows different units for z-, x, and y-axes. This needs to be handled properly in the future.
             # For now, we only read the global unit of the z-axis and ignore the others.
@@ -134,8 +145,11 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
                 # Extract unit, if available
                 if line.startswith('unit='):
                     unit = line.split('=')[1]
-                    if unit != 'pixel':
-                        metadata['unit'] = unit
+                    if unit.startswith('"') and unit.endswith('"'):
+                        unit = unit[1:-1]  # remove quotes
+                    metadata['unit'] = unit
+
+            # We currently do not read the `z_position` here (not implemented yet)
 
     # As a fallback, read unit from the dedicated tag, if available
     if 'unit' not in metadata and 'ResolutionUnit' in page0.tags:
@@ -146,8 +160,13 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
             metadata['unit'] = 'cm'
 
     # Normalize unit representation
-    if metadata.get('unit', None) in (r'\u00B5m', 'µm'):
-        metadata['unit'] = 'um'
+    if (unit := metadata.get('unit', None)) is not None:
+        if unit == r'\u00B5m':
+            metadata['unit'] = 'um'
+        elif (normalized_unit := normalize_unit(unit)) is not None:
+            metadata['unit'] = normalized_unit
+        else:
+            del metadata['unit']  # remove unrecognized unit
 
     return metadata
 

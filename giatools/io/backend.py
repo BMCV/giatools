@@ -160,3 +160,26 @@ class Backend:
 
         # Delegate the writing to the writer class
         writer.write(im_arr, filepath, metadata, **kwargs)
+
+
+def normalize_unit(unit: str) -> Optional[str]:
+    """
+    Normalizes a unit string to a standard representation.
+    """
+    unit = unit.strip().lower()
+    if unit in ('nm', 'nanometer', 'nanometers'):
+        return 'nm'
+    elif unit in ('um', 'micrometer', 'micrometers', 'µm'):
+        return 'um'
+    elif unit in ('mm', 'millimeter', 'millimeters'):
+        return 'mm'
+    elif unit in ('cm', 'centimeter', 'centimeters'):
+        return 'cm'
+    elif unit in ('m', 'meter', 'meters'):
+        return 'm'
+    elif unit in ('km', 'kilometer', 'kilometers'):
+        return 'km'
+    elif unit in ('inch', 'inches'):
+        return 'inch'
+    else:
+        return None  # unknown unit
