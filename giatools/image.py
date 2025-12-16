@@ -31,20 +31,14 @@ class Image:
     Represents an image (image pixel/voxel data and the corresponding axes metadata).
     """
 
-    data: NDArray
-    """
-    The image data as a NumPy array or a Dask array.
-    """
-
     axes: str
     """
     The axes of the image data as a string.
     """
 
-    original_axes: Optional[str]
+    data: NDArray
     """
-    The original axes of the image data as a string, if available. This is useful for keeping track of the original
-    axes when normalizing or reordering axes.
+    The image data as a NumPy array or a Dask array.
     """
 
     metadata: Dict
@@ -59,12 +53,18 @@ class Image:
     - **unit**, `str`: The unit of measurement (e.g., nn, um, mm, cm, m, km).
     """
 
+    original_axes: Optional[str]
+    """
+    The original axes of the image data as a string, if available. This is useful for keeping track of the original
+    axes when normalizing or reordering axes.
+    """
+
     def __init__(
         self,
         data: NDArray,
         axes: str,
-        original_axes: Optional[str] = None,
         metadata: Optional[Dict] = None,
+        original_axes: Optional[str] = None,
     ):
         self.data = data
         self.axes = axes
