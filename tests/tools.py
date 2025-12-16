@@ -1,5 +1,6 @@
 import contextlib
 import io
+import logging
 import os
 import sys
 import tempfile
@@ -58,7 +59,7 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
                 if not np.issubdtype(dtype, np.floating):
                     data = (data * np.iinfo(dtype).max).astype(dtype)
 
-                # Write the image to a temporary file
+                # Supply a temporary file to write the image to
                 filepath = os.path.join(temp_path, f'test.{ext}')
 
                 # Run the test
@@ -91,3 +92,41 @@ def _select_python_version(op: Literal['min', 'max']):
 
 minimum_python_version = _select_python_version('min')
 maximum_python_version = _select_python_version('max')
+
+
+def without_logging(test_impl):
+    """
+    Disable logging for the duration of the test.
+    """
+    def wrapper(self):
+        logger = logging.getLogger()
+        previous_level = logger.level
+        logger.setLevel(logging.CRITICAL + 1)
+        try:
+            test_impl(self)
+        finally:
+            logger.setLevel(previous_level)
+    return wrapper
+
+
+def mock_array(*shape, name: str = 'array'):
+    def decorator(test_func):
+        def wrapper(*args, **kwargs):
+            array = unittest.mock.MagicMock(shape=shape, ndim=len(shape))
+            kwargs = dict(kwargs)
+            kwargs[name] = array
+            return test_func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
+    def decorator(test_func):
+        def wrapper(self, *args, **kwargs):
+            for ext in extensions:
+                with self.subTest(extension=ext):
+                    kwargs = dict(kwargs)
+                    kwargs[name] = f'{prefix}.{ext}'
+                    test_func(self, *args, **kwargs)
+        return wrapper
+    return decorator

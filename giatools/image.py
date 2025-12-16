@@ -9,13 +9,11 @@ import sys
 
 import numpy as np
 
-from . import (
-    io,
-    util,
-)
+from . import util
 from .typing import (
     Dict,
     Iterator,
+    NDArray,
     Optional,
     Self,
     Tuple,
@@ -38,9 +36,9 @@ class Image:
     The axes of the image data as a string.
     """
 
-    data: np.ndarray
+    data: NDArray
     """
-    The image data as a numpy array.
+    The image data as a NumPy array or a Dask array.
     """
 
     metadata: Dict
@@ -63,7 +61,7 @@ class Image:
 
     def __init__(
         self,
-        data: np.ndarray,
+        data: NDArray,
         axes: str,
         metadata: Optional[Dict] = None,
         original_axes: Optional[str] = None,
@@ -74,14 +72,15 @@ class Image:
         self.metadata = dict() if metadata is None else metadata
 
     @staticmethod
-    def read(*args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
+    def read(filepath: str, *args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`. Normalization will be (almost)
         skipped if `normalize_axes` is `None`.
 
         See :func:`giatools.io.imreadraw` for details how axes are determined and treated.
         """
-        data, axes, metadata = io.imreadraw(*args, **kwargs)
+        from .io import imreadraw
+        data, axes, metadata = imreadraw(filepath, *args, **kwargs)
         img = Image(data, axes, original_axes=axes, metadata=metadata)
         if normalize_axes is None:
             return img
@@ -91,7 +90,7 @@ class Image:
     def write(
         self,
         filepath: str,
-        backend: io.BackendType = 'auto',
+        backend: str = 'auto',
     ) -> Self:
         """
         Write the image to a file.
@@ -103,8 +102,9 @@ class Image:
             raise ValueError(
                 f'Number of axes "{self.axes}" does not match number of data dimensions {self.data.shape}'
             )
+        from .io import imwrite
         full_metadata = dict(axes=self.axes) | (self.metadata if self.metadata else dict())
-        io.imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
+        imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
         return self
 
     def squeeze_like(self, axes: str) -> Self:
@@ -194,7 +194,7 @@ class Image:
         squeezed_axes = ''.join(np.array(list(self.axes))[np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
-    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], np.ndarray]]:
+    def iterate_jointly(self, axes: str = 'YX') -> Iterator[Tuple[Tuple[Union[int, slice], ...], NDArray]]:
         """
         Iterates over all slices of the image along the given axes.
 

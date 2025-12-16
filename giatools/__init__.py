@@ -5,8 +5,31 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-from .image import (  # noqa: F401
+from .image import (
     Image,
     default_normalized_axes,
 )
-from .version import __version__ as VERSION  # noqa: F401
+from .version import __version__ as VERSION
+
+__all__ = [
+    'default_normalized_axes',
+    'Image',
+    'require_backend',
+    'VERSION',
+]
+
+
+def require_backend(name: str):
+    """
+    Ensures that the backend with the given `name` is available.
+
+    Raises:
+        ImportError: If the backend is not available.
+    """
+    from .io import backends
+
+    for backend in backends:
+        if backend.name == name:
+            break
+    else:
+        raise ImportError(f'The backend "{name}" is not available.')
