@@ -35,7 +35,6 @@ except ImportError:
     OMEZarrReader = None  # type: ignore
 
 __all__ = [
-    'Backend',
     'CorruptFileError',
     'imreadraw',
     'imwrite',
