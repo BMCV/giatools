@@ -47,7 +47,7 @@ class Metadata:
         )
     )
     """
-    Pixels per unit in X and Y dimensions.
+    Pixel resolution (pixels per unit in X and Y dimensions).
     """
 
     @property
