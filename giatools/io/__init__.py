@@ -189,7 +189,7 @@ def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto
             If no backend is available to write the file format (inferred from the suffix of the file).
         ValueError:
             If `backend` is not ``"auto"`` and the specified backend is not available, or if the image data or metadata
-            are invalid (e.g., invalid axes or dimensions).
+            are invalid (e.g., `None`, invalid axes or dimensions).
     """
     if filepath.lower().endswith('.tif'):
         warnings.warn(
