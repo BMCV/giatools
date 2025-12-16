@@ -1,20 +1,13 @@
-from typing import (
-    Any,
-    Iterable,
-    overload,
-)
+from typing import Iterable
 
 try:
-    import pandas as pd
-
-    @overload
-    def find_column(df: pd.DataFrame, candidates: Iterable[str]) -> str: ...  # type: ignore
-
+    from pandas import DataFrame as _DataFrame
+    class DataFrame(_DataFrame): ...  # noqa: E701
 except ImportError:
-    pd = None
+    class DataFrame: ...  # noqa: E701
 
 
-def find_column(df: Any, candidates: Iterable[str]) -> str:
+def find_column(df: DataFrame, candidates: Iterable[str]) -> str:
     """
     Returns the column name present in `df` and the list of `candidates`.
 
