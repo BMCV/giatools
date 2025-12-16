@@ -70,7 +70,7 @@ class Image:
 
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.metadata.pixel_spacing)
+            >>> print(image.metadata.pixel_size)
             >>> print(image.metadata.z_spacing)
             >>> print(image.metadata.unit)
     """
