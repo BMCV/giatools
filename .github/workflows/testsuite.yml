@@ -11,7 +11,7 @@ on:
       - master
     paths:
       - .github/workflows/testsuite.yml
-      - giatools/*.py
+      - giatools/**/*.py
       - setup.py
       - tests/*.py
       - tests/data/**
