@@ -1,4 +1,4 @@
-import os
+import os as _os
 
 from ..metadata import Unit
 from ..typing import (
@@ -98,7 +98,7 @@ class Backend:
         return f'<{self.name} Backend>'
 
     def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> Optional[int]:
-        if not os.path.exists(filepath):
+        if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
             with self.reader_class(filepath, *args, **kwargs) as reader:
@@ -107,7 +107,7 @@ class Backend:
             return None  # Indicate that the file is unsupported
 
     def read(self, filepath: str, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
-        if not os.path.exists(filepath):
+        if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
             with self.reader_class(filepath, *args, **kwargs) as reader:
