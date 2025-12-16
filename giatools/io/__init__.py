@@ -11,7 +11,6 @@ from ..typing import (
     Any,
     Dict,
     NDArray,
-    Optional,
     Tuple,
 )
 from ..util import distance_to_external_frame
