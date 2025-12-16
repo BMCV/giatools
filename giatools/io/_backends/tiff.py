@@ -11,9 +11,9 @@ from ...typing import (
 )
 from ..backend import (
     Reader,
+    UnsupportedFileError,
     Writer,
     normalize_unit,
-    UnsupportedFileError,
 )
 
 
