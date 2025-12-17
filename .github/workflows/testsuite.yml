@@ -18,9 +18,6 @@ on:
       - requirements.txt
       - tests/requirements.txt
 
-env:
-  python_versions: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
-
 jobs:
   python_lint:
     name: Linting
@@ -52,7 +49,7 @@ jobs:
     uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
     with:
       main_branch: master
-      python_versions: ${{ fromJSON(env.python_versions) }}
+      python_versions: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
       main_python_version: "3.11"
       gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
       gist-filename: giatools.json
@@ -64,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ${{ fromJSON(env.python_versions) }}
+        python_version: ["3.9", "3.11"]
     steps:
 
       - name: Checkout
@@ -84,7 +81,7 @@ jobs:
           pip install ".[omezarr]"
 
       - name: Install package without "omezarr" backend
-        if: matrix.python_version == '3.9' || matrix.python_version == '3.10'
+        if: matrix.python_version == '3.9'
         run: |
           pip install "."
 
