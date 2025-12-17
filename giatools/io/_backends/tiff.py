@@ -58,7 +58,7 @@ class TiffWriter(_backend.Writer):
         metadata: _metadata.Metadata,
         **kwargs: _T.Any,
     ):
-        metadata_dict =  _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
+        metadata_dict = _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
         metadata_dict['axes'] = axes
 
         # Update the metadata structure to what `tifffile` expects

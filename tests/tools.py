@@ -49,7 +49,7 @@ def validate_metadata(testcase: unittest.TestCase, actual: Union[dict, giatools.
     expected = attrs.asdict(expected_metadata)
 
     # Compare
-    testcase.assertAlmostEqual(actual, expected)
+    testcase.assertEqual(actual, expected)
 
 
 def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):

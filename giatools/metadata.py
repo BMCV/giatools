@@ -61,7 +61,7 @@ class Metadata:
         if value is None:
             self.resolution = None
         else:
-            if len(value) != 2 or not all(isinstance(val, float) for val in value):
+            if not isinstance(value, tuple) or len(value) != 2 or not all(isinstance(val, float) for val in value):
                 raise ValueError('Pixel size must be a tuple of two non-None floats or None.')
             self.resolution = (
                 1 / value[0],
