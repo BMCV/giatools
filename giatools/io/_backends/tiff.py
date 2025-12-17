@@ -39,7 +39,7 @@ class TiffReader(_backend.Reader):
     def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image.asarray()
 
-    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _metadata.Metadata:
         return _get_tiff_metadata(self.file, image)
 
 
@@ -72,7 +72,7 @@ class TiffWriter(_backend.Writer):
         _tifffile.imwrite(filepath, data, **kwargs)
 
 
-def _get_tiff_metadata(tif: _T.Any, series: _T.Any) -> _T.Dict[str, _T.Any]:
+def _get_tiff_metadata(tif: _T.Any, series: _T.Any) -> _metadata.Metadata:
     """
     Extract metadata from a `tifffile.TiffFile` object.
     """
@@ -177,7 +177,7 @@ def _get_tiff_metadata(tif: _T.Any, series: _T.Any) -> _T.Dict[str, _T.Any]:
         else:
             del metadata['unit']  # remove unrecognized unit
 
-    return metadata
+    return _metadata.Metadata(**metadata)
 
 
 def _guess_tiff_description_format(description: str) -> _T.Literal['json', 'xml', 'line']:

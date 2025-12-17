@@ -76,9 +76,9 @@ class OMEZarrReader(unittest.TestCase):
                 }
                 reader = giatools.io._backends.omezarr.OMEZarrReader()
                 metadata = reader.get_image_metadata(image)
-                self.assertEqual(metadata['unit'], unit)
-                self.assertEqual(metadata['resolution'], (0.5, 0.5))
-                self.assertNotIn('z_spacing', metadata)
+                self.assertEqual(metadata.unit, unit)
+                self.assertEqual(metadata.resolution, (0.5, 0.5))
+                self.assertIsNone(metadata.z_spacing)
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -94,4 +94,4 @@ class OMEZarrReader(unittest.TestCase):
         }
         reader = giatools.io._backends.omezarr.OMEZarrReader()
         metadata = reader.get_image_metadata(image)
-        self.assertEqual(metadata, dict())
+        validate_metadata(self, metadata)

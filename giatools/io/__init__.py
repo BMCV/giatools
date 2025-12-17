@@ -79,7 +79,7 @@ def _raise_unsupported_file_error(filepath: str, *args: _T.Any, **kwargs: _T.Any
 
 def imreadraw(
     filepath: _T.PathLike, *args: _T.Any, position: int = 0, **kwargs: _T.Any,
-) -> _T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]:
+) -> _T.Tuple[_T.NDArray, str, _metadata.Metadata]:
     """
     Wrapper for reading images, muting non-fatal errors.
 
@@ -90,11 +90,11 @@ def imreadraw(
     `IndexError` is raised if `position` is invalid. The :py:func:`peek_num_images_in_file` function can be used to
     determine the number of images in a file.
 
-    Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy or Dask array, `axes` are
-    the axes of the image, and `metadata` is any additional metadata. Minimal normalization is performed by treating
-    sample axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread`
-    backend, single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two
-    axes and ``YXC`` for arrays with three axes, respectively.
+    Returns a tuple `(data, axes, metadata)` where `data` is the image data as a NumPy or Dask array, `axes` are the
+    axes of the image, and `metadata` is any additional metadata. Minimal normalization is performed by treating sample
+    axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread` backend,
+    single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two axes and
+    ``YXC`` for arrays with three axes, respectively.
 
     Raises:
         CorruptFileError:

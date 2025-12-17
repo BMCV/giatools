@@ -86,7 +86,7 @@ class Reader:
     def get_image_data(self, image: _T.Any) -> _T.NDArray:
         raise NotImplementedError()
 
-    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _metadata.Metadata:
         raise NotImplementedError()
 
 
@@ -131,7 +131,7 @@ class Backend:
         *args: _T.Any,
         position: int = 0,
         **kwargs: _T.Any,
-    ) -> _T.Optional[_T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]]:
+    ) -> _T.Optional[_T.Tuple[_T.NDArray, str, _metadata.Metadata]]:
 
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
@@ -144,33 +144,33 @@ class Backend:
                     image = reader.select_image(position)
                 else:
                     raise IndexError(f'Image {position} is out of range for file with {num_images} images.')
-                im_axes = reader.get_axes(image)
+                axes = reader.get_axes(image)
 
                 # Verify that the image format is supported
-                if 'Y' not in im_axes or 'X' not in im_axes:
-                    raise CorruptFileError(filepath, f'Image is missing required X or Y axes (found {im_axes}).')
+                if 'Y' not in axes or 'X' not in axes:
+                    raise CorruptFileError(filepath, f'Image is missing required X or Y axes (found {axes}).')
                 if (
-                    not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS'))
-                    or len(im_axes) != len(frozenset(im_axes))
+                    not (frozenset('YX') <= frozenset(axes) <= frozenset('QTZYXCS'))
+                    or len(axes) != len(frozenset(axes))
                 ):
-                    raise CorruptFileError(filepath, f'Image has unsupported axes: {im_axes}')
+                    raise CorruptFileError(filepath, f'Image has unsupported axes: {axes}')
 
                 # Treat sample axis "S" as channel axis "C" and fail if both are present
-                if 'C' in im_axes and 'S' in im_axes:
+                if 'C' in axes and 'S' in axes:
                     raise CorruptFileError(
                         filepath,
-                        f'Image has both channel and sample axes which is not supported: {im_axes}',
+                        f'Image has both channel and sample axes which is not supported: {axes}',
                     )
-                im_axes = im_axes.replace('S', 'C')
+                axes = axes.replace('S', 'C')
 
                 # Get the reference to the image data
-                im_arr = reader.get_image_data(image)
+                data = reader.get_image_data(image)
 
                 # Read the metadata
                 metadata = reader.get_image_metadata(image)
 
                 # Return the image data, axes, and metadata
-                return im_arr, im_axes, metadata
+                return data, axes, metadata
 
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported

@@ -59,8 +59,8 @@ class SKImageReader(_backend.Reader):
     def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image
 
-    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
-        return dict()
+    def get_image_metadata(self, image: _T.Any) -> _metadata.Metadata:
+        return _metadata.Metadata()
 
 
 class SKImageWriter(_backend.Writer):

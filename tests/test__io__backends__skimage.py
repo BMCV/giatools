@@ -8,6 +8,7 @@ import giatools.metadata
 from .tools import (
     filenames,
     mock_array,
+    validate_metadata,
 )
 
 
@@ -112,7 +113,7 @@ class SKImageReader(unittest.TestCase):
             self.assertEqual(reader.get_num_images(), 1)
             im = reader.select_image(0)
             self.assertEqual(reader.get_axes(im), 'YXC')
-            self.assertEqual(reader.get_image_metadata(im), dict())
+            validate_metadata(self, reader.get_image_metadata(im))
             arr = reader.get_image_data(im)
             self.assertEqual(arr.shape, (10, 10, 3))
             self.assertEqual(round(arr.mean(), 2), 130.04)
@@ -122,7 +123,7 @@ class SKImageReader(unittest.TestCase):
             self.assertEqual(reader.get_num_images(), 1)
             im = reader.select_image(0)
             self.assertEqual(reader.get_axes(im), 'YX')
-            self.assertEqual(reader.get_image_metadata(im), dict())
+            validate_metadata(self, reader.get_image_metadata(im))
             arr = reader.get_image_data(im)
             self.assertEqual(arr.shape, (265, 329))
             self.assertEqual(round(arr.mean(), 2), 63.67)

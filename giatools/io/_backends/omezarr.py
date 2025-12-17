@@ -1,7 +1,10 @@
 import ome_zarr.io as _ome_zarr_io
 import ome_zarr.reader as _ome_zarr_reader
 
-from ... import typing as _T
+from ... import (
+    metadata as _metadata,
+    typing as _T,
+)
 from .. import backend as _backend
 
 
@@ -33,7 +36,7 @@ class OMEZarrReader(_backend.Reader):
     def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image.data[0]  # top-level of the pyramid (dask array)
 
-    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _metadata.Metadata:
         return _get_omezarr_metadata(image)
 
 
@@ -46,12 +49,12 @@ def _get_omezarr_axes(omezarr_node: _ome_zarr_reader.Node) -> str:
     return ''.join(axis['name'].upper() for axis in omezarr_node.metadata['axes'])
 
 
-def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _T.Dict[str, _T.Any]:
+def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _metadata.Metadata:
     """
     Extract metadata from an `ome_zarr.reader.Node` object.
     """
     axes = _get_omezarr_axes(omezarr_node)
-    metadata: _T.Dict[str, _T.Any] = dict()
+    metadata = _metadata.Metadata()
 
     # Extract the `unit`, if it is constant across all axes
     units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
@@ -59,7 +62,7 @@ def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _T.Dict[str, _
         len(units) == 1 and (unit := next(iter(units))) and
         (normalized_unit := _backend.normalize_unit(unit)) is not None
     ):
-        metadata['unit'] = normalized_unit
+        metadata.unit = normalized_unit
 
     # Extract the pixel/voxel sizes
     try:
@@ -72,12 +75,12 @@ def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _T.Dict[str, _
 
                 # Only include spacing information if it matches the number of axes
                 if len(scales) == len(axes):
-                    metadata['resolution'] = (
-                        1 / scales[axes.index('X')],
-                        1 / scales[axes.index('Y')],
+                    metadata.pixel_size = (
+                        float(scales[axes.index('X')]),
+                        float(scales[axes.index('Y')]),
                     )
                     if 'Z' in axes:
-                        metadata['z_spacing'] = scales[axes.index('Z')]
+                        metadata.z_spacing = float(scales[axes.index('Z')])
 
                 # Only consider the first `scale` transformation
                 break

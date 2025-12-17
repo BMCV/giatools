@@ -108,7 +108,7 @@ class Image:
         """
         from .io import imreadraw
         data, axes, metadata = imreadraw(filepath, *args, **kwargs)
-        img = Image(data, axes, original_axes=axes, metadata=_metadata.Metadata(**metadata))
+        img = Image(data, axes, metadata, original_axes=axes)
         if normalize_axes is None:
             return img
         else:
