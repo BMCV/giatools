@@ -1,4 +1,4 @@
-name: Test suite
+name: Tests
 
 on:
   workflow_dispatch:
@@ -17,6 +17,9 @@ on:
       - tests/data/**
       - requirements.txt
       - tests/requirements.txt
+
+env:
+  python_versions: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
 
 jobs:
   python_lint:
@@ -45,13 +48,51 @@ jobs:
           isort tests --check-only
 
   run_testsuite:
-    name: Tests
+    name: Test suite
     uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
     with:
       main_branch: master
-      python_versions: '["3.9", "3.10", "3.11", "3.12", "3.13"]'
+      python_versions: '$python_versions'
       main_python_version: "3.11"
       gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
       gist-filename: giatools.json
     secrets:
       gist-auth: ${{ secrets.GIST_SECRET }}
+
+  test_setup:
+    name: Test setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ${{ fromJSON($python_versions) }}
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install package with "omezarr" backend
+        if: matrix.python_version != '3.9' && matrix.python_version != '3.10'
+        run: |
+          pip install ".[omezarr]"
+
+      - name: Install package without "omezarr" backend
+        if: matrix.python_version == '3.9' || matrix.python_version == '3.10'
+        run: |
+          pip install "."
+
+      - name: Verify installation
+        run: |
+          python -c "import giatools; print(giatools.__version__)"
+          python -c "import giatools.image"
+          python -c "import giatools.io; print(giatools.io.backends)"
+          python -c "import giatools.metadata"
+          python -c "import giatools.pandas"
+          python -c "import giatools.util"
