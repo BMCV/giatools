@@ -12,6 +12,12 @@ class UnsupportedFileError(Exception):
     """
     Raised when a file cannot be read or written.
     """
+
+    filepath: str
+    """
+    The path to the file that could not be read or written.
+    """
+
     def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
@@ -21,6 +27,12 @@ class CorruptFileError(Exception):
     """
     Raised when a file is corrupted (or follows an unexpected internal format flavor) and cannot be read.
     """
+
+    filepath: str
+    """
+    The path to the file that could not be read.
+    """
+
     def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
@@ -30,6 +42,12 @@ class IncompatibleDataError(Exception):
     """
     Raised when a file cannot be written because the data or metadata is incompatible with the file format.
     """
+
+    filepath: str
+    """
+    The path to the file that could not be written.
+    """
+
     def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
