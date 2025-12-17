@@ -78,7 +78,7 @@ def _raise_unsupported_file_error(filepath: str, *args: _T.Any, **kwargs: _T.Any
 
 
 def imreadraw(
-    filepath: str, *args: _T.Any, position: int = 0, **kwargs: _T.Any,
+    filepath: _T.PathLike, *args: _T.Any, position: int = 0, **kwargs: _T.Any,
 ) -> _T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]:
     """
     Wrapper for reading images, muting non-fatal errors.
@@ -104,7 +104,9 @@ def imreadraw(
         UnsupportedFileError:
             If no backend could read the image.
     """
+    filepath = str(filepath)
 
+    # Try each backend in succession
     for backend in backends:
         ret = backend.read(filepath, *args, position=position, **kwargs)
         if ret is not None:
@@ -114,7 +116,7 @@ def imreadraw(
     _raise_unsupported_file_error(filepath, *args, **kwargs)
 
 
-def peek_num_images_in_file(filepath: str, *args: _T.Any, **kwargs: _T.Any) -> int:
+def peek_num_images_in_file(filepath: _T.PathLike, *args: _T.Any, **kwargs: _T.Any) -> int:
     """
     Peeks the number of images that can be loaded from a file.
 
@@ -142,6 +144,9 @@ def peek_num_images_in_file(filepath: str, *args: _T.Any, **kwargs: _T.Any) -> i
         UnsupportedFileError:
             If no backend could read the image.
     """
+    filepath = str(filepath)
+
+    # Try each backend in succession
     for backend in backends:
         ret = backend.peek_num_images_in_file(filepath, *args, **kwargs)
         if ret is not None:
@@ -178,7 +183,12 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
 
 
 def imwrite(
-    data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, backend: str = 'auto', **kwargs: _T.Any,
+    data: _T.NDArray,
+    filepath: _T.PathLike,
+    axes: str,
+    metadata: _metadata.Metadata,
+    backend: str = 'auto',
+    **kwargs: _T.Any,
 ):
     """
     Save an image to a file.
@@ -192,6 +202,7 @@ def imwrite(
             If `backend` is not ``"auto"`` and the specified backend is not available, or if the image data or metadata
             are invalid (e.g., `None`, invalid axes or dimensions).
     """
+    filepath = str(filepath)
     if filepath.lower().endswith('.tif'):
         _warnings.warn(
             '.tif extension is deprecated, use .tiff instead.',

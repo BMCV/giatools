@@ -95,7 +95,10 @@ class Image:
 
     @staticmethod
     def read(
-        filepath: str, *args: _T.Any, normalize_axes: _T.Optional[str] = default_normalized_axes, **kwargs: _T.Any,
+        filepath: _T.PathLike,
+        *args: _T.Any,
+        normalize_axes: _T.Optional[str] = default_normalized_axes,
+        **kwargs: _T.Any,
     ) -> _T.Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`. Normalization will be (almost)
@@ -111,7 +114,7 @@ class Image:
         else:
             return img.normalize_axes_like(normalize_axes)
 
-    def write(self, filepath: str, backend: str = 'auto') -> _T.Self:
+    def write(self, filepath: _T.PathLike, backend: str = 'auto') -> _T.Self:
         """
         Write the image to a file.
 

@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 import tempfile
 import unittest
 
@@ -14,7 +15,9 @@ import giatools.metadata
 from giatools.typing import (
     Literal,
     Optional,
+    PathLike,
     Tuple,
+    Type,
     Union,
 )
 
@@ -46,11 +49,14 @@ class imreadraw(unittest.TestCase):
             giatools.io.imreadraw(filepath, some_kwarg=True)
 
     def test__input1(self):
-        img, axes, metadata = giatools.io.imreadraw('tests/data/input1_uint8_yx.tiff')
-        self.assertEqual(img.mean(), 63.66848655158571)
-        self.assertEqual(img.shape, (265, 329))
-        self.assertEqual(axes, 'YX')
-        validate_metadata(self, metadata)
+        filepath_str = 'tests/data/input1_uint8_yx.tiff'
+        for filepath in (filepath_str, pathlib.Path(filepath_str)):
+            with self.subTest(filepath_type=type(filepath)):
+                img, axes, metadata = giatools.io.imreadraw(filepath)
+                self.assertEqual(img.mean(), 63.66848655158571)
+                self.assertEqual(img.shape, (265, 329))
+                self.assertEqual(axes, 'YX')
+                validate_metadata(self, metadata)
 
     def test__input2(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tiff')
@@ -239,6 +245,7 @@ class imwrite(unittest.TestCase):
         dtype: np.dtype,
         metadata: Optional[giatools.metadata.Metadata] = None,
         *,
+        filepath_type: Type[PathLike] = str,
         sigma: float = 0,
         ext: str,
         backend: str = 'auto',
@@ -258,7 +265,7 @@ class imwrite(unittest.TestCase):
         filepath = os.path.join(self.tempdir.name, f'test.{ext}')
         metadata = giatools.metadata.Metadata() if metadata is None else metadata
         metadata_copy = attrs.asdict(metadata)
-        giatools.io.imwrite(data, filepath, backend=backend, axes=axes, metadata=metadata, **kwargs)
+        giatools.io.imwrite(data, filepath_type(filepath), backend=backend, axes=axes, metadata=metadata, **kwargs)
 
         # Validate immutability of metadata
         _validate_metadata = globals()['validate_metadata']
@@ -331,7 +338,16 @@ class imwrite(unittest.TestCase):
             self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tif', backend='tifffile')
 
     def test__float32__tifffile__tiff(self):
-        self._test(data_shape=(10, 10, 5, 2), axes='YXZC', dtype=np.float32, ext='tiff', backend='tifffile')
+        for filetype_path in (str, pathlib.Path):
+            with self.subTest(filepath_type=filetype_path):
+                self._test(
+                    data_shape=(10, 10, 5, 2),
+                    axes='YXZC',
+                    dtype=np.float32,
+                    ext='tiff',
+                    backend='tifffile',
+                    filepath_type=filetype_path,
+                )
 
     def test__float32__tifffile__tiff__metadata(self):
         self._test(
