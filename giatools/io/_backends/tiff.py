@@ -1,34 +1,28 @@
-import json
-from xml.etree import ElementTree
+import json as _json
+from xml.etree import ElementTree as _ElementTree
 
-import tifffile
+import attrs as _attrs
+import tifffile as _tifffile
 
-from ...typing import (
-    Any,
-    Dict,
-    Literal,
-    NDArray,
+from ... import (
+    metadata as _metadata,
+    typing as _T,
 )
-from ..backend import (
-    Reader,
-    UnsupportedFileError,
-    Writer,
-    normalize_unit,
-)
+from .. import backend as _backend
 
 
-class TiffReader(Reader):
+class TiffReader(_backend.Reader):
 
     unsupported_file_errors = (
-        tifffile.TiffFileError,
+        _tifffile.TiffFileError,
         IsADirectoryError,
     )
 
-    def open(self, filepath: str, *args, **kwargs) -> Any:
+    def open(self, filepath: str, *args, **kwargs) -> _T.Any:
         try:
-            return tifffile.TiffFile(filepath, *args, **kwargs)
+            return _tifffile.TiffFile(filepath, *args, **kwargs)
         except TypeError:  # this is too generic to be added to `unsupported_file_errors`
-            raise UnsupportedFileError(
+            raise _backend.UnsupportedFileError(
                 filepath,
                 f'This backend does not accept the given arguments: args={args}, kwargs={kwargs}',
             )
@@ -36,46 +30,54 @@ class TiffReader(Reader):
     def get_num_images(self) -> int:
         return len(self.file.series)
 
-    def select_image(self, position: int) -> Any:
+    def select_image(self, position: int) -> _T.Any:
         return self.file.series[position]
 
-    def get_axes(self, image: Any) -> str:
+    def get_axes(self, image: _T.Any) -> str:
         return image.axes.upper()
 
-    def get_image_data(self, image: Any) -> NDArray:
+    def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image.asarray()
 
-    def get_image_metadata(self, image: Any) -> Dict[str, Any]:
+    def get_image_metadata(self, image: _T.Any) -> _metadata.Metadata:
         return _get_tiff_metadata(self.file, image)
 
 
-class TiffWriter(Writer):
+class TiffWriter(_backend.Writer):
 
     supported_extensions = (
         'tiff',
         'tif',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(
+        self,
+        data: _T.NDArray,
+        filepath: str,
+        axes: str,
+        metadata: _metadata.Metadata,
+        **kwargs: _T.Any,
+    ):
+        metadata_dict = _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
+        metadata_dict['axes'] = axes
 
         # Update the metadata structure to what `tifffile` expects
-        kwargs = dict(kwargs)
-        kwargs['metadata'] = metadata
-        if 'resolution' in metadata:
-            kwargs['resolution'] = metadata.pop('resolution')
-        if 'z_spacing' in metadata:
-            metadata['spacing'] = metadata.pop('z_spacing')
+        kwargs = dict(metadata=metadata_dict) | dict(kwargs)
+        if 'resolution' in metadata_dict:
+            kwargs['resolution'] = metadata_dict.pop('resolution')
+        if 'z_spacing' in metadata_dict:
+            metadata_dict['spacing'] = metadata_dict.pop('z_spacing')
 
         # Write the image using tifffile
-        tifffile.imwrite(filepath, im_arr, **kwargs)
+        _tifffile.imwrite(filepath, data, **kwargs)
 
 
-def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
+def _get_tiff_metadata(tif: _T.Any, series: _T.Any) -> _metadata.Metadata:
     """
     Extract metadata from a `tifffile.TiffFile` object.
     """
 
-    metadata: Dict[str, Any] = dict()
+    metadata: _T.Dict[str, _T.Any] = dict()
 
     # Extract pixel resolution, if available
     page0 = series.pages[0]
@@ -95,7 +97,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
 
         # Parse as JSON (giatools-style)
         if description_format == 'json':
-            description_json = json.loads(description)
+            description_json = _json.loads(description)
 
             # Extract z-slice spacing, if available
             if (val := description_json.get('spacing', None)) is not None:
@@ -117,7 +119,7 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
 
         # Parse as XML (OME-style)
         elif description_format == 'xml':
-            ome_xml = ElementTree.fromstring(description)
+            ome_xml = _ElementTree.fromstring(description)
             ome_ns = dict(ome='http://www.openmicroscopy.org/Schemas/OME/2016-06')
             ome_pixels = ome_xml.find('.//ome:Pixels', ome_ns)
 
@@ -170,31 +172,31 @@ def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
     if (unit := metadata.get('unit', None)) is not None:
         if unit == r'\u00B5m':
             metadata['unit'] = 'um'
-        elif (normalized_unit := normalize_unit(unit)) is not None:
+        elif (normalized_unit := _backend.normalize_unit(unit)) is not None:
             metadata['unit'] = normalized_unit
         else:
             del metadata['unit']  # remove unrecognized unit
 
-    return metadata
+    return _metadata.Metadata(**metadata)
 
 
-def _guess_tiff_description_format(description: str) -> Literal['json', 'xml', 'line']:
+def _guess_tiff_description_format(description: str) -> _T.Literal['json', 'xml', 'line']:
     """
     Guess the format of the given TIFF `ImageDescription` string.
     """
 
     # Try to parse as JSON first
     try:
-        json.loads(description)
+        _json.loads(description)
         return 'json'
-    except json.JSONDecodeError:
+    except _json.JSONDecodeError:
         pass
 
     # Try to parse as XML next
     try:
-        ElementTree.fromstring(description)
+        _ElementTree.fromstring(description)
         return 'xml'
-    except ElementTree.ParseError:
+    except _ElementTree.ParseError:
         pass
 
     # Fall back to line-by-line parsing

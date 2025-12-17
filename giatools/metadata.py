@@ -1,0 +1,99 @@
+"""
+Copyright 2017-2025 Leonid Kostrykin, Biomedical Computer Vision Group, Heidelberg University.
+
+Distributed under the MIT license.
+See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+"""
+
+import attrs as _attrs
+
+from . import typing as _T
+
+#: Valid units for metadata
+Unit = _T.Literal[
+    'inch',
+    'nm',
+    'um',
+    'mm',
+    'cm',
+    'm',
+    'km',
+]
+
+
+@_attrs.define
+class Metadata:
+    """
+    Image metadata.
+    """
+
+    resolution: _T.Optional[_T.Tuple[float, float]] = _attrs.field(
+        default=None,
+        validator=_attrs.validators.optional(
+            [
+                _attrs.validators.instance_of(tuple),
+                _attrs.validators.min_len(2),
+                _attrs.validators.max_len(2),
+                _attrs.validators.deep_iterable(
+                    member_validator=_attrs.validators.instance_of(float),
+                    iterable_validator=None,
+                ),
+            ],
+        )
+    )
+    """
+    Pixel resolution (pixels per unit in X and Y dimensions).
+    """
+
+    @property
+    def pixel_size(self) -> _T.Optional[_T.Tuple[float, float]]:
+        """
+        The pixel size in X and Y dimensions (units per pixel). This is identical to the pixel spacing in X and Y
+        dimensions.
+        """
+        return (
+            1 / self.resolution[0],
+            1 / self.resolution[1],
+        ) if self.resolution is not None else None
+
+    @pixel_size.setter
+    def pixel_size(self, value: _T.Optional[_T.Tuple[float, float]]):
+        if value is None:
+            self.resolution = None
+        else:
+            if not isinstance(value, tuple) or len(value) != 2 or not all(isinstance(val, float) for val in value):
+                raise ValueError('Pixel size must be a tuple of two non-None floats or None.')
+            self.resolution = (
+                1 / value[0],
+                1 / value[1],
+            )
+
+    z_spacing: _T.Optional[float] = _attrs.field(
+        default=None,
+        validator=_attrs.validators.optional(
+            _attrs.validators.instance_of(float),
+        ),
+    )
+    """
+    The pixel spacing in the Z dimension.
+    """
+
+    z_position: _T.Optional[float] = _attrs.field(
+        default=None,
+        validator=_attrs.validators.optional(
+            _attrs.validators.instance_of(float),
+        ),
+    )
+    """
+    The position of the image in the Z dimension.
+    """
+
+    unit: _T.Optional[Unit] = _attrs.field(
+        default=None,
+        validator=_attrs.validators.optional(
+            _attrs.validators.in_(_T.get_args(Unit)),
+        ),
+    )
+    """
+    The unit of measurement.
+    """

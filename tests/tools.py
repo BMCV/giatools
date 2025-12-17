@@ -6,12 +6,15 @@ import sys
 import tempfile
 import unittest
 
+import attrs
 import numpy as np
 
+import giatools.metadata
 from giatools.typing import (
     Any,
     Literal,
     Tuple,
+    Union,
 )
 
 
@@ -32,20 +35,21 @@ class CaptureStderr:
         return self.stdout_buf.getvalue()
 
 
-def verify_metadata(testcase: unittest.TestCase, metadata: dict, **expected: Any):
+def validate_metadata(testcase: unittest.TestCase, actual: Union[dict, giatools.metadata.Metadata], **expected: Any):
     """
-    Verify that the metadata is present and correct.
+    Verify that the `actual` metadata is identical to the `expected` metadata.
     """
-    testcase.assertIsInstance(metadata, dict)
-    for key, value in expected.items():
-        if value is None:
-            testcase.assertNotIn(key, metadata)
-        else:
-            testcase.assertIn(key, metadata)
-            if isinstance(value, tuple):
-                np.testing.assert_array_almost_equal(metadata[key], value, err_msg=f'Validation failed for "{key}"')
-            else:
-                testcase.assertEqual(metadata[key], value)
+    # Normalize the actual metadata (fill missing fields with None)
+    if isinstance(actual, dict):
+        actual = giatools.metadata.Metadata(**actual)
+    actual = attrs.asdict(actual)
+
+    # Normalize the expected metadata (fill missing fields with None)
+    expected_metadata = giatools.metadata.Metadata(**expected)
+    expected = attrs.asdict(expected_metadata)
+
+    # Compare
+    testcase.assertEqual(actual, expected)
 
 
 def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):

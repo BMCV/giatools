@@ -1,14 +1,18 @@
 import unittest
 import unittest.mock
 
+import attrs
+
 import giatools.io
 import giatools.io.backend
+import giatools.metadata
 
 invalid_axes = (
     'YYX',   # error: Y axis given twice
     'YXCS',  # error: C and S are mutually exclusive
     'YXM',   # error: unsupported axis M
     'Y',     # error: missing X axis
+    '',      # error: missing X and Y axes
 )
 
 
@@ -63,7 +67,7 @@ class Backend__peek_num_images_in_file(BackendTestCase):
         with self.assertRaises(FileNotFoundError):
             self.backend.peek_num_images_in_file('nonexistent_file.tiff')
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__unsupported_file(self, mock_os_path_exists):
         for error_in in (
             'reader_init',
@@ -75,7 +79,7 @@ class Backend__peek_num_images_in_file(BackendTestCase):
                 mock.side_effect = giatools.io.UnsupportedFileError('some_file')
                 self.assertIsNone(self.backend.peek_num_images_in_file('some_file'))
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__valid(self, mock_os_path_exists):
         self.reader_get_num_images.return_value = 5
         self.assertEqual(self.backend.peek_num_images_in_file('some_file'), 5)
@@ -87,7 +91,7 @@ class Backend__read(BackendTestCase):
         with self.assertRaises(FileNotFoundError):
             self.backend.read('nonexistent_file.tiff')
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__unsupported_file(self, mock_os_path_exists):
         for error_in in (
             'reader_init',
@@ -99,13 +103,13 @@ class Backend__read(BackendTestCase):
                 mock.side_effect = giatools.io.UnsupportedFileError('some_file')
                 self.assertIsNone(self.backend.read('some_file'))
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__invalid_position(self, mock_os_path_exists):
         self.reader_get_num_images.return_value = 3
         with self.assertRaises(IndexError):
             self.backend.read('some_file', position=3)
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__invalid_axes(self, mock_os_path_exists):
         self.reader_get_num_images.return_value = 1
         for axes in invalid_axes:
@@ -114,7 +118,7 @@ class Backend__read(BackendTestCase):
                 with self.assertRaises(giatools.io.CorruptFileError):
                     self.backend.read('some_file')
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__valid(self, mock_os_path_exists):
         self.reader_get_num_images.return_value = 1
         for axes in ('YXC', 'YXS'):
@@ -135,27 +139,26 @@ class Backend__write(BackendTestCase):
         for axes in invalid_axes:
             with self.subTest(axes=axes):
                 with self.assertRaises(ValueError):
-                    self.backend.write(self.im_arr, 'some_file', metadata=dict(axes=axes))
+                    self.backend.write(self.im_arr, 'some_file', axes=axes, metadata=giatools.metadata.Metadata())
 
     def test__missing_metadata(self):
-        for metadata in (None, dict()):
-            with self.subTest(metadata=metadata):
-                with self.assertRaises(ValueError):
-                    self.backend.write(self.im_arr, 'some_file', metadata=metadata)
+        with self.assertRaises(ValueError):
+            self.backend.write(self.im_arr, 'some_file', axes='YX', metadata=None)
 
-    @unittest.mock.patch('giatools.io.backend.os.path.exists', return_value=True)
+    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__valid(self, mock_os_path_exists):
         kwarg = unittest.mock.MagicMock()
         for axes in ('YXC', 'YXS'):
-            metadata = dict(axes=axes)
-            metadata_copy = dict(metadata)
+            metadata = giatools.metadata.Metadata()
+            metadata_copy = attrs.asdict(metadata)
             with self.subTest(axes=axes):
-                self.backend.write(self.im_arr, 'some_file', metadata=metadata, kwarg=kwarg)
+                self.backend.write(self.im_arr, 'some_file', axes=axes, metadata=metadata, kwarg=kwarg)
                 self.writer_write.assert_called()
                 self.assertIs(self.writer_write.call_args.args[0], self.im_arr)
                 self.assertIs(self.writer_write.call_args.args[1], 'some_file')
-                self.assertIsNot(self.writer_write.call_args.args[2], metadata)
-                self.assertEqual(self.writer_write.call_args.args[2], metadata_copy)
+                self.assertEqual(self.writer_write.call_args.args[2], 'YXC')
+                self.assertIsNot(self.writer_write.call_args.args[3], metadata)
+                self.assertEqual(attrs.asdict(self.writer_write.call_args.args[3]), metadata_copy)
                 self.assertEqual(self.writer_write.call_args.kwargs, dict(kwarg=kwarg))
 
 
@@ -190,4 +193,9 @@ class Writer(unittest.TestCase):
 
     def test_write(self):
         with self.assertRaises(NotImplementedError):
-            giatools.io.backend.Writer().write(unittest.mock.MagicMock(), 'some_file', dict())
+            giatools.io.backend.Writer().write(
+                unittest.mock.MagicMock(),
+                'some_file',
+                axes='YX',
+                metadata=giatools.metadata.Metadata(),
+            )

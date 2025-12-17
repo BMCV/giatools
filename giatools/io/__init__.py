@@ -5,22 +5,20 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import warnings
+import warnings as _warnings
 
-from ..typing import (
-    Any,
-    Dict,
-    NDArray,
-    Tuple,
+from .. import (
+    metadata as _metadata,
+    typing as _T,
+    util as _util,
 )
-from ..util import distance_to_external_frame
 from ._backends.skimage import (
-    SKImageReader,
-    SKImageWriter,
+    SKImageReader as _SKImageReader,
+    SKImageWriter as _SKImageWriter,
 )
 from ._backends.tiff import (
-    TiffReader,
-    TiffWriter,
+    TiffReader as _TiffReader,
+    TiffWriter as _TiffWriter,
 )
 from .backend import (
     Backend,
@@ -30,9 +28,9 @@ from .backend import (
 )
 
 try:
-    from ._backends.omezarr import OMEZarrReader
+    from ._backends.omezarr import OMEZarrReader as _OMEZarrReader
 except ImportError:
-    OMEZarrReader = None  # type: ignore
+    _OMEZarrReader = None  # type: ignore
 
 __all__ = [
     'backends',
@@ -59,18 +57,18 @@ __all__ = [
 #:
 #:         The `omezarr` backend is only available on **Python 3.11** or later.
 backends = [
-    Backend('tifffile', TiffReader, TiffWriter),
+    Backend('tifffile', _TiffReader, _TiffWriter),
 ] + (
     [
-        Backend('omezarr', OMEZarrReader),
+        Backend('omezarr', _OMEZarrReader),
     ]
-    if OMEZarrReader is not None else []
+    if _OMEZarrReader is not None else []
 ) + [
-    Backend('skimage', SKImageReader, SKImageWriter),
+    Backend('skimage', _SKImageReader, _SKImageWriter),
 ]
 
 
-def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
+def _raise_unsupported_file_error(filepath: str, *args: _T.Any, **kwargs: _T.Any):
     args_str = ', '.join(repr(arg) for arg in args)
     kwargs_str = ', '.join(f'{key}={value!r}' for key, value in kwargs.items())
     details = ', '.join(filter(lambda s: len(s), (args_str, kwargs_str)))
@@ -79,7 +77,9 @@ def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
     raise UnsupportedFileError(filepath, f'No backend could read {filepath}{details}')
 
 
-def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
+def imreadraw(
+    filepath: _T.PathLike, *args: _T.Any, position: int = 0, **kwargs: _T.Any,
+) -> _T.Tuple[_T.NDArray, str, _metadata.Metadata]:
     """
     Wrapper for reading images, muting non-fatal errors.
 
@@ -90,11 +90,11 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     `IndexError` is raised if `position` is invalid. The :py:func:`peek_num_images_in_file` function can be used to
     determine the number of images in a file.
 
-    Returns a tuple `(im_arr, axes, metadata)` where `im_arr` is the image data as a NumPy or Dask array, `axes` are
-    the axes of the image, and `metadata` is any additional metadata. Minimal normalization is performed by treating
-    sample axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread`
-    backend, single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two
-    axes and ``YXC`` for arrays with three axes, respectively.
+    Returns a tuple `(data, axes, metadata)` where `data` is the image data as a NumPy or Dask array, `axes` are the
+    axes of the image, and `metadata` is any additional metadata. Minimal normalization is performed by treating sample
+    axis ``S`` as an alias for the channel axis ``C``. For images which are read by the `skimage.io.imread` backend,
+    single-channel and multi-channel 2-D images are supported, assuming ``YX`` axes layout for arrays with two axes and
+    ``YXC`` for arrays with three axes, respectively.
 
     Raises:
         CorruptFileError:
@@ -104,7 +104,9 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
         UnsupportedFileError:
             If no backend could read the image.
     """
+    filepath = str(filepath)
 
+    # Try each backend in succession
     for backend in backends:
         ret = backend.read(filepath, *args, position=position, **kwargs)
         if ret is not None:
@@ -114,7 +116,7 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     _raise_unsupported_file_error(filepath, *args, **kwargs)
 
 
-def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
+def peek_num_images_in_file(filepath: _T.PathLike, *args: _T.Any, **kwargs: _T.Any) -> int:
     """
     Peeks the number of images that can be loaded from a file.
 
@@ -142,6 +144,9 @@ def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
         UnsupportedFileError:
             If no backend could read the image.
     """
+    filepath = str(filepath)
+
+    # Try each backend in succession
     for backend in backends:
         ret = backend.peek_num_images_in_file(filepath, *args, **kwargs)
         if ret is not None:
@@ -177,7 +182,14 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         return next((backend for backend in supported_backends if backend.name == backend_name))
 
 
-def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto', **kwargs):
+def imwrite(
+    data: _T.NDArray,
+    filepath: _T.PathLike,
+    axes: str,
+    metadata: _metadata.Metadata,
+    backend: str = 'auto',
+    **kwargs: _T.Any,
+):
     """
     Save an image to a file.
 
@@ -190,13 +202,14 @@ def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto
             If `backend` is not ``"auto"`` and the specified backend is not available, or if the image data or metadata
             are invalid (e.g., `None`, invalid axes or dimensions).
     """
+    filepath = str(filepath)
     if filepath.lower().endswith('.tif'):
-        warnings.warn(
+        _warnings.warn(
             '.tif extension is deprecated, use .tiff instead.',
             DeprecationWarning,
-            stacklevel=distance_to_external_frame(),
+            stacklevel=_util.distance_to_external_frame(),
         )
     _select_writing_backend(
         filepath,
         backend,
-    ).write(im_arr, filepath, metadata=metadata, **kwargs)
+    ).write(data, filepath, axes=axes, metadata=metadata, **kwargs)

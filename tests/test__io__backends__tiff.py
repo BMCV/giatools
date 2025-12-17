@@ -3,6 +3,8 @@ import unittest.mock
 
 import giatools.io
 import giatools.io._backends.tiff
+import giatools.metadata
+from giatools.typing import get_args
 
 from .tools import (
     filenames,
@@ -27,8 +29,11 @@ valid_tiff_units = (
     ('kilometers', 'km'),
 )
 
+# Consistency check
+assert frozenset(u[1] for u in valid_tiff_units) == frozenset(get_args(giatools.metadata.Unit))
 
-@unittest.mock.patch('giatools.io._backends.tiff.tifffile.imwrite')
+
+@unittest.mock.patch('giatools.io._backends.tiff._tifffile.imwrite')
 class TiffWriter__write(unittest.TestCase):
 
     def setUp(self):
@@ -37,8 +42,8 @@ class TiffWriter__write(unittest.TestCase):
     @mock_array(10, 10, 1)
     @filenames('tif', 'tiff')
     def test__valid(self, mock_imwrite, array, filename):
-        metadata = dict(z_spacing=0.5, unit='cm', axes='YXC')
-        self.writer.write(array, filepath=filename, metadata=dict(metadata))
+        metadata = dict(z_spacing=0.5, unit='cm')
+        self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata(**metadata))
         mock_imwrite.assert_called()
         self.assertEqual(
             mock_imwrite.call_args.kwargs['metadata'],
@@ -52,7 +57,7 @@ class TiffWriter__write(unittest.TestCase):
 
 class TiffReader__get_image_metadata(unittest.TestCase):
 
-    @unittest.mock.patch('giatools.io._backends.tiff.tifffile.TiffFile')
+    @unittest.mock.patch('giatools.io._backends.tiff._tifffile.TiffFile')
     def setUp(self, mock_tiff_file):
         self.reader = giatools.io._backends.tiff.TiffReader('filepath').__enter__()
         self.image = self.reader.select_image(0)
@@ -67,19 +72,19 @@ class TiffReader__get_image_metadata(unittest.TestCase):
             YResolution=unittest.mock.MagicMock(value=(300, 2)),
         )
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['resolution'], (300.0, 150.0))
+        self.assertEqual(metadata.resolution, (300.0, 150.0))
 
     def test__resolution__unavailable1(self):
         self.image.pages[0].tags = dict(
             XResolution=unittest.mock.MagicMock(value=(300, 1)),
         )
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertNotIn('resolution', metadata)
+        self.assertIsNone(metadata.resolution)
 
     def test__resolution__unavailable2(self):
         self.image.pages[0].tags = dict()
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertNotIn('resolution', metadata)
+        self.assertIsNone(metadata.resolution)
 
     def test__resolution__invalid(self):
         self.image.pages[0].tags = dict(
@@ -87,7 +92,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
             YResolution=unittest.mock.MagicMock(value=(300, 0)),
         )
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertNotIn('resolution', metadata)
+        self.assertIsNone(metadata.resolution)
 
     # -----------------------------------------------------------------------------------------------------------------
     # Missing or invalid `ImageDescription` tests
@@ -98,14 +103,14 @@ class TiffReader__get_image_metadata(unittest.TestCase):
             ResolutionUnit=unittest.mock.MagicMock(value=2),
         )
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['unit'], 'inch')
+        self.assertEqual(metadata.unit, 'inch')
 
     def test__resolution_unit_centimeters(self):
         self.image.pages[0].tags = dict(
             ResolutionUnit=unittest.mock.MagicMock(value=3),
         )
         metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['unit'], 'cm')
+        self.assertEqual(metadata.unit, 'cm')
 
     def test__resolution_unit__invalid(self):
         for value in (0, 1, 4):
@@ -114,18 +119,22 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ResolutionUnit=unittest.mock.MagicMock(value=value),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('unit', metadata)
+                self.assertIsNone(metadata.unit)
 
     # -----------------------------------------------------------------------------------------------------------------
     # GIA-like `ImageDescription` tests (JSON)
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__json_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='{"spacing": 0.5}'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['z_spacing'], 0.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'{{"spacing": {value}}}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__json_description__spacing__invalid(self):
         for json in (
@@ -138,14 +147,18 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=json),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('z_spacing', metadata)
+                self.assertIsNone(metadata.z_spacing)
 
     def test__json_description__z_position(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='{"z_position": 1.5}'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['z_position'], 1.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'{{"z_position": {value}}}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_position, expected_value)
 
     def test__json_description__z_position__invalid(self):
         for json in (
@@ -158,7 +171,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=json),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('z_position', metadata)
+                self.assertIsNone(metadata.z_position)
 
     def test__json_description__unit(self):
         for unit_input, unit_expected in valid_tiff_units:
@@ -167,7 +180,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=f'{{"unit": "{unit_input}"}}'),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertEqual(metadata['unit'], unit_expected)
+                self.assertEqual(metadata.unit, unit_expected)
 
     def test__json_description__unit__invalid(self):
         for json in (
@@ -182,24 +195,28 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=json),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('unit', metadata)
+                self.assertIsNone(metadata.unit)
 
     # -----------------------------------------------------------------------------------------------------------------
     # OME-like `ImageDescription` tests (XML)
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__xml_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(
-                value=(
-                    '<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">'
-                    '<Pixels PhysicalSizeZ="0.5"/>'
-                    '</OME>'
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(
+                        value=(
+                            '<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">'
+                            '<Pixels PhysicalSizeZ="{}"/>'
+                            '</OME>'.format(value)
+                        )
+                    ),
                 )
-            ),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['z_spacing'], 0.5)
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__xml_description__spacing__invalid(self):
         for xml in (
@@ -212,7 +229,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=xml),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('z_spacing', metadata)
+                self.assertIsNone(metadata.z_spacing)
 
     def test__xml_description__unit(self):
         for unit_input, unit_expected in valid_tiff_units:
@@ -227,7 +244,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertEqual(metadata['unit'], unit_expected)
+                self.assertEqual(metadata.unit, unit_expected)
 
     def test__xml_description__unit__invalid(self):
         for xml in (
@@ -241,18 +258,22 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=xml),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('unit', metadata)
+                self.assertIsNone(metadata.unit)
 
     # -----------------------------------------------------------------------------------------------------------------
     # ImageJ-like `ImageDescription` tests (line-by-line)
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__line_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='spacing=0.5'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata['z_spacing'], 0.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'spacing={value}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__line_description__spacing__invalid(self):
         for line in (
@@ -265,7 +286,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=line),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('z_spacing', metadata)
+                self.assertIsNone(metadata.z_spacing)
 
     def test__line_description__unit(self):
         for unit_input, unit_expected in valid_tiff_units:
@@ -275,7 +296,7 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                         ImageDescription=unittest.mock.MagicMock(value=f'unit={unit_input2}'),
                     )
                     metadata = self.reader.get_image_metadata(self.image)
-                    self.assertEqual(metadata['unit'], unit_expected)
+                    self.assertEqual(metadata.unit, unit_expected)
 
     def test__line_description__unit__invalid(self):
         for line in (
@@ -291,4 +312,4 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                     ImageDescription=unittest.mock.MagicMock(value=line),
                 )
                 metadata = self.reader.get_image_metadata(self.image)
-                self.assertNotIn('unit', metadata)
+                self.assertIsNone(metadata.unit)

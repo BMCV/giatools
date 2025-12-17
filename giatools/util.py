@@ -5,15 +5,15 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
-import contextlib
-import functools
-import inspect
-import os
+import contextlib as _contextlib
+import functools as _functools
+import inspect as _inspect
+import os as _os
 
-import numpy as np
-import skimage.util
+import numpy as _np
+import skimage.util as _skimage_util
 
-from .typing import Iterable
+from . import typing as _T
 
 
 def silent(func):
@@ -21,10 +21,10 @@ def silent(func):
     Decorator that mutes the standard error stream of the decorated function.
     """
 
-    @functools.wraps(func)  # propagate function signature so Sphinx can handle it
+    @_functools.wraps(func)  # propagate function signature so Sphinx can handle it
     def wrapper(*args, **kwargs):
-        with open(os.devnull, 'w') as fnull:
-            with contextlib.redirect_stderr(fnull):
+        with open(_os.devnull, 'w') as fnull:
+            with _contextlib.redirect_stderr(fnull):
                 return func(*args, **kwargs)
 
     return wrapper
@@ -40,24 +40,24 @@ def convert_image_to_format_of(image, format_image):
         return image
 
     # Convert the image to uint8 if this is the format of the second image.
-    elif format_image.dtype == np.uint8:
-        return skimage.util.img_as_ubyte(image)
+    elif format_image.dtype == _np.uint8:
+        return _skimage_util.img_as_ubyte(image)
 
     # Convert the image to uint16 if this is the format of the second image.
-    elif format_image.dtype == np.uint16:
-        return skimage.util.img_as_uint(image)
+    elif format_image.dtype == _np.uint16:
+        return _skimage_util.img_as_uint(image)
 
     # Convert the image to int16 if this is the format of the second image.
-    elif format_image.dtype == np.int16:
-        return skimage.util.img_as_int(image)
+    elif format_image.dtype == _np.int16:
+        return _skimage_util.img_as_int(image)
 
     # Convert the image to float32 if this is the format of the second image.
-    elif format_image.dtype == np.float32:
-        return skimage.util.img_as_float32(image)
+    elif format_image.dtype == _np.float32:
+        return _skimage_util.img_as_float32(image)
 
     # Convert the image to float64 if this is the format of the second image.
-    elif format_image.dtype == np.float64:
-        return skimage.util.img_as_float64(image)
+    elif format_image.dtype == _np.float64:
+        return _skimage_util.img_as_float64(image)
 
     # Other formats are not supported yet (e.g., float16).
     else:
@@ -73,7 +73,7 @@ def move_char(s: str, pos_src: int, pos_dst: int) -> str:
     return ''.join(s_list)
 
 
-def str_without_positions(s: str, positions: Iterable[int]) -> str:
+def str_without_positions(s: str, positions: _T.Iterable[int]) -> str:
     """
     Returns the string `s` with the `characters` removed from it.
     """
@@ -86,9 +86,9 @@ def distance_to_external_frame():
     """
     Returns the number of stack levels until the first frame of the user's code.
     """
-    for depth, frame_info in enumerate(inspect.stack()[1:], start=1):
+    for depth, frame_info in enumerate(_inspect.stack()[1:], start=1):
         frame = frame_info.frame
-        module = inspect.getmodule(frame)
+        module = _inspect.getmodule(frame)
         module_name = module.__name__ if module else None
 
         if module_name.split('.')[0] != 'giatools':
