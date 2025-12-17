@@ -7,7 +7,6 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import sys as _sys
 
-import attrs as _attrs
 import numpy as _np
 
 from . import (
@@ -93,18 +92,13 @@ class Image:
         self,
         data: NDArray,
         axes: str,
-        metadata: Optional[Union[dict, _metadata.Metadata]] = None,
+        metadata: Optional[_metadata.Metadata] = None,
         original_axes: Optional[str] = None,
     ):
         self.data = data
         self.axes = axes
         self.original_axes = original_axes
-        if metadata is None:
-            self.metadata = _metadata.Metadata()
-        elif isinstance(metadata, dict):
-            self.metadata = _metadata.Metadata(**metadata)
-        else:
-            self.metadata = metadata
+        self.metadata = _metadata.Metadata() if metadata is None else metadata
 
     @staticmethod
     def read(filepath: str, *args, normalize_axes: Optional[str] = default_normalized_axes, **kwargs) -> Self:
@@ -138,11 +132,7 @@ class Image:
                 f'Number of axes "{self.axes}" does not match number of data dimensions {self.data.shape}'
             )
         from .io import imwrite
-        full_metadata = dict(axes=self.axes) | _attrs.asdict(
-            self.metadata,
-            filter=lambda attr, value: value is not None,
-        )
-        imwrite(self.data, filepath, backend=backend, metadata=full_metadata)
+        imwrite(self.data, filepath, axes=self.axes, metadata=self.metadata, backend=backend)
         return self
 
     def squeeze_like(self, axes: str) -> Self:

@@ -1,8 +1,10 @@
 import json
 from xml.etree import ElementTree
 
+import attrs as _attrs
 import tifffile
 
+from ... import metadata as _metadata
 from ...typing import (
     Any,
     Dict,
@@ -56,15 +58,16 @@ class TiffWriter(Writer):
         'tif',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+        metadata_dict =  _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
+        metadata_dict['axes'] = axes
 
         # Update the metadata structure to what `tifffile` expects
-        kwargs = dict(kwargs)
-        kwargs['metadata'] = metadata
-        if 'resolution' in metadata:
-            kwargs['resolution'] = metadata.pop('resolution')
-        if 'z_spacing' in metadata:
-            metadata['spacing'] = metadata.pop('z_spacing')
+        kwargs = dict(metadata=metadata_dict) | dict(kwargs)
+        if 'resolution' in metadata_dict:
+            kwargs['resolution'] = metadata_dict.pop('resolution')
+        if 'z_spacing' in metadata_dict:
+            metadata_dict['spacing'] = metadata_dict.pop('z_spacing')
 
         # Write the image using tifffile
         tifffile.imwrite(filepath, im_arr, **kwargs)

@@ -2,6 +2,7 @@ import warnings
 
 import skimage.io
 
+from ... import metadata as _metadata
 from ...typing import (
     Any,
     Dict,
@@ -78,15 +79,15 @@ class SKImageWriter(Writer):
         'jpeg',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         suffix = filepath.split('.')[-1].lower()
 
         # Validate that the image data is compatible with the file format
         error = None
         if suffix == 'png':
-            error = self._validate_png(im_arr, metadata)
+            error = self._validate_png(im_arr, axes)
         if suffix in ('jpg', 'jpeg'):
-            error = self._validate_jpg(im_arr, metadata)
+            error = self._validate_jpg(im_arr, axes)
         if error:
             raise IncompatibleDataError(filepath, error)
 
@@ -101,15 +102,15 @@ class SKImageWriter(Writer):
             warnings.filterwarnings('ignore', category=FutureWarning)
             skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False, **kwargs)
 
-    def _validate_png(self, im_arr: NDArray, metadata: dict) -> Union[str, None]:
+    def _validate_png(self, im_arr: NDArray, axes: str) -> Union[str, None]:
         if not (
-            (metadata['axes'] == 'YX' and im_arr.ndim == 2) or (metadata['axes'] == 'YXC' and im_arr.ndim in (1, 3, 4))
+            (axes == 'YX' and im_arr.ndim == 2) or (axes == 'YXC' and im_arr.ndim in (1, 3, 4))
         ):
             return 'PNG files only support single-channel, RGB, and RGBA images (YX or YXC axes layout).'
 
-    def _validate_jpg(self, im_arr: NDArray, metadata: dict):
+    def _validate_jpg(self, im_arr: NDArray, axes: str):
         if not (
-            metadata['axes'] == 'YXC' and im_arr.ndim == 3 and im_arr.shape[2] == 3
+            axes == 'YXC' and im_arr.ndim == 3 and im_arr.shape[2] == 3
         ):
             return 'JPEG files only support RGB images (YXC axes layout).'
 

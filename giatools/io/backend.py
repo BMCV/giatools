@@ -1,6 +1,8 @@
 import os as _os
 
-from ..metadata import Unit
+import attrs as _attrs
+
+from .. import metadata as _metadata
 from ..typing import (
     Any,
     Dict,
@@ -80,7 +82,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         raise NotImplementedError()
 
 
@@ -149,36 +151,35 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         if metadata is None:
             raise ValueError('Metadata must be provided when writing images.')
 
         # Create a copy of the metadata to avoid modifying the original
-        metadata = dict(metadata) if metadata is not None else dict()
+        metadata = _metadata.Metadata(**_attrs.asdict(metadata))
 
         # Validate metadata
-        im_axes = metadata.get('axes', '')
-        if 'Y' not in im_axes or 'X' not in im_axes:
-            raise ValueError(f'Image is missing required X or Y axes (found {im_axes}).')
+        if 'Y' not in axes or 'X' not in axes:
+            raise ValueError(f'Image is missing required X or Y axes (found {axes}).')
         if (
-            not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS'))
-            or len(im_axes) != len(frozenset(im_axes))
+            not (frozenset('YX') <= frozenset(axes) <= frozenset('QTZYXCS'))
+            or len(axes) != len(frozenset(axes))
         ):
-            raise ValueError(f'Image has unsupported axes: {im_axes}')
+            raise ValueError(f'Image has unsupported axes: {axes}')
 
         # Treat sample axis "S" as channel axis "C" and fail if both are present
-        if 'C' in im_axes and 'S' in im_axes:
+        if 'C' in axes and 'S' in axes:
             raise ValueError(
-                f'Image has both channel and sample axes which is not supported: {im_axes}',
+                f'Image has both channel and sample axes which is not supported: {axes}',
             )
-        im_axes = im_axes.replace('S', 'C')
+        axes = axes.replace('S', 'C')
 
         # Delegate the writing to the writer class
         writer = self.writer_class()
-        writer.write(im_arr, filepath, metadata, **kwargs)
+        writer.write(im_arr, filepath, axes, metadata, **kwargs)
 
 
-def normalize_unit(unit: str) -> Optional[Unit]:
+def normalize_unit(unit: str) -> Optional[_metadata.Unit]:
     """
     Normalizes a unit string to a standard representation.
     """
