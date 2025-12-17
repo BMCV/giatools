@@ -1,11 +1,7 @@
 import ome_zarr.io
 import ome_zarr.reader
 
-from ...typing import (
-    Any,
-    Dict,
-    NDArray,
-)
+from ... import typing as _typing
 from ..backend import (
     CorruptFileError,
     Reader,
@@ -16,7 +12,7 @@ from ..backend import (
 
 class OMEZarrReader(Reader):
 
-    def open(self, filepath: str, *args, **kwargs) -> Any:
+    def open(self, filepath: str, *args, **kwargs) -> _typing.Any:
         try:
             omezarr_store = ome_zarr.io.parse_url(filepath, *args, **kwargs)
         except TypeError:  # this is too generic to be added to `unsupported_file_errors`
@@ -33,16 +29,16 @@ class OMEZarrReader(Reader):
     def get_num_images(self) -> int:
         return len(self.file)
 
-    def select_image(self, position: int) -> Any:
+    def select_image(self, position: int) -> _typing.Any:
         return self.file[position]
 
-    def get_axes(self, image: Any) -> str:
+    def get_axes(self, image: _typing.Any) -> str:
         return _get_omezarr_axes(image)
 
-    def get_image_data(self, image: Any) -> NDArray:
+    def get_image_data(self, image: _typing.Any) -> _typing.NDArray:
         return image.data[0]  # top-level of the pyramid (dask array)
 
-    def get_image_metadata(self, image: Any) -> Dict[str, Any]:
+    def get_image_metadata(self, image: _typing.Any) -> _typing.Dict[str, _typing.Any]:
         return _get_omezarr_metadata(image)
 
 
@@ -55,12 +51,12 @@ def _get_omezarr_axes(omezarr_node: ome_zarr.reader.Node) -> str:
     return ''.join(axis['name'].upper() for axis in omezarr_node.metadata['axes'])
 
 
-def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> Dict[str, Any]:
+def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> _typing.Dict[str, _typing.Any]:
     """
     Extract metadata from an `ome_zarr.reader.Node` object.
     """
     axes = _get_omezarr_axes(omezarr_node)
-    metadata: Dict[str, Any] = dict()
+    metadata: _typing.Dict[str, _typing.Any] = dict()
 
     # Extract the `unit`, if it is constant across all axes
     units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
