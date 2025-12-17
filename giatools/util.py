@@ -13,7 +13,7 @@ import os as _os
 import numpy as _np
 import skimage.util as _skimage_util
 
-from . import typing as _typing
+from . import typing as _T
 
 
 def silent(func):
@@ -73,7 +73,7 @@ def move_char(s: str, pos_src: int, pos_dst: int) -> str:
     return ''.join(s_list)
 
 
-def str_without_positions(s: str, positions: _typing.Iterable[int]) -> str:
+def str_without_positions(s: str, positions: _T.Iterable[int]) -> str:
     """
     Returns the string `s` with the `characters` removed from it.
     """

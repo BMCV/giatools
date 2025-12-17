@@ -4,7 +4,7 @@ import attrs as _attrs
 
 from .. import (
     metadata as _metadata,
-    typing as _typing,
+    typing as _T,
 )
 
 
@@ -44,7 +44,7 @@ class Reader:
         self._kwargs = kwargs
         self.file = None
 
-    def __enter__(self) -> _typing.Self:
+    def __enter__(self) -> _T.Self:
         self.file = self.open(*self._args, **self._kwargs)
         return self
 
@@ -53,22 +53,22 @@ class Reader:
             self.file.close()
         self.file = None
 
-    def open(self, *args, **kwargs) -> _typing.Any:
+    def open(self, *args, **kwargs) -> _T.Any:
         raise NotImplementedError()
 
     def get_num_images(self) -> int:
         raise NotImplementedError()
 
-    def select_image(self, position: int) -> _typing.Any:
+    def select_image(self, position: int) -> _T.Any:
         raise NotImplementedError()
 
-    def get_axes(self, image: _typing.Any) -> str:
+    def get_axes(self, image: _T.Any) -> str:
         raise NotImplementedError()
 
-    def get_image_data(self, image: _typing.Any) -> _typing.NDArray:
+    def get_image_data(self, image: _T.Any) -> _T.NDArray:
         raise NotImplementedError()
 
-    def get_image_metadata(self, image: _typing.Any) -> _typing.Dict[str, _typing.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
         raise NotImplementedError()
 
 
@@ -76,7 +76,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, data: _typing.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         raise NotImplementedError()
 
 
@@ -85,8 +85,8 @@ class Backend:
     def __init__(
         self,
         name: str,
-        reader_class: _typing.Type[Reader],
-        writer_class: _typing.Optional[_typing.Type[Writer]] = None,
+        reader_class: _T.Type[Reader],
+        writer_class: _T.Optional[_T.Type[Writer]] = None,
     ):
         self.name = name
         self.reader_class = reader_class
@@ -98,7 +98,7 @@ class Backend:
     def __repr__(self) -> str:
         return f'<{self.name} Backend>'
 
-    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> _typing.Optional[int]:
+    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> _T.Optional[int]:
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
@@ -110,10 +110,10 @@ class Backend:
     def read(
         self,
         filepath: str,
-        *args: _typing.Any,
+        *args: _T.Any,
         position: int = 0,
-        **kwargs: _typing.Any,
-    ) -> _typing.Optional[_typing.Tuple[_typing.NDArray, str, _typing.Dict[str, _typing.Any]]]:
+        **kwargs: _T.Any,
+    ) -> _T.Optional[_T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]]:
 
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
@@ -159,11 +159,11 @@ class Backend:
 
     def write(
         self,
-        data: _typing.NDArray,
+        data: _T.NDArray,
         filepath: str,
         axes: str,
         metadata: _metadata.Metadata,
-        **kwargs: _typing.Any,
+        **kwargs: _T.Any,
     ):
         if metadata is None:
             raise ValueError('Metadata must be provided when writing images.')
@@ -192,7 +192,7 @@ class Backend:
         writer.write(data, filepath, axes, metadata, **kwargs)
 
 
-def normalize_unit(unit: str) -> _typing.Optional[_metadata.Unit]:
+def normalize_unit(unit: str) -> _T.Optional[_metadata.Unit]:
     """
     Normalizes a unit string to a standard representation.
     """

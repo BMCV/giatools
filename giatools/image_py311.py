@@ -9,14 +9,14 @@ import numpy as _np
 
 from . import (
     image as _image,
-    typing as _typing,
+    typing as _T,
 )
 
 
 def iterate_jointly(
     img: _image.Image,
     axes: str,
-) -> _typing.Iterator[_typing.Tuple[_typing.Tuple[_typing.Union[int, slice], ...], _typing.NDArray]]:
+) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.NDArray]]:
 
     if len(axes) == 0 or not frozenset(axes).issubset(frozenset(img.axes)):
         raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{img.axes}"')

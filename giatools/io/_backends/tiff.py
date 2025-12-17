@@ -6,7 +6,7 @@ import tifffile
 
 from ... import (
     metadata as _metadata,
-    typing as _typing,
+    typing as _T,
 )
 from ..backend import (
     Reader,
@@ -23,7 +23,7 @@ class TiffReader(Reader):
         IsADirectoryError,
     )
 
-    def open(self, filepath: str, *args, **kwargs) -> _typing.Any:
+    def open(self, filepath: str, *args, **kwargs) -> _T.Any:
         try:
             return tifffile.TiffFile(filepath, *args, **kwargs)
         except TypeError:  # this is too generic to be added to `unsupported_file_errors`
@@ -35,16 +35,16 @@ class TiffReader(Reader):
     def get_num_images(self) -> int:
         return len(self.file.series)
 
-    def select_image(self, position: int) -> _typing.Any:
+    def select_image(self, position: int) -> _T.Any:
         return self.file.series[position]
 
-    def get_axes(self, image: _typing.Any) -> str:
+    def get_axes(self, image: _T.Any) -> str:
         return image.axes.upper()
 
-    def get_image_data(self, image: _typing.Any) -> _typing.NDArray:
+    def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image.asarray()
 
-    def get_image_metadata(self, image: _typing.Any) -> _typing.Dict[str, _typing.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
         return _get_tiff_metadata(self.file, image)
 
 
@@ -57,11 +57,11 @@ class TiffWriter(Writer):
 
     def write(
         self,
-        data: _typing.NDArray,
+        data: _T.NDArray,
         filepath: str,
         axes: str,
         metadata: _metadata.Metadata,
-        **kwargs: _typing.Any,
+        **kwargs: _T.Any,
     ):
         metadata_dict =  _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
         metadata_dict['axes'] = axes
@@ -77,12 +77,12 @@ class TiffWriter(Writer):
         tifffile.imwrite(filepath, data, **kwargs)
 
 
-def _get_tiff_metadata(tif: _typing.Any, series: _typing.Any) -> _typing.Dict[str, _typing.Any]:
+def _get_tiff_metadata(tif: _T.Any, series: _T.Any) -> _T.Dict[str, _T.Any]:
     """
     Extract metadata from a `tifffile.TiffFile` object.
     """
 
-    metadata: _typing.Dict[str, _typing.Any] = dict()
+    metadata: _T.Dict[str, _T.Any] = dict()
 
     # Extract pixel resolution, if available
     page0 = series.pages[0]
@@ -185,7 +185,7 @@ def _get_tiff_metadata(tif: _typing.Any, series: _typing.Any) -> _typing.Dict[st
     return metadata
 
 
-def _guess_tiff_description_format(description: str) -> _typing.Literal['json', 'xml', 'line']:
+def _guess_tiff_description_format(description: str) -> _T.Literal['json', 'xml', 'line']:
     """
     Guess the format of the given TIFF `ImageDescription` string.
     """

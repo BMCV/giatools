@@ -4,7 +4,7 @@ import skimage.io
 
 from ... import (
     metadata as _metadata,
-    typing as _typing,
+    typing as _T,
     util as _util,
 )
 from ..backend import (
@@ -36,7 +36,7 @@ class SKImageReader(Reader):
         OSError,  # raised by _skimage_io_imread
     )
 
-    def open(self, filepath: str, *args, **kwargs) -> _typing.Any:
+    def open(self, filepath: str, *args, **kwargs) -> _T.Any:
         if _can_read_file(self, filepath):
             return (filepath, args, kwargs)  # deferred loading
         else:
@@ -49,22 +49,22 @@ class SKImageReader(Reader):
     def get_num_images(self) -> int:
         return 1
 
-    def select_image(self, position: int) -> _typing.Any:
+    def select_image(self, position: int) -> _T.Any:
         image = _skimage_io_imread(self.filepath, *self.file[1], **self.file[2])
         if image.ndim not in (2, 3):
             raise UnsupportedFileError(self.filepath, f'Image has unsupported dimension: {image.ndim}')
         return image
 
-    def get_axes(self, image: _typing.Any) -> str:
+    def get_axes(self, image: _T.Any) -> str:
         if image.ndim == 2:
             return 'YX'
         else:
             return 'YXC'
 
-    def get_image_data(self, image: _typing.Any) -> _typing.NDArray:
+    def get_image_data(self, image: _T.Any) -> _T.NDArray:
         return image
 
-    def get_image_metadata(self, image: _typing.Any) -> _typing.Dict[str, _typing.Any]:
+    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
         return dict()
 
 
@@ -76,7 +76,7 @@ class SKImageWriter(Writer):
         'jpeg',
     )
 
-    def write(self, data: _typing.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         suffix = filepath.split('.')[-1].lower()
 
         # Validate that the image data is compatible with the file format
@@ -99,13 +99,13 @@ class SKImageWriter(Writer):
             warnings.filterwarnings('ignore', category=FutureWarning)
             skimage.io.imsave(filepath, data.squeeze(), check_contrast=False, **kwargs)
 
-    def _validate_png(self, im_arr: _typing.NDArray, axes: str) -> _typing.Union[str, None]:
+    def _validate_png(self, im_arr: _T.NDArray, axes: str) -> _T.Union[str, None]:
         if not (
             (axes == 'YX' and im_arr.ndim == 2) or (axes == 'YXC' and im_arr.ndim in (1, 3, 4))
         ):
             return 'PNG files only support single-channel, RGB, and RGBA images (YX or YXC axes layout).'
 
-    def _validate_jpg(self, im_arr: _typing.NDArray, axes: str):
+    def _validate_jpg(self, im_arr: _T.NDArray, axes: str):
         if not (
             axes == 'YXC' and im_arr.ndim == 3 and im_arr.shape[2] == 3
         ):
@@ -113,7 +113,7 @@ class SKImageWriter(Writer):
 
 
 @_util.silent
-def _skimage_io_imread(*args, **kwargs) -> _typing.NDArray:
+def _skimage_io_imread(*args, **kwargs) -> _T.NDArray:
     """
     Wrapper for skimage.io.imread that suppresses non-fatal errors on stdout and stderr.
 

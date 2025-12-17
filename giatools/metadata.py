@@ -7,10 +7,10 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import attrs as _attrs
 
-from . import typing as _typing
+from . import typing as _T
 
 #: Valid units for metadata
-Unit = _typing.Literal[
+Unit = _T.Literal[
     'inch',
     'nm',
     'um',
@@ -27,7 +27,7 @@ class Metadata:
     Image metadata.
     """
 
-    resolution: _typing.Optional[_typing.Tuple[float, float]] = _attrs.field(
+    resolution: _T.Optional[_T.Tuple[float, float]] = _attrs.field(
         default=None,
         validator=_attrs.validators.optional(
             [
@@ -46,7 +46,7 @@ class Metadata:
     """
 
     @property
-    def pixel_size(self) -> _typing.Optional[_typing.Tuple[float, float]]:
+    def pixel_size(self) -> _T.Optional[_T.Tuple[float, float]]:
         """
         The pixel size in X and Y dimensions (units per pixel). This is identical to the pixel spacing in X and Y
         dimensions.
@@ -57,7 +57,7 @@ class Metadata:
         ) if self.resolution is not None else None
 
     @pixel_size.setter
-    def pixel_size(self, value: _typing.Optional[_typing.Tuple[float, float]]):
+    def pixel_size(self, value: _T.Optional[_T.Tuple[float, float]]):
         if value is None:
             self.resolution = None
         else:
@@ -68,7 +68,7 @@ class Metadata:
                 1 / value[1],
             )
 
-    z_spacing: _typing.Optional[float] = _attrs.field(
+    z_spacing: _T.Optional[float] = _attrs.field(
         default=None,
         validator=_attrs.validators.optional(
             _attrs.validators.instance_of(float),
@@ -78,7 +78,7 @@ class Metadata:
     The pixel spacing in the Z dimension.
     """
 
-    z_position: _typing.Optional[float] = _attrs.field(
+    z_position: _T.Optional[float] = _attrs.field(
         default=None,
         validator=_attrs.validators.optional(
             _attrs.validators.instance_of(float),
@@ -88,10 +88,10 @@ class Metadata:
     The position of the image in the Z dimension.
     """
 
-    unit: _typing.Optional[Unit] = _attrs.field(
+    unit: _T.Optional[Unit] = _attrs.field(
         default=None,
         validator=_attrs.validators.optional(
-            _attrs.validators.in_(_typing.get_args(Unit)),
+            _attrs.validators.in_(_T.get_args(Unit)),
         ),
     )
     """

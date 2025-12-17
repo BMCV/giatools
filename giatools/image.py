@@ -12,7 +12,7 @@ import numpy as _np
 from . import (
     metadata as _metadata,
     util as _util,
-    typing as _typing
+    typing as _T
 )
 
 default_normalized_axes: str = 'QTZYXC'
@@ -39,7 +39,7 @@ class Image:
             >>> print(image.axes)
     """
 
-    data: _typing.NDArray
+    data: _T.NDArray
     """
     The image data as a NumPy array or a Dask array.
 
@@ -67,7 +67,7 @@ class Image:
             >>> print(image.metadata.unit)
     """
 
-    original_axes: _typing.Optional[str]
+    original_axes: _T.Optional[str]
     """
     The original axes of the image data as a string, if available. This is useful for keeping track of the original
     axes when normalizing or reordering axes.
@@ -83,10 +83,10 @@ class Image:
 
     def __init__(
         self,
-        data: _typing.NDArray,
+        data: _T.NDArray,
         axes: str,
-        metadata: _typing.Optional[_metadata.Metadata] = None,
-        original_axes: _typing.Optional[str] = None,
+        metadata: _T.Optional[_metadata.Metadata] = None,
+        original_axes: _T.Optional[str] = None,
     ):
         self.data = data
         self.axes = axes
@@ -95,11 +95,8 @@ class Image:
 
     @staticmethod
     def read(
-        filepath: str,
-        *args: _typing.Any,
-        normalize_axes: _typing.Optional[str] = default_normalized_axes,
-        **kwargs: _typing.Any
-    ) -> _typing.Self:
+        filepath: str, *args: _T.Any, normalize_axes: _T.Optional[str] = default_normalized_axes, **kwargs: _T.Any,
+    ) -> _T.Self:
         """
         Read an image from file and normalize the image axes like `normalize_axes`. Normalization will be (almost)
         skipped if `normalize_axes` is `None`.
@@ -114,11 +111,7 @@ class Image:
         else:
             return img.normalize_axes_like(normalize_axes)
 
-    def write(
-        self,
-        filepath: str,
-        backend: str = 'auto',
-    ) -> _typing.Self:
+    def write(self, filepath: str, backend: str = 'auto') -> _T.Self:
         """
         Write the image to a file.
 
@@ -133,7 +126,7 @@ class Image:
         imwrite(self.data, filepath, axes=self.axes, metadata=self.metadata, backend=backend)
         return self
 
-    def squeeze_like(self, axes: str) -> _typing.Self:
+    def squeeze_like(self, axes: str) -> _T.Self:
         """
         Squeeze the axes of the image to match the axes.
 
@@ -157,7 +150,7 @@ class Image:
         )
         return squeezed_image.reorder_axes_like(axes)
 
-    def reorder_axes_like(self, axes: str) -> _typing.Self:
+    def reorder_axes_like(self, axes: str) -> _T.Self:
         """
         Reorder the axes of the image to match the given order.
 
@@ -180,7 +173,7 @@ class Image:
         assert reordered_axes == axes, f'Failed to reorder axes "{self.axes}" to "{axes}", got "{reordered_axes}"'
         return Image(data=reordered_data, axes=axes, original_axes=self.original_axes, metadata=self.metadata)
 
-    def normalize_axes_like(self, axes: str) -> _typing.Self:
+    def normalize_axes_like(self, axes: str) -> _T.Self:
         """
         Normalize the axes of the image.
 
@@ -210,7 +203,7 @@ class Image:
             metadata=self.metadata,
         ).squeeze_like(axes)
 
-    def squeeze(self) -> _typing.Self:
+    def squeeze(self) -> _T.Self:
         """
         Squeeze all singleton axes of the image.
 
@@ -221,9 +214,8 @@ class Image:
         return self.squeeze_like(squeezed_axes)
 
     def iterate_jointly(
-        self,
-        axes: str = 'YX',
-    ) -> _typing.Iterator[_typing.Tuple[_typing.Tuple[_typing.Union[int, slice], ...], _typing.NDArray]]:
+        self, axes: str = 'YX',
+    ) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.NDArray]]:
         """
         Iterate over all slices of the image along the given axes.
 
@@ -240,7 +232,7 @@ class Image:
             from . import image_py311
             return image_py311.iterate_jointly(self, axes)
 
-    def is_isotropic(self, tol=1e-2) -> _typing.Optional[bool]:
+    def is_isotropic(self, tol=1e-2) -> _T.Optional[bool]:
         """
         Determine whether the image pixels/voxels are isotropic.
 
