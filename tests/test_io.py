@@ -412,7 +412,7 @@ class ModuleTestCase(unittest.TestCase):
             expected_data,
             filepath,
             axes=expected_axes,
-            metadata=giatools.metadata.Metadata(expected_metadata),
+            metadata=giatools.metadata.Metadata(**expected_metadata),
         )
 
         # Read the image back and validate

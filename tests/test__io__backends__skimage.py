@@ -24,36 +24,36 @@ class SKImageWriter__write(unittest.TestCase):
     @filenames('png')
     def test__png__invalid__zyx(self, mock_imsave, array, filename):
         with self.assertRaises(giatools.io.IncompatibleDataError):
-            self.writer.write(array, filepath=filename, metadata=dict(axes='ZYX'))
+            self.writer.write(array, filepath=filename, axes='ZYX', metadata=giatools.metadata.Metadata())
 
     @mock_array(10, 10)
     @filenames('png')
     def test__png__invalid__zx(self, mock_imsave, array, filename):
         with self.assertRaises(giatools.io.IncompatibleDataError):
-            self.writer.write(array, filepath=filename, metadata=dict(axes='ZX'))
+            self.writer.write(array, filepath=filename, axes='ZX', metadata=giatools.metadata.Metadata())
 
     @mock_array(10, 10)
     @filenames('png')
     def test__png__valid__yx(self, mock_imsave, array, filename):
-        self.writer.write(array, filepath=filename, metadata=dict(axes='YX'))
+        self.writer.write(array, filepath=filename, axes='YX', metadata=giatools.metadata.Metadata())
         mock_imsave.assert_called()
 
     @mock_array(10, 10, 3)
     @filenames('png')
     def test__png__valid__yxc_rgb(self, mock_imsave, array, filename):
-        self.writer.write(array, filepath=filename, metadata=dict(axes='YXC'))
+        self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata())
         mock_imsave.assert_called()
 
     @mock_array(10, 10, 4)
     @filenames('png')
     def test__png__valid__yxc_rgba(self, mock_imsave, array, filename):
-        self.writer.write(array, filepath=filename, metadata=dict(axes='YXC'))
+        self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata())
         mock_imsave.assert_called()
 
     @mock_array(10, 10, 1)
     @filenames('png')
     def test__png__valid__yxc_gray(self, mock_imsave, array, filename):
-        self.writer.write(array, filepath=filename, metadata=dict(axes='YXC'))
+        self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata())
         mock_imsave.assert_called()
 
     # -----------------------------------------------------------------------------------------------------------------

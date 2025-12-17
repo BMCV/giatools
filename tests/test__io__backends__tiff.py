@@ -42,8 +42,8 @@ class TiffWriter__write(unittest.TestCase):
     @mock_array(10, 10, 1)
     @filenames('tif', 'tiff')
     def test__valid(self, mock_imwrite, array, filename):
-        metadata = dict(z_spacing=0.5, unit='cm', axes='YXC')
-        self.writer.write(array, filepath=filename, metadata=dict(metadata))
+        metadata = dict(z_spacing=0.5, unit='cm')
+        self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata(**metadata))
         mock_imwrite.assert_called()
         self.assertEqual(
             mock_imwrite.call_args.kwargs['metadata'],

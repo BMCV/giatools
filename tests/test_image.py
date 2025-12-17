@@ -1,4 +1,3 @@
-import copy
 import os
 import tempfile
 import unittest
@@ -45,7 +44,7 @@ class ModuleTestCase(unittest.TestCase):
         img0 = giatools.image.Image(
             data=expected_data,
             axes=expected_axes,
-            metadata=copy.deepcopy(expected_metadata),
+            metadata=giatools.metadata.Metadata(**expected_metadata),
         )
 
         # Write the image and read back
