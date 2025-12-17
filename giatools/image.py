@@ -11,8 +11,8 @@ import numpy as _np
 
 from . import (
     metadata as _metadata,
+    typing as _T,
     util as _util,
-    typing as _T
 )
 
 default_normalized_axes: str = 'QTZYXC'

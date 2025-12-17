@@ -4,11 +4,11 @@ from xml.etree import ElementTree as _ElementTree
 import attrs as _attrs
 import tifffile as _tifffile
 
-from .. import backend as _backend
 from ... import (
     metadata as _metadata,
     typing as _T,
 )
+from .. import backend as _backend
 
 
 class TiffReader(_backend.Reader):

@@ -2,12 +2,12 @@ import warnings as _warnings
 
 import skimage.io as _skimage_io
 
-from .. import backend as _backend
 from ... import (
     metadata as _metadata,
     typing as _T,
     util as _util,
 )
+from .. import backend as _backend
 
 # https://gist.github.com/leommoore/f9e57ba2aa4bf197ebc5
 supported_magic_numbers = (

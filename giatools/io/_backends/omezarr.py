@@ -1,8 +1,8 @@
 import ome_zarr.io as _ome_zarr_io
 import ome_zarr.reader as _ome_zarr_reader
 
-from .. import backend as _backend
 from ... import typing as _T
+from .. import backend as _backend
 
 
 class OMEZarrReader(_backend.Reader):
