@@ -52,7 +52,7 @@ jobs:
     uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
     with:
       main_branch: master
-      python_versions: '$python_versions'
+      python_versions: ${{ fromJSON(env.python_versions) }}
       main_python_version: "3.11"
       gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
       gist-filename: giatools.json
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ${{ fromJSON('$python_versions') }}
+        python_version: ${{ fromJSON(env.python_versions) }}
     steps:
 
       - name: Checkout
