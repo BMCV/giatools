@@ -9,14 +9,19 @@ from .image import (
     Image,
     default_normalized_axes,
 )
-from .version import __version__ as VERSION
+from .version import __version__
 
 __all__ = [
+    '__version__',
     'default_normalized_axes',
     'Image',
     'require_backend',
     'VERSION',
 ]
+
+
+#: Alias for backward compatibility.
+VERSION = __version__
 
 
 def require_backend(name: str):
