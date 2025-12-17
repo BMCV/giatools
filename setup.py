@@ -16,4 +16,16 @@ setup(
     url='https://kostrykin.com',
     license='MIT',
     packages=['giatools', 'giatools.io', 'giatools.io._backends'],
+    python_requires='>=3.9',
+    install_requires=[
+        'numpy>=1.18',
+        'scikit-image>=0.18,<0.27',
+        'typing-extensions',
+        'tifffile',
+        'attrs>=25.4',
+    ],
+    extras_require={
+        'omezarr': ['ome-zarr>=0.12.2,<0.13'],
+        'pandas': ['pandas>=1'],
+    },
 )
