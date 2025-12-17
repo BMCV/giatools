@@ -1,14 +1,18 @@
 import unittest
 import unittest.mock
 
+import attrs
+
 import giatools.io
 import giatools.io.backend
+import giatools.metadata
 
 invalid_axes = (
     'YYX',   # error: Y axis given twice
     'YXCS',  # error: C and S are mutually exclusive
     'YXM',   # error: unsupported axis M
     'Y',     # error: missing X axis
+    '',      # error: missing X and Y axes
 )
 
 
@@ -135,27 +139,26 @@ class Backend__write(BackendTestCase):
         for axes in invalid_axes:
             with self.subTest(axes=axes):
                 with self.assertRaises(ValueError):
-                    self.backend.write(self.im_arr, 'some_file', metadata=dict(axes=axes))
+                    self.backend.write(self.im_arr, 'some_file', axes=axes, metadata=giatools.metadata.Metadata())
 
     def test__missing_metadata(self):
-        for metadata in (None, dict()):
-            with self.subTest(metadata=metadata):
-                with self.assertRaises(ValueError):
-                    self.backend.write(self.im_arr, 'some_file', metadata=metadata)
+        with self.assertRaises(ValueError):
+            self.backend.write(self.im_arr, 'some_file', axes='YX', metadata=None)
 
     @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
     def test__valid(self, mock_os_path_exists):
         kwarg = unittest.mock.MagicMock()
         for axes in ('YXC', 'YXS'):
-            metadata = dict(axes=axes)
-            metadata_copy = dict(metadata)
+            metadata = giatools.metadata.Metadata()
+            metadata_copy = attrs.asdict(metadata)
             with self.subTest(axes=axes):
-                self.backend.write(self.im_arr, 'some_file', metadata=metadata, kwarg=kwarg)
+                self.backend.write(self.im_arr, 'some_file', axes=axes, metadata=metadata, kwarg=kwarg)
                 self.writer_write.assert_called()
                 self.assertIs(self.writer_write.call_args.args[0], self.im_arr)
                 self.assertIs(self.writer_write.call_args.args[1], 'some_file')
-                self.assertIsNot(self.writer_write.call_args.args[2], metadata)
-                self.assertEqual(self.writer_write.call_args.args[2], metadata_copy)
+                self.assertEqual(self.writer_write.call_args.args[2], 'YXC')
+                self.assertIsNot(self.writer_write.call_args.args[3], metadata)
+                self.assertEqual(attrs.asdict(self.writer_write.call_args.args[3]), metadata_copy)
                 self.assertEqual(self.writer_write.call_args.kwargs, dict(kwarg=kwarg))
 
 
@@ -190,4 +193,9 @@ class Writer(unittest.TestCase):
 
     def test_write(self):
         with self.assertRaises(NotImplementedError):
-            giatools.io.backend.Writer().write(unittest.mock.MagicMock(), 'some_file', dict())
+            giatools.io.backend.Writer().write(
+                unittest.mock.MagicMock(),
+                'some_file',
+                axes='YX',
+                metadata=giatools.metadata.Metadata(),
+            )
