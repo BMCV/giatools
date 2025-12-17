@@ -1,17 +1,12 @@
-import warnings
+import warnings as _warnings
 
-import skimage.io
+import skimage.io as _skimage_io
 
+from .. import backend as _backend
 from ... import (
     metadata as _metadata,
     typing as _T,
     util as _util,
-)
-from ..backend import (
-    IncompatibleDataError,
-    Reader,
-    UnsupportedFileError,
-    Writer,
 )
 
 # https://gist.github.com/leommoore/f9e57ba2aa4bf197ebc5
@@ -30,7 +25,7 @@ def _can_read_file(self, filepath: str) -> bool:
         return any(prefix.startswith(magic) for magic in supported_magic_numbers)
 
 
-class SKImageReader(Reader):
+class SKImageReader(_backend.Reader):
 
     unsupported_file_errors = (
         OSError,  # raised by _skimage_io_imread
@@ -40,7 +35,7 @@ class SKImageReader(Reader):
         if _can_read_file(self, filepath):
             return (filepath, args, kwargs)  # deferred loading
         else:
-            raise UnsupportedFileError(filepath, 'File format not supported by this backend.')
+            raise _backend.UnsupportedFileError(filepath, 'File format not supported by this backend.')
 
     @property
     def filepath(self) -> str:
@@ -52,7 +47,7 @@ class SKImageReader(Reader):
     def select_image(self, position: int) -> _T.Any:
         image = _skimage_io_imread(self.filepath, *self.file[1], **self.file[2])
         if image.ndim not in (2, 3):
-            raise UnsupportedFileError(self.filepath, f'Image has unsupported dimension: {image.ndim}')
+            raise _backend.UnsupportedFileError(self.filepath, f'Image has unsupported dimension: {image.ndim}')
         return image
 
     def get_axes(self, image: _T.Any) -> str:
@@ -68,7 +63,7 @@ class SKImageReader(Reader):
         return dict()
 
 
-class SKImageWriter(Writer):
+class SKImageWriter(_backend.Writer):
 
     supported_extensions = (
         'png',
@@ -86,7 +81,7 @@ class SKImageWriter(Writer):
         if suffix in ('jpg', 'jpeg'):
             error = self._validate_jpg(data, axes)
         if error:
-            raise IncompatibleDataError(filepath, error)
+            raise _backend.IncompatibleDataError(filepath, error)
 
         # Write the image using skimage
         #
@@ -95,9 +90,9 @@ class SKImageWriter(Writer):
         #
         # TODO: Instead, use `imageio` or other I/O packages directly.
         #
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=FutureWarning)
-            skimage.io.imsave(filepath, data.squeeze(), check_contrast=False, **kwargs)
+        with _warnings.catch_warnings():
+            _warnings.filterwarnings('ignore', category=FutureWarning)
+            _skimage_io.imsave(filepath, data.squeeze(), check_contrast=False, **kwargs)
 
     def _validate_png(self, im_arr: _T.NDArray, axes: str) -> _T.Union[str, None]:
         if not (
@@ -113,7 +108,7 @@ class SKImageWriter(Writer):
 
 
 @_util.silent
-def _skimage_io_imread(*args, **kwargs) -> _T.NDArray:
+def _skimage_io_imread(*args: _T.Any, **kwargs: _T.Any) -> _T.NDArray:
     """
     Wrapper for skimage.io.imread that suppresses non-fatal errors on stdout and stderr.
 
@@ -125,4 +120,4 @@ def _skimage_io_imread(*args, **kwargs) -> _T.NDArray:
     Raises:
         OSError: If the image file cannot be read.
     """
-    return skimage.io.imread(*args, **kwargs)
+    return _skimage_io.imread(*args, **kwargs)

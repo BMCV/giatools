@@ -33,7 +33,7 @@ valid_tiff_units = (
 assert frozenset(u[1] for u in valid_tiff_units) == frozenset(get_args(giatools.metadata.Unit))
 
 
-@unittest.mock.patch('giatools.io._backends.tiff.tifffile.imwrite')
+@unittest.mock.patch('giatools.io._backends.tiff._tifffile.imwrite')
 class TiffWriter__write(unittest.TestCase):
 
     def setUp(self):
@@ -57,7 +57,7 @@ class TiffWriter__write(unittest.TestCase):
 
 class TiffReader__get_image_metadata(unittest.TestCase):
 
-    @unittest.mock.patch('giatools.io._backends.tiff.tifffile.TiffFile')
+    @unittest.mock.patch('giatools.io._backends.tiff._tifffile.TiffFile')
     def setUp(self, mock_tiff_file):
         self.reader = giatools.io._backends.tiff.TiffReader('filepath').__enter__()
         self.image = self.reader.select_image(0)

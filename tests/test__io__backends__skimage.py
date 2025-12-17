@@ -11,7 +11,7 @@ from .tools import (
 )
 
 
-@unittest.mock.patch('giatools.io._backends.skimage.skimage.io.imsave')
+@unittest.mock.patch('giatools.io._backends.skimage._skimage_io.imsave')
 class SKImageWriter__write(unittest.TestCase):
 
     def setUp(self):

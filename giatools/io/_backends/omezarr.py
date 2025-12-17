@@ -1,29 +1,24 @@
-import ome_zarr.io
-import ome_zarr.reader
+import ome_zarr.io as _ome_zarr_io
+import ome_zarr.reader as _ome_zarr_reader
 
+from .. import backend as _backend
 from ... import typing as _T
-from ..backend import (
-    CorruptFileError,
-    Reader,
-    UnsupportedFileError,
-    normalize_unit,
-)
 
 
-class OMEZarrReader(Reader):
+class OMEZarrReader(_backend.Reader):
 
     def open(self, filepath: str, *args, **kwargs) -> _T.Any:
         try:
-            omezarr_store = ome_zarr.io.parse_url(filepath, *args, **kwargs)
+            omezarr_store = _ome_zarr_io.parse_url(filepath, *args, **kwargs)
         except TypeError:  # this is too generic to be added to `unsupported_file_errors`
-            raise UnsupportedFileError(
+            raise _backend.UnsupportedFileError(
                 filepath,
                 f'This backend does not accept the given arguments: args={args}, kwargs={kwargs}',
             )
         if omezarr_store is None:
-            raise UnsupportedFileError(filepath=filepath)
+            raise _backend.UnsupportedFileError(filepath=filepath)
         else:
-            omezarr_reader = ome_zarr.reader.Reader(omezarr_store)
+            omezarr_reader = _ome_zarr_reader.Reader(omezarr_store)
             return list(omezarr_reader())
 
     def get_num_images(self) -> int:
@@ -42,16 +37,16 @@ class OMEZarrReader(Reader):
         return _get_omezarr_metadata(image)
 
 
-def _get_omezarr_axes(omezarr_node: ome_zarr.reader.Node) -> str:
+def _get_omezarr_axes(omezarr_node: _ome_zarr_reader.Node) -> str:
     """
     Extract axes string from an `ome_zarr.reader.Node` object.
     """
     if 'axes' not in omezarr_node.metadata:
-        raise CorruptFileError('OME-Zarr node is missing axes information.')
+        raise _backend.CorruptFileError('OME-Zarr node is missing axes information.')
     return ''.join(axis['name'].upper() for axis in omezarr_node.metadata['axes'])
 
 
-def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> _T.Dict[str, _T.Any]:
+def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _T.Dict[str, _T.Any]:
     """
     Extract metadata from an `ome_zarr.reader.Node` object.
     """
@@ -60,7 +55,10 @@ def _get_omezarr_metadata(omezarr_node: ome_zarr.reader.Node) -> _T.Dict[str, _T
 
     # Extract the `unit`, if it is constant across all axes
     units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
-    if len(units) == 1 and (unit := next(iter(units))) and (normalized_unit := normalize_unit(unit)) is not None:
+    if (
+        len(units) == 1 and (unit := next(iter(units))) and
+        (normalized_unit := _backend.normalize_unit(unit)) is not None
+    ):
         metadata['unit'] = normalized_unit
 
     # Extract the pixel/voxel sizes
