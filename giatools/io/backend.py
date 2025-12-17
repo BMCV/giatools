@@ -82,7 +82,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         raise NotImplementedError()
 
 
@@ -151,7 +151,7 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         if metadata is None:
             raise ValueError('Metadata must be provided when writing images.')
 
@@ -176,7 +176,7 @@ class Backend:
 
         # Delegate the writing to the writer class
         writer = self.writer_class()
-        writer.write(im_arr, filepath, axes, metadata, **kwargs)
+        writer.write(data, filepath, axes, metadata, **kwargs)
 
 
 def normalize_unit(unit: str) -> Optional[_metadata.Unit]:

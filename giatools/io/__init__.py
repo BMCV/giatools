@@ -178,7 +178,7 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         return next((backend for backend in supported_backends if backend.name == backend_name))
 
 
-def imwrite(im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, backend: str = 'auto', **kwargs):
+def imwrite(data: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, backend: str = 'auto', **kwargs):
     """
     Save an image to a file.
 
@@ -200,4 +200,4 @@ def imwrite(im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metad
     _select_writing_backend(
         filepath,
         backend,
-    ).write(im_arr, filepath, axes=axes, metadata=metadata, **kwargs)
+    ).write(data, filepath, axes=axes, metadata=metadata, **kwargs)

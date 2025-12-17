@@ -79,15 +79,15 @@ class SKImageWriter(Writer):
         'jpeg',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         suffix = filepath.split('.')[-1].lower()
 
         # Validate that the image data is compatible with the file format
         error = None
         if suffix == 'png':
-            error = self._validate_png(im_arr, axes)
+            error = self._validate_png(data, axes)
         if suffix in ('jpg', 'jpeg'):
-            error = self._validate_jpg(im_arr, axes)
+            error = self._validate_jpg(data, axes)
         if error:
             raise IncompatibleDataError(filepath, error)
 
@@ -100,7 +100,7 @@ class SKImageWriter(Writer):
         #
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', category=FutureWarning)
-            skimage.io.imsave(filepath, im_arr.squeeze(), check_contrast=False, **kwargs)
+            skimage.io.imsave(filepath, data.squeeze(), check_contrast=False, **kwargs)
 
     def _validate_png(self, im_arr: NDArray, axes: str) -> Union[str, None]:
         if not (

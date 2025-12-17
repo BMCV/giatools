@@ -58,7 +58,7 @@ class TiffWriter(Writer):
         'tif',
     )
 
-    def write(self, im_arr: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
         metadata_dict =  _attrs.asdict(metadata, filter=lambda attr, value: value is not None)
         metadata_dict['axes'] = axes
 
@@ -70,7 +70,7 @@ class TiffWriter(Writer):
             metadata_dict['spacing'] = metadata_dict.pop('z_spacing')
 
         # Write the image using tifffile
-        tifffile.imwrite(filepath, im_arr, **kwargs)
+        tifffile.imwrite(filepath, data, **kwargs)
 
 
 def _get_tiff_metadata(tif: Any, series: Any) -> Dict[str, Any]:
