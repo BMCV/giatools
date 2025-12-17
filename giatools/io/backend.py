@@ -12,7 +12,7 @@ class UnsupportedFileError(Exception):
     """
     Raised when a file cannot be read or written.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -21,7 +21,7 @@ class CorruptFileError(Exception):
     """
     Raised when a file is corrupted (or follows an unexpected internal format flavor) and cannot be read.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -30,7 +30,7 @@ class IncompatibleDataError(Exception):
     """
     Raised when a file cannot be written because the data or metadata is incompatible with the file format.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -39,7 +39,7 @@ class Reader:
 
     unsupported_file_errors = tuple()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: _T.Any, **kwargs: _T.Any):
         self._args = args
         self._kwargs = kwargs
         self.file = None
@@ -76,7 +76,7 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs):
+    def write(self, data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs: _T.Any):
         raise NotImplementedError()
 
 
@@ -98,7 +98,7 @@ class Backend:
     def __repr__(self) -> str:
         return f'<{self.name} Backend>'
 
-    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> _T.Optional[int]:
+    def peek_num_images_in_file(self, filepath: str, *args: _T.Any, **kwargs: _T.Any) -> _T.Optional[int]:
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
