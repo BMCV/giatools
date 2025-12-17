@@ -1,14 +1,10 @@
 import os as _os
 
-from ..metadata import Unit
-from ..typing import (
-    Any,
-    Dict,
-    NDArray,
-    Optional,
-    Self,
-    Tuple,
-    Type,
+import attrs as _attrs
+
+from .. import (
+    metadata as _metadata,
+    typing as _T,
 )
 
 
@@ -16,7 +12,13 @@ class UnsupportedFileError(Exception):
     """
     Raised when a file cannot be read or written.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+
+    filepath: str
+    """
+    The path to the file that could not be read or written.
+    """
+
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -25,7 +27,13 @@ class CorruptFileError(Exception):
     """
     Raised when a file is corrupted (or follows an unexpected internal format flavor) and cannot be read.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+
+    filepath: str
+    """
+    The path to the file that could not be read.
+    """
+
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -34,7 +42,13 @@ class IncompatibleDataError(Exception):
     """
     Raised when a file cannot be written because the data or metadata is incompatible with the file format.
     """
-    def __init__(self, filepath: str, *args, **kwargs):
+
+    filepath: str
+    """
+    The path to the file that could not be written.
+    """
+
+    def __init__(self, filepath: str, *args: _T.Any, **kwargs: _T.Any):
         self.filepath = filepath
         super().__init__(*args, **kwargs)
 
@@ -43,12 +57,12 @@ class Reader:
 
     unsupported_file_errors = tuple()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: _T.Any, **kwargs: _T.Any):
         self._args = args
         self._kwargs = kwargs
         self.file = None
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> _T.Self:
         self.file = self.open(*self._args, **self._kwargs)
         return self
 
@@ -57,22 +71,22 @@ class Reader:
             self.file.close()
         self.file = None
 
-    def open(self, *args, **kwargs) -> Any:
+    def open(self, *args, **kwargs) -> _T.Any:
         raise NotImplementedError()
 
     def get_num_images(self) -> int:
         raise NotImplementedError()
 
-    def select_image(self, position: int) -> Any:
+    def select_image(self, position: int) -> _T.Any:
         raise NotImplementedError()
 
-    def get_axes(self, image: Any) -> str:
+    def get_axes(self, image: _T.Any) -> str:
         raise NotImplementedError()
 
-    def get_image_data(self, image: Any) -> NDArray:
+    def get_image_data(self, image: _T.Any) -> _T.NDArray:
         raise NotImplementedError()
 
-    def get_image_metadata(self, image: Any) -> Dict[str, Any]:
+    def get_image_metadata(self, image: _T.Any) -> _T.Dict[str, _T.Any]:
         raise NotImplementedError()
 
 
@@ -80,13 +94,18 @@ class Writer:
 
     supported_extensions = tuple()
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(self, data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, **kwargs: _T.Any):
         raise NotImplementedError()
 
 
 class Backend:
 
-    def __init__(self, name: str, reader_class: Type[Reader], writer_class: Optional[Type[Writer]] = None):
+    def __init__(
+        self,
+        name: str,
+        reader_class: _T.Type[Reader],
+        writer_class: _T.Optional[_T.Type[Writer]] = None,
+    ):
         self.name = name
         self.reader_class = reader_class
         self.writer_class = writer_class
@@ -97,7 +116,7 @@ class Backend:
     def __repr__(self) -> str:
         return f'<{self.name} Backend>'
 
-    def peek_num_images_in_file(self, filepath: str, *args, **kwargs) -> Optional[int]:
+    def peek_num_images_in_file(self, filepath: str, *args: _T.Any, **kwargs: _T.Any) -> _T.Optional[int]:
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
@@ -106,7 +125,14 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def read(self, filepath: str, *args, position: int = 0, **kwargs) -> Optional[Tuple[NDArray, str, Dict[str, Any]]]:
+    def read(
+        self,
+        filepath: str,
+        *args: _T.Any,
+        position: int = 0,
+        **kwargs: _T.Any,
+    ) -> _T.Optional[_T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]]:
+
         if not _os.path.exists(filepath):
             raise FileNotFoundError(f'File not found: {filepath}')
         try:
@@ -149,36 +175,42 @@ class Backend:
         except tuple(list(self.reader_class.unsupported_file_errors) + [UnsupportedFileError]):
             return None  # Indicate that the file is unsupported
 
-    def write(self, im_arr: NDArray, filepath: str, metadata: dict, **kwargs):
+    def write(
+        self,
+        data: _T.NDArray,
+        filepath: str,
+        axes: str,
+        metadata: _metadata.Metadata,
+        **kwargs: _T.Any,
+    ):
         if metadata is None:
             raise ValueError('Metadata must be provided when writing images.')
 
         # Create a copy of the metadata to avoid modifying the original
-        metadata = dict(metadata) if metadata is not None else dict()
+        metadata = _metadata.Metadata(**_attrs.asdict(metadata))
 
         # Validate metadata
-        im_axes = metadata.get('axes', '')
-        if 'Y' not in im_axes or 'X' not in im_axes:
-            raise ValueError(f'Image is missing required X or Y axes (found {im_axes}).')
+        if 'Y' not in axes or 'X' not in axes:
+            raise ValueError(f'Image is missing required X or Y axes (found {axes}).')
         if (
-            not (frozenset('YX') <= frozenset(im_axes) <= frozenset('QTZYXCS'))
-            or len(im_axes) != len(frozenset(im_axes))
+            not (frozenset('YX') <= frozenset(axes) <= frozenset('QTZYXCS'))
+            or len(axes) != len(frozenset(axes))
         ):
-            raise ValueError(f'Image has unsupported axes: {im_axes}')
+            raise ValueError(f'Image has unsupported axes: {axes}')
 
         # Treat sample axis "S" as channel axis "C" and fail if both are present
-        if 'C' in im_axes and 'S' in im_axes:
+        if 'C' in axes and 'S' in axes:
             raise ValueError(
-                f'Image has both channel and sample axes which is not supported: {im_axes}',
+                f'Image has both channel and sample axes which is not supported: {axes}',
             )
-        im_axes = im_axes.replace('S', 'C')
+        axes = axes.replace('S', 'C')
 
         # Delegate the writing to the writer class
         writer = self.writer_class()
-        writer.write(im_arr, filepath, metadata, **kwargs)
+        writer.write(data, filepath, axes, metadata, **kwargs)
 
 
-def normalize_unit(unit: str) -> Optional[Unit]:
+def normalize_unit(unit: str) -> _T.Optional[_metadata.Unit]:
     """
     Normalizes a unit string to a standard representation.
     """

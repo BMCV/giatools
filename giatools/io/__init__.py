@@ -7,13 +7,11 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import warnings as _warnings
 
-from ..typing import (
-    Any,
-    Dict,
-    NDArray,
-    Tuple,
+from .. import (
+    metadata as _metadata,
+    typing as _T,
+    util as _util,
 )
-from ..util import distance_to_external_frame as _distance_to_external_frame
 from ._backends.skimage import (
     SKImageReader as _SKImageReader,
     SKImageWriter as _SKImageWriter,
@@ -70,7 +68,7 @@ backends = [
 ]
 
 
-def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
+def _raise_unsupported_file_error(filepath: str, *args: _T.Any, **kwargs: _T.Any):
     args_str = ', '.join(repr(arg) for arg in args)
     kwargs_str = ', '.join(f'{key}={value!r}' for key, value in kwargs.items())
     details = ', '.join(filter(lambda s: len(s), (args_str, kwargs_str)))
@@ -79,7 +77,9 @@ def _raise_unsupported_file_error(filepath: str, *args, **kwargs):
     raise UnsupportedFileError(filepath, f'No backend could read {filepath}{details}')
 
 
-def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArray, str, Dict[str, Any]]:
+def imreadraw(
+    filepath: str, *args: _T.Any, position: int = 0, **kwargs: _T.Any,
+) -> _T.Tuple[_T.NDArray, str, _T.Dict[str, _T.Any]]:
     """
     Wrapper for reading images, muting non-fatal errors.
 
@@ -114,7 +114,7 @@ def imreadraw(filepath: str, *args, position: int = 0, **kwargs) -> Tuple[NDArra
     _raise_unsupported_file_error(filepath, *args, **kwargs)
 
 
-def peek_num_images_in_file(filepath: str, *args, **kwargs) -> int:
+def peek_num_images_in_file(filepath: str, *args: _T.Any, **kwargs: _T.Any) -> int:
     """
     Peeks the number of images that can be loaded from a file.
 
@@ -177,7 +177,9 @@ def _select_writing_backend(filepath: str, backend_name: str) -> Backend:
         return next((backend for backend in supported_backends if backend.name == backend_name))
 
 
-def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto', **kwargs):
+def imwrite(
+    data: _T.NDArray, filepath: str, axes: str, metadata: _metadata.Metadata, backend: str = 'auto', **kwargs: _T.Any,
+):
     """
     Save an image to a file.
 
@@ -194,9 +196,9 @@ def imwrite(im_arr: NDArray, filepath: str, metadata: dict, backend: str = 'auto
         _warnings.warn(
             '.tif extension is deprecated, use .tiff instead.',
             DeprecationWarning,
-            stacklevel=_distance_to_external_frame(),
+            stacklevel=_util.distance_to_external_frame(),
         )
     _select_writing_backend(
         filepath,
         backend,
-    ).write(im_arr, filepath, metadata=metadata, **kwargs)
+    ).write(data, filepath, axes=axes, metadata=metadata, **kwargs)

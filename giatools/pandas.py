@@ -1,4 +1,4 @@
-from typing import Iterable
+from . import typing as _T
 
 try:
     import pandas as _pd
@@ -7,7 +7,7 @@ except ImportError:
     class DataFrame: ...  # noqa: E701
 
 
-def find_column(df: DataFrame, candidates: Iterable[str]) -> str:
+def find_column(df: DataFrame, candidates: _T.Iterable[str]) -> str:
     """
     Returns the column name present in `df` and the list of `candidates`.
 

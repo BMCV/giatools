@@ -1,17 +1,17 @@
-import copy
 import json
 import os
 import tempfile
 import unittest
 
+import attrs
 import numpy as np
 import scipy.ndimage as ndi
 import skimage.io
 import tifffile
 
 import giatools.io
+import giatools.metadata
 from giatools.typing import (
-    Dict,
     Literal,
     Optional,
     Tuple,
@@ -21,7 +21,7 @@ from giatools.typing import (
 from .tools import (
     minimum_python_version,
     random_io_test,
-    verify_metadata,
+    validate_metadata,
     without_logging,
 )
 
@@ -50,14 +50,14 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.mean(), 63.66848655158571)
         self.assertEqual(img.shape, (265, 329))
         self.assertEqual(axes, 'YX')
-        verify_metadata(self, metadata)
+        validate_metadata(self, metadata)
 
     def test__input2(self):
         img, axes, metadata = giatools.io.imreadraw('tests/data/input2_uint8_yx.tiff')
         self.assertEqual(img.mean(), 9.543921821305842)
         self.assertEqual(img.shape, (96, 97))
         self.assertEqual(axes, 'YX')
-        verify_metadata(self, metadata)
+        validate_metadata(self, metadata)
 
     def test__input3(self):
         """
@@ -69,7 +69,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (5, 198, 356))
         self.assertEqual(img.mean(), 1259.6755334241288)
         self.assertEqual(axes, 'ZYX')
-        verify_metadata(self, metadata, resolution=(10000., 10000.))
+        validate_metadata(self, metadata, resolution=(10000., 10000.))
 
     def test__input4__png(self):
         """
@@ -79,7 +79,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(round(img.mean(), 2), 130.04)
         self.assertEqual(axes, 'YXC')
-        verify_metadata(self, metadata)
+        validate_metadata(self, metadata)
 
     def test__input4__jpg(self):
         """
@@ -89,7 +89,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (10, 10, 3))
         self.assertEqual(round(img.mean(), 2), 130.06)
         self.assertEqual(axes, 'YXC')
-        verify_metadata(self, metadata)
+        validate_metadata(self, metadata)
 
     def test__input5(self):
         """
@@ -99,7 +99,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (2, 8, 16))
         self.assertEqual(img.mean(), 22.25390625)
         self.assertEqual(axes, 'CYX')
-        verify_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
+        validate_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input6(self):
         """
@@ -109,7 +109,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (25, 8, 16))
         self.assertEqual(img.mean(), 26.555)
         self.assertEqual(axes, 'ZYX')
-        verify_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
+        validate_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
     def test__input7(self):
         """
@@ -119,7 +119,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (25, 2, 50, 50))
         self.assertEqual(img.mean(), 14.182152)
         self.assertEqual(axes, 'ZCYX')
-        verify_metadata(self, metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
+        validate_metadata(self, metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
 
     def test__input8(self):
         """
@@ -129,7 +129,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (5, 49, 56))
         self.assertEqual(img.mean(), 5815.486880466472)
         self.assertEqual(axes, 'TYX')
-        verify_metadata(self, metadata, resolution=(1., 1.))
+        validate_metadata(self, metadata, resolution=(1., 1.))
 
     def test__input9(self):
         """
@@ -139,7 +139,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (2, 256, 256))
         self.assertAlmostEqual(img.mean(), 0.05388291)
         self.assertEqual(axes, 'QYX')
-        verify_metadata(self, metadata, resolution=(1., 1.))
+        validate_metadata(self, metadata, resolution=(1., 1.))
 
     def test__input10(self):
         """
@@ -149,7 +149,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (64, 64))
         self.assertAlmostEqual(img.mean(), 128.549560546875)
         self.assertEqual(axes, 'YX')
-        verify_metadata(self, metadata, resolution=(300., 300.), unit='inch')
+        validate_metadata(self, metadata, resolution=(300., 300.), unit='inch')
 
     def test__input11(self):
         """
@@ -159,7 +159,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (4, 5, 5))
         self.assertAlmostEqual(img.mean(), 1384.33)
         self.assertEqual(axes, 'CYX')
-        verify_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1., unit='um')
+        validate_metadata(self, metadata, resolution=(15384.615, 15384.615), z_spacing=1., unit='um')
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -171,7 +171,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (200, 200))
         self.assertAlmostEqual(round(img.mean().compute(), 2), 502.26)
         self.assertEqual(axes, 'YX')
-        verify_metadata(self, metadata, resolution=(1., 1.), unit='um')
+        validate_metadata(self, metadata, resolution=(1., 1.), unit='um')
 
     @minimum_python_version(3, 11)
     @without_logging
@@ -183,7 +183,7 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(img.shape, (2, 64, 64))
         self.assertAlmostEqual(img.mean().compute(), 0.0)
         self.assertEqual(axes, 'ZYX')
-        verify_metadata(self, metadata, resolution=(1., 1.), z_spacing=1., unit='um')
+        validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1., unit='um')
 
 
 class peek_num_images_in_file(unittest.TestCase):
@@ -237,7 +237,7 @@ class imwrite(unittest.TestCase):
         data_shape: Tuple,
         axes: str,
         dtype: np.dtype,
-        metadata: Optional[Dict] = None,
+        metadata: Optional[giatools.metadata.Metadata] = None,
         *,
         sigma: float = 0,
         ext: str,
@@ -256,12 +256,13 @@ class imwrite(unittest.TestCase):
 
         # Write the image to a temporary file
         filepath = os.path.join(self.tempdir.name, f'test.{ext}')
-        metadata = (dict() if metadata is None else metadata) | dict(axes=axes)
-        metadata_copy = copy.deepcopy(metadata)
-        giatools.io.imwrite(data, filepath, backend=backend, metadata=metadata, **kwargs)
+        metadata = giatools.metadata.Metadata() if metadata is None else metadata
+        metadata_copy = attrs.asdict(metadata)
+        giatools.io.imwrite(data, filepath, backend=backend, axes=axes, metadata=metadata, **kwargs)
 
         # Validate immutability of metadata
-        self.assertEqual(metadata, metadata_copy)
+        _validate_metadata = globals()['validate_metadata']
+        _validate_metadata(self, metadata, **metadata_copy)
 
         # Read back the image data and the axes, and validate, if applicable
         data1, axes1 = self._read_image(filepath)
@@ -280,20 +281,20 @@ class imwrite(unittest.TestCase):
                 x_res = page0.tags['XResolution'].value
                 y_res = page0.tags['YResolution'].value
 
-            if 'resolution' in metadata:
+            if metadata.resolution is not None:
                 np.testing.assert_allclose(
                     (
                         x_res[0] / x_res[1],
                         y_res[0] / y_res[1],
                     ),
-                    metadata['resolution'],
+                    metadata.resolution,
                 )
-            if 'z_spacing' in metadata:
-                self.assertEqual(float(description['spacing']), metadata['z_spacing'])
-            if 'z_position' in metadata:
-                self.assertEqual(float(description['z_position']), metadata['z_position'])
-            if 'unit' in metadata:
-                self.assertEqual(description['unit'], metadata['unit'])
+            if metadata.z_spacing is not None:
+                self.assertEqual(float(description['spacing']), metadata.z_spacing)
+            if metadata.z_position is not None:
+                self.assertEqual(float(description['z_position']), metadata.z_position)
+            if metadata.unit is not None:
+                self.assertEqual(description['unit'], metadata.unit)
 
     def test__unsupported_backend(self):
         with self.assertRaises(ValueError):
@@ -339,7 +340,7 @@ class imwrite(unittest.TestCase):
             dtype=np.float32,
             ext='tiff',
             backend='tifffile',
-            metadata=dict(
+            metadata=giatools.metadata.Metadata(
                 resolution=(0.3, 0.4),
                 z_spacing=0.5,
                 z_position=0.8,
@@ -410,11 +411,12 @@ class ModuleTestCase(unittest.TestCase):
         giatools.io.imwrite(
             expected_data,
             filepath,
-            metadata=copy.deepcopy(expected_metadata) | dict(axes=expected_axes),
+            axes=expected_axes,
+            metadata=giatools.metadata.Metadata(**expected_metadata),
         )
 
         # Read the image back and validate
         data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
         np.testing.assert_array_equal(data1, expected_data)
         self.assertEqual(axes1, expected_axes)
-        self.assertEqual(metadata1, expected_metadata)
+        validate_metadata(self, metadata1, **expected_metadata)

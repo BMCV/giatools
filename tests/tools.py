@@ -35,7 +35,7 @@ class CaptureStderr:
         return self.stdout_buf.getvalue()
 
 
-def verify_metadata(testcase: unittest.TestCase, actual: Union[dict, giatools.metadata.Metadata], **expected: Any):
+def validate_metadata(testcase: unittest.TestCase, actual: Union[dict, giatools.metadata.Metadata], **expected: Any):
     """
     Verify that the `actual` metadata is identical to the `expected` metadata.
     """
