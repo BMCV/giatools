@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: ${{ fromJSON($python_versions) }}
+        python_version: ${{ fromJSON('$python_versions') }}
     steps:
 
       - name: Checkout
