@@ -126,11 +126,15 @@ class TiffReader__get_image_metadata(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__json_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='{"spacing": 0.5}'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata.z_spacing, 0.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'{{"spacing": {value}}}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__json_description__spacing__invalid(self):
         for json in (
@@ -146,11 +150,15 @@ class TiffReader__get_image_metadata(unittest.TestCase):
                 self.assertIsNone(metadata.z_spacing)
 
     def test__json_description__z_position(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='{"z_position": 1.5}'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata.z_position, 1.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'{{"z_position": {value}}}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_position, expected_value)
 
     def test__json_description__z_position__invalid(self):
         for json in (
@@ -194,17 +202,21 @@ class TiffReader__get_image_metadata(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__xml_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(
-                value=(
-                    '<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">'
-                    '<Pixels PhysicalSizeZ="0.5"/>'
-                    '</OME>'
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(
+                        value=(
+                            '<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">'
+                            '<Pixels PhysicalSizeZ="{}"/>'
+                            '</OME>'.format(value)
+                        )
+                    ),
                 )
-            ),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata.z_spacing, 0.5)
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__xml_description__spacing__invalid(self):
         for xml in (
@@ -253,11 +265,15 @@ class TiffReader__get_image_metadata(unittest.TestCase):
     # -----------------------------------------------------------------------------------------------------------------
 
     def test__line_description__spacing(self):
-        self.image.pages[0].tags = dict(
-            ImageDescription=unittest.mock.MagicMock(value='spacing=0.5'),
-        )
-        metadata = self.reader.get_image_metadata(self.image)
-        self.assertEqual(metadata.z_spacing, 0.5)
+        for value, expected_value in (
+            ('0.5', 0.5), ('1', 1.0),
+        ):
+            with self.subTest(value=value):
+                self.image.pages[0].tags = dict(
+                    ImageDescription=unittest.mock.MagicMock(value=f'spacing={value}'),
+                )
+                metadata = self.reader.get_image_metadata(self.image)
+                self.assertEqual(metadata.z_spacing, expected_value)
 
     def test__line_description__spacing__invalid(self):
         for line in (
