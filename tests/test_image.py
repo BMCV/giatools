@@ -488,3 +488,46 @@ class Image__iterate_jointly(unittest.TestCase):
     @minimum_python_version(3, 11)
     def test__dask_array__zyx__iterate__yx(self):
         self._test_dask('ZYX', (10, 20, 30), 'YX', (2, 5, 5))
+
+
+class Image__is_isotropic(unittest.TestCase):
+
+    eps = 1e-6
+
+    def setUp(self):
+        self.array = np.zeros((10, 20, 30))
+
+    def test__2d__unknown_resolution(self):
+        img = giatools.Image(data=self.array, axes='CYX')
+        self.assertIsNone(img.is_isotropic())
+
+    def test__2d__anisotropic(self):
+        img = giatools.Image(data=self.array, axes='CYX')
+        img.metadata.pixel_size = (1.0, 1.01 + self.eps)
+        self.assertFalse(img.is_isotropic())
+
+    def test__2d__isotropic(self):
+        img = giatools.Image(data=self.array, axes='CYX')
+        img.metadata.pixel_size = (1.0, 1.01 - self.eps)
+        self.assertTrue(img.is_isotropic())
+
+    def test__3d__unknown_resolution(self):
+        img = giatools.Image(data=self.array, axes='ZYX')
+        self.assertIsNone(img.is_isotropic())
+        img.metadata.pixel_size = (1.0, 1.01 + self.eps)
+        self.assertIsNone(img.is_isotropic())
+        img.metadata.pixel_size = None
+        img.metadata.z_spacing = 1.0
+        self.assertIsNone(img.is_isotropic())
+
+    def test__3d__anisotropic(self):
+        img = giatools.Image(data=self.array, axes='ZYX')
+        img.metadata.pixel_size = (1.0, 1.0)
+        img.metadata.z_spacing = 1.01 + self.eps
+        self.assertFalse(img.is_isotropic())
+
+    def test__3d__isotropic(self):
+        img = giatools.Image(data=self.array, axes='ZYX')
+        img.metadata.pixel_size = (1.0, 1.0)
+        img.metadata.z_spacing = 1.01 - self.eps
+        self.assertTrue(img.is_isotropic())
