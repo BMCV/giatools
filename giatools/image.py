@@ -237,8 +237,10 @@ class Image:
 
                 >>> from giatools import Image
                 >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-                >>> for _, section in image.iterate_jointly('XY'):
-                ...     print(section.data.shape, section.axes)
+                >>> for _, section in image.iterate_jointly('XYC'):
+                ...     print(section.data.shape)
+                ...     print(section.axes)
+                ...     print(section.original_axes)
                 ...     break
         """
         if _sys.version_info < (3, 11):
