@@ -1,3 +1,4 @@
+import itertools
 import os
 import tempfile
 import unittest
@@ -7,7 +8,10 @@ import numpy as np
 
 import giatools.image
 import giatools.metadata
-from giatools.typing import Tuple
+from giatools.typing import (
+    Tuple,
+    List,
+)
 
 from .tools import (
     maximum_python_version,
@@ -415,6 +419,21 @@ class Image__normalize_axes_like(unittest.TestCase):
             self.img1.normalize_axes_like('ZTCYXX')
 
 
+def permutate(axes: str, name='axes') -> List[str]:
+    permutations = list(''.join(axis) for axis in itertools.permutations(axes, len(axes)))
+
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            for axis in permutations:
+                kwargs = dict(kwargs)
+                kwargs[name] = axis
+                with self.subTest(**dict({name: axis})):
+                    func(self, *args, **kwargs)
+        return wrapper
+
+    return decorator
+
+
 class Image__iterate_jointly(unittest.TestCase):
 
     def create_test_image(self, axes: str, shape: Tuple[int, ...]) -> giatools.image.Image:
@@ -447,21 +466,17 @@ class Image__iterate_jointly(unittest.TestCase):
             for _ in img.iterate_jointly('Z'):
                 pass
 
-    @minimum_python_version(3, 11)
-    def test__order_invariance(self):
-        img = self.create_test_image('YX', (10, 11))
-        for axes in ('YX', 'XY'):
-            with self.subTest(axes=axes):
-                for _, arr in img.iterate_jointly(axes):
-                    self.assertEqual(arr.shape, (10, 11))
-
     def _test(self, axes: str, shape: Tuple[int, ...], joint_axes: str):
         assert set(joint_axes).issubset(set(axes))
         img = self.create_test_image(axes, shape)
         counter = np.zeros(img.data.shape, np.uint32)
-        for sl, arr in img.iterate_jointly(joint_axes):
-            counter[sl] += 1
-            np.testing.assert_array_equal(arr, img.data[sl])
+        for source_slice, section in img.iterate_jointly(joint_axes):
+            self.assertEqual(section.axes, joint_axes)
+            counter[source_slice] += 1
+            np.testing.assert_array_equal(
+                section.reorder_axes_like(section.original_axes).data,
+                img.data[source_slice],
+            )
         np.testing.assert_array_equal(counter, np.ones(counter.shape, np.uint8))
 
     @minimum_python_version(3, 11)
@@ -469,25 +484,29 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test('YX', (10, 11), 'Y')
 
     @minimum_python_version(3, 11)
-    def test__img_yx__iterate_yx(self):
-        self._test('YX', (10, 11), 'YX')
+    @permutate('YX', name='joint_axes')
+    def test__img_yx__iterate_yx(self, joint_axes: str):
+        self._test('YX', (10, 11), joint_axes)
 
     @minimum_python_version(3, 11)
-    def test__img_zyx__iterate_yx(self):
-        self._test('ZYX', (1, 11, 12), 'YX')
-        self._test('ZYX', (5, 11, 12), 'YX')
+    @permutate('YX', name='joint_axes')
+    def test__img_zyx__iterate_yx(self, joint_axes: str):
+        self._test('ZYX', (1, 11, 12), joint_axes)
+        self._test('ZYX', (5, 11, 12), joint_axes)
 
     @minimum_python_version(3, 11)
-    def test__img_zyx__iterate_zyx(self):
-        self._test('ZYX', (1, 11, 12), 'ZYX')
-        self._test('ZYX', (5, 11, 12), 'ZYX')
+    @permutate('ZYX', name='joint_axes')
+    def test__img_zyx__iterate_zyx(self, joint_axes: str):
+        self._test('ZYX', (1, 11, 12), joint_axes)
+        self._test('ZYX', (5, 11, 12), joint_axes)
 
     @minimum_python_version(3, 11)
-    def test__img_tzyxc__iterate_zyx(self):
-        self._test('TZYXC', (1, 1, 11, 12, 3), 'ZYX')
-        self._test('TZYXC', (1, 5, 11, 12, 3), 'ZYX')
-        self._test('TZYXC', (5, 1, 11, 12, 3), 'ZYX')
-        self._test('TZYXC', (5, 5, 11, 12, 3), 'ZYX')
+    @permutate('ZYX', name='joint_axes')
+    def test__img_tzyxc__iterate_zyx(self, joint_axes: str):
+        self._test('TZYXC', (1, 1, 11, 12, 3), joint_axes)
+        self._test('TZYXC', (1, 5, 11, 12, 3), joint_axes)
+        self._test('TZYXC', (5, 1, 11, 12, 3), joint_axes)
+        self._test('TZYXC', (5, 5, 11, 12, 3), joint_axes)
 
     def _test_dask(self, axes: str, shape: Tuple[int, ...], joint_axes: str, chunks: Tuple[int, ...]):
         assert set(joint_axes).issubset(set(axes))
@@ -495,14 +514,18 @@ class Image__iterate_jointly(unittest.TestCase):
         img = self.create_test_image(axes, shape)
         np_data, img.data = img.data, da.from_array(img.data, chunks=chunks)
         counter = np.zeros(img.data.shape, np.uint32)
-        for sl, arr in img.iterate_jointly(joint_axes):
-            counter[sl] += 1
-            np.testing.assert_array_equal(arr, np_data[sl])
+        for source_slice, section in img.iterate_jointly(joint_axes):
+            counter[source_slice] += 1
+            np.testing.assert_array_equal(
+                section.reorder_axes_like(section.original_axes).data,
+                np_data[source_slice],
+            )
         np.testing.assert_array_equal(counter, np.ones(counter.shape, np.uint8))
 
     @minimum_python_version(3, 11)
-    def test__dask_array__zyx__iterate__yx(self):
-        self._test_dask('ZYX', (10, 20, 30), 'YX', (2, 5, 5))
+    @permutate('YX', name='joint_axes')
+    def test__dask_array__zyx__iterate__yx(self, joint_axes: str):
+        self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))
 
 
 class Image__is_isotropic(unittest.TestCase):

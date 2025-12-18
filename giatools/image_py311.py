@@ -33,12 +33,21 @@ def iterate_jointly(
     # Iterate the given `axes` jointly
     for pos in _np.ndindex(*ndindex):
 
-        # Build slice
-        sl = _np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]  # not supported in Python <3.11
+        # Build source slice
+        source_slice = _np.s_[*[(slice(None) if s is None else pos[s]) for s in s_]]  # not supported in Python <3.11
 
         # Extract array
-        arr = img.data[sl]
+        arr = img.data[source_slice]
         assert arr.ndim == len(axes)  # sanity check, should always be True
 
-        # Yield slice and array
-        yield sl, arr
+        # Wrap the array in an `Image` object
+        section_axes = ''.join(filter(lambda axis: axis in axes, img.axes))
+        section = _image.Image(
+            data=arr,
+            axes=section_axes,
+            metadata=img.metadata,
+            original_axes=section_axes,
+        ).reorder_axes_like(axes)
+
+        # Yield the slice and section
+        yield source_slice, section

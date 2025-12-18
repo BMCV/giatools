@@ -218,13 +218,14 @@ class Image:
 
     def iterate_jointly(
         self, axes: str = 'YX',
-    ) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.NDArray]]:
+    ) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.Self]]:
         """
         Iterate over all slices of the image along the given axes.
 
-        This method yields tuples of slices and the corresponding image data. This method is useful for, for example,
-        applying 2-D operations to all YX slices of a 3-D image or time series. The order of axes of the yielded tuples
-        corresponds to the order of axes of this image. The order of axes in the ``axes`` parameter does not matter.
+        This method yields tuples `(slice, section)` where `slice` is the slice in the source data array (this image)
+        and `section` is the corresponding image section. This method is useful, for example, for applying 2-D
+        operations to all slices of a 3-D image or time series. The order of axes in the yielded image `section`
+        corresponds to the order in the ``axes`` parameter.
 
         .. note::
 
