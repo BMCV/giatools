@@ -9,8 +9,8 @@ import numpy as np
 import giatools.image
 import giatools.metadata
 from giatools.typing import (
-    Tuple,
     List,
+    Tuple,
 )
 
 from .tools import (
