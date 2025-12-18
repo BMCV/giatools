@@ -447,6 +447,14 @@ class Image__iterate_jointly(unittest.TestCase):
             for _ in img.iterate_jointly('Z'):
                 pass
 
+    @minimum_python_version(3, 11)
+    def test__order_invariance(self):
+        img = self.create_test_image('YX', (10, 11))
+        for axes in ('YX', 'XY'):
+            with self.subTest(axes=axes):
+                for _, arr in img.iterate_jointly(axes):
+                    self.assertEqual(arr.shape, (10, 11))
+
     def _test(self, axes: str, shape: Tuple[int, ...], joint_axes: str):
         assert set(joint_axes).issubset(set(axes))
         img = self.create_test_image(axes, shape)
