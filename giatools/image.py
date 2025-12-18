@@ -275,20 +275,28 @@ class Image:
                 >>> print(image.is_isotropic())
                 >>> image.axes = 'ZYX'
                 >>> print(image.is_isotropic())
+                >>> print(image.is_isotropic(axes='YX'))
                 >>> image.metadata.z_spacing = 1.0
                 >>> print(image.is_isotropic())
         """
-        if self.metadata.pixel_size is None or ('Z' in self.axes and self.metadata.z_spacing is None):
-            return None
 
         # Determine the pixel/voxel size
         voxel_size = list()
         if 'X' in (axes or self.axes):
-            voxel_size.append(self.metadata.pixel_size[0])
+            if self.metadata.pixel_size is None:
+                return None  # unknown size
+            else:
+                voxel_size.append(self.metadata.pixel_size[0])
         if 'Y' in (axes or self.axes):
-            voxel_size.append(self.metadata.pixel_size[1])
+            if self.metadata.pixel_size is None:
+                return None  # unknown size
+            else:
+                voxel_size.append(self.metadata.pixel_size[1])
         if 'Z' in (axes or self.axes):
-            voxel_size.append(self.metadata.z_spacing)
+            if self.metadata.z_spacing is None:
+                return None  # unknown size
+            else:
+                voxel_size.append(self.metadata.z_spacing)
 
         # Check for isotropy
         anisotropy = max(voxel_size) / min(voxel_size)
