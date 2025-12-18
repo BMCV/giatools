@@ -230,6 +230,16 @@ class Image:
         .. note::
 
             This method requires **Python 3.11** or later.
+
+        Example:
+
+            .. runblock:: pycon
+
+                >>> from giatools import Image
+                >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+                >>> for _, section in image.iterate_jointly('XY'):
+                ...     print(section.data.shape, section.axes)
+                ...     break
         """
         if _sys.version_info < (3, 11):
             raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
