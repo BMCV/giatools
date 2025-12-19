@@ -292,7 +292,8 @@ class Image:
                 >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
                 >>> image.metadata.pixel_size = (1.0, 1.2)  # X, Y
                 >>> image.metadata.z_spacing = 1.1
-                >>> anisotropy = image.get_anisotropy('XYZ'))
+                >>>
+                >>> anisotropy = image.get_anisotropy('XYZ')
                 >>> print(image.metadata.pixel_size[0] / anisotropy[0])  # X
                 >>> print(image.metadata.pixel_size[1] / anisotropy[1])  # Y
                 >>> print(image.metadata.z_spacing / anisotropy[2])
