@@ -259,9 +259,10 @@ class Image:
         spatial axes are considered. The pixels/voxels of the image (along the specified `axes`) are isotropic if all
         returned anisotropy factors are (approximately) equal to 1.0.
 
-        The `eps` parameter specifies a threshold for deciding whether a voxel size is too close to zero to be treated
-        as valid. If any voxel size along the considered axes has absolute value smaller than `eps`, the resolution is
-        treated as unknown and the method returns `None`.
+        The `eps` parameter specifies a threshold for deciding whether a pixel/voxel size is too close to zero. If any
+        pixel/voxel size along the considered axes has absolute value smaller than `eps` (or is `None`), the resolution
+        is treated as unknown and the method returns `None`.
+
         Returns:
             A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
             `None`), or `None` if the resolution is not fully known.
