@@ -259,6 +259,10 @@ class Image:
         spatial axes are considered. The pixels/voxels of the image (along the specified `axes`) are isotropic if all
         returned anisotropy factors are (approximately) equal to 1.0.
 
+        Returns:
+            A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
+            `None`), or `None` if the resolution is not fully known.
+
         Example:
 
             .. runblock:: pycon
@@ -297,10 +301,6 @@ class Image:
                 >>> print(image.metadata.pixel_size[0] / anisotropy[0])  # X
                 >>> print(image.metadata.pixel_size[1] / anisotropy[1])  # Y
                 >>> print(image.metadata.z_spacing / anisotropy[2])
-
-        Returns:
-            A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
-            `None`), or `None` if the resolution is not fully known.
         """
         if axes is not None and (axes == '' or not (frozenset(axes) <= frozenset('XYZ'))):
             raise ValueError(f'Invalid axes "{axes}", only "X", "Y", and "Z" are supported')
