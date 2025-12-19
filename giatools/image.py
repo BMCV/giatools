@@ -257,12 +257,7 @@ class Image:
 
         If `axes` is given, only the specified `axes` are considered for the anisotropy computation. Otherwise, all
         spatial axes are considered. The pixels/voxels of the image (along the specified `axes`) are isotropic if all
-        returned anisotropy factors are (approximately) equal to 1.0. Dividing the pixel/voxel size of each axis by the
-        corresponding anisotropy factor yields the isotropic pixel/voxel size.
-
-        Returns:
-            A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
-            `None`), or `None` if the resolution is not fully known.
+        returned anisotropy factors are (approximately) equal to 1.0.
 
         Example:
 
@@ -272,15 +267,39 @@ class Image:
                 >>> import numpy as np
                 >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
                 >>> print(image.get_anisotropy())
+                >>>
                 >>> image.metadata.pixel_size = (1.0, 1.2)
                 >>> print(image.get_anisotropy())
+                >>> print(image.get_anisotropy('XY'))
                 >>> image.metadata.pixel_size = (1.0, 1.0)
                 >>> print(image.get_anisotropy())
+                >>>
                 >>> image.axes = 'ZYX'
                 >>> print(image.get_anisotropy())
                 >>> print(image.get_anisotropy(axes='YX'))
                 >>> image.metadata.z_spacing = 1.0
                 >>> print(image.get_anisotropy())
+
+        Scaling the pixel/voxel size of each axis by the reciprocal of the corresponding anisotropy factor yields the
+        isotropic pixel/voxel size.
+
+        Example:
+
+            .. runblock:: pycon
+
+                >>> from giatools import Image
+                >>> import numpy as np
+                >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
+                >>> image.metadata.pixel_size = (1.0, 1.2)  # X, Y
+                >>> image.metadata.z_spacing = 1.1
+                >>> anisotropy = image.get_anisotropy('XYZ'))
+                >>> print(image.metadata.pixel_size[0] / anisotropy[0])  # X
+                >>> print(image.metadata.pixel_size[1] / anisotropy[1])  # Y
+                >>> print(image.metadata.z_spacing / anisotropy[2])
+
+        Returns:
+            A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
+            `None`), or `None` if the resolution is not fully known.
         """
         if axes is not None and (axes == '' or not (frozenset(axes) <= frozenset('XYZ'))):
             raise ValueError(f'Invalid axes "{axes}", only "X", "Y", and "Z" are supported')
