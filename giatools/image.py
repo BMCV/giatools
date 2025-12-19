@@ -257,7 +257,8 @@ class Image:
 
         If `axes` is given, only the specified `axes` are considered for the anisotropy computation. Otherwise, all
         spatial axes are considered. The pixels/voxels of the image (along the specified `axes`) are isotropic if all
-        returned anisotropy factors are (approximately) equal to 1.0.
+        returned anisotropy factors are (approximately) equal to 1.0. Dividing the pixel/voxel size of each axis by the
+        corresponding anisotropy factor yields the isotropic pixel/voxel size.
 
         Returns:
             A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
