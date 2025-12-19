@@ -251,12 +251,21 @@ class Image:
             from . import image_py311
             return image_py311.iterate_jointly(self, axes)
 
-    def is_isotropic(self, tol=1e-2) -> _T.Optional[bool]:
+    def get_anisotropy(self, axes: _T.Optional[str] = None, eps: float = 1e-8) -> _T.Optional[_T.Tuple[float, ...]]:
         """
-        Determine whether the image pixels/voxels are isotropic.
+        Get the anisotropy of the image pixels/voxels.
+
+        If `axes` is given, only the specified `axes` are considered for the anisotropy computation. Otherwise, all
+        spatial axes are considered. The pixels/voxels of the image (along the specified `axes`) are isotropic if all
+        returned anisotropy factors are (approximately) equal to 1.0.
+
+        The `eps` parameter specifies a threshold for deciding whether a pixel/voxel size is too close to zero. If any
+        pixel/voxel size along the considered axes has absolute value smaller than `eps` (or is `None`), the resolution
+        is treated as unknown and the method returns `None`.
 
         Returns:
-            `True` if the image is isotropic, `False` if not, or `None` if the resolution is not fully known.
+            A tuple of anisotropy factors for the specified axes (or the spatial axes of this image if `axes` is
+            `None`), or `None` if the resolution is not fully known.
 
         Example:
 
@@ -265,24 +274,71 @@ class Image:
                 >>> from giatools import Image
                 >>> import numpy as np
                 >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
-                >>> print(image.is_isotropic())
-                >>> image.metadata.pixel_size = (1.0, 1.1)
-                >>> print(image.is_isotropic())
+                >>> print(image.get_anisotropy())
+                >>>
+                >>> image.metadata.pixel_size = (1.0, 1.2)
+                >>> print(image.get_anisotropy())
+                >>> print(image.get_anisotropy('XY'))
                 >>> image.metadata.pixel_size = (1.0, 1.0)
-                >>> print(image.is_isotropic())
+                >>> print(image.get_anisotropy())
+                >>>
                 >>> image.axes = 'ZYX'
-                >>> print(image.is_isotropic())
+                >>> print(image.get_anisotropy())
+                >>> print(image.get_anisotropy(axes='YX'))
                 >>> image.metadata.z_spacing = 1.0
-                >>> print(image.is_isotropic())
+                >>> print(image.get_anisotropy())
+
+        Scaling the pixel/voxel size of each axis by the reciprocal of the corresponding anisotropy factor yields the
+        isotropic pixel/voxel size.
+
+        Example:
+
+            .. runblock:: pycon
+
+                >>> from giatools import Image
+                >>> import numpy as np
+                >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
+                >>> image.metadata.pixel_size = (1.0, 1.2)  # X, Y
+                >>> image.metadata.z_spacing = 1.1
+                >>>
+                >>> anisotropy = image.get_anisotropy('XYZ')
+                >>> print(
+                ...     image.metadata.pixel_size[0] / anisotropy[0],  # X
+                ...     image.metadata.pixel_size[1] / anisotropy[1],  # Y
+                ...     image.metadata.z_spacing / anisotropy[2],
+                ... )
         """
-        if self.metadata.pixel_size is None or ('Z' in self.axes and self.metadata.z_spacing is None):
-            return None
+        if axes is None:
+            axes = self.axes
+        else:
+            if (len(axes) < 2 or not (frozenset(axes) <= frozenset('XYZ')) or len(frozenset(axes)) != len(axes)):
+                raise ValueError(
+                    f'Invalid axes "{axes}", must contain at least two axes out of "X", "Y", and "Z", '
+                    'and the axes must be unique',
+                )
 
         # Determine the pixel/voxel size
-        voxel_size = list(self.metadata.pixel_size)
-        if 'Z' in self.axes:
-            voxel_size += [self.metadata.z_spacing]
+        voxel_size = list()
+        for axis in (axes or self.axes):
+            if axis == 'X':
+                if self.metadata.pixel_size is None:
+                    return None  # unknown size
+                else:
+                    voxel_size.append(self.metadata.pixel_size[0])
+            elif axis == 'Y':
+                if self.metadata.pixel_size is None:
+                    return None  # unknown size
+                else:
+                    voxel_size.append(self.metadata.pixel_size[1])
+            elif axis == 'Z':
+                if self.metadata.z_spacing is None:
+                    return None  # unknown size
+                else:
+                    voxel_size.append(self.metadata.z_spacing)
 
-        # Check for isotropy
-        anisotropy = max(voxel_size) / min(voxel_size)
-        return anisotropy <= 1 + tol
+        # Check for unknown size and compute anisotropy
+        if any(abs(s) < eps for s in voxel_size):
+            return None  # unknown size
+        else:
+            denom = pow(_np.prod(voxel_size), 1 / len(voxel_size))  # geometric mean
+            return tuple(_np.divide(voxel_size, denom).tolist())

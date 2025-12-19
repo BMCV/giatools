@@ -528,44 +528,53 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))
 
 
-class Image__is_isotropic(unittest.TestCase):
-
-    eps = 1e-6
+class Image__get_anisotropy(unittest.TestCase):
 
     def setUp(self):
         self.array = np.zeros((10, 20, 30))
 
-    def test__2d__unknown_resolution(self):
-        img = giatools.Image(data=self.array, axes='CYX')
-        self.assertIsNone(img.is_isotropic())
+    def test__invalid_axes(self):
+        for axes in ['', ' ', 'X', 'Y', 'Z', 'XYX', 'XY ', 'XYA', 'ABCD']:
+            with self.subTest(axes=axes):
+                img = giatools.Image(data=self.array, axes='CYX')
+                with self.assertRaises(ValueError):
+                    img.get_anisotropy(axes)
 
-    def test__2d__anisotropic(self):
+    def test__cyx__unknown_resolution(self):
         img = giatools.Image(data=self.array, axes='CYX')
-        img.metadata.pixel_size = (1.0, 1.01 + self.eps)
-        self.assertFalse(img.is_isotropic())
+        self.assertIsNone(img.get_anisotropy())
 
-    def test__2d__isotropic(self):
-        img = giatools.Image(data=self.array, axes='CYX')
-        img.metadata.pixel_size = (1.0, 1.01 - self.eps)
-        self.assertTrue(img.is_isotropic())
+    def test__cyx__anisotropic(self):
+        img = giatools.Image(data=self.array, axes='CYX')  # Y, X
+        img.metadata.pixel_size = (1.0, 1.1)  # X, Y
+        ret = img.get_anisotropy()
+        np.testing.assert_array_almost_equal(ret, (1.04880884817, 0.9534625892))  # Y, X
+        self.assertAlmostEqual(1.1 / ret[0], 1.0 / ret[1])
 
-    def test__3d__unknown_resolution(self):
+    def test__zyx__unknown_resolution(self):
         img = giatools.Image(data=self.array, axes='ZYX')
-        self.assertIsNone(img.is_isotropic())
-        img.metadata.pixel_size = (1.0, 1.01 + self.eps)
-        self.assertIsNone(img.is_isotropic())
+        self.assertIsNone(img.get_anisotropy())
+        img.metadata.pixel_size = (1.0, 1.1)
+        self.assertIsNone(img.get_anisotropy())
         img.metadata.pixel_size = None
         img.metadata.z_spacing = 1.0
-        self.assertIsNone(img.is_isotropic())
+        self.assertIsNone(img.get_anisotropy())
 
-    def test__3d__anisotropic(self):
+    def test__zyx__anisotropic(self):
         img = giatools.Image(data=self.array, axes='ZYX')
-        img.metadata.pixel_size = (1.0, 1.0)
-        img.metadata.z_spacing = 1.01 + self.eps
-        self.assertFalse(img.is_isotropic())
+        img.metadata.pixel_size = (1.0, 1.1)  # X, Y
+        img.metadata.z_spacing = 1.2
+        ret = img.get_anisotropy()
+        np.testing.assert_array_almost_equal(ret, (1.093931, 1.00277 , 0.911609))  # Z, Y, X
+        self.assertAlmostEqual(1.1 / ret[1], 1.0 / ret[2])
+        self.assertAlmostEqual(1.1 / ret[1], 1.2 / ret[0])
 
-    def test__3d__isotropic(self):
+    @permutate('YX', name='known_axes')
+    def test__3d__yx__unknown_z(self, known_axes: str):
         img = giatools.Image(data=self.array, axes='ZYX')
-        img.metadata.pixel_size = (1.0, 1.0)
-        img.metadata.z_spacing = 1.01 - self.eps
-        self.assertTrue(img.is_isotropic())
+        img.metadata.pixel_size = (1.0, 1.1)  # X, Y
+        ret = img.get_anisotropy(axes=known_axes)
+        self.assertAlmostEqual(ret[known_axes.index('Y')], 1.04880884817)
+        self.assertAlmostEqual(ret[known_axes.index('X')], 0.9534625892)
+        self.assertIsNone(img.get_anisotropy(axes='XZ'))
+        self.assertIsNone(img.get_anisotropy(axes='YZ'))
