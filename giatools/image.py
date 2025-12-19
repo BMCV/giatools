@@ -304,8 +304,14 @@ class Image:
                 ...     image.metadata.z_spacing / anisotropy[2],
                 ... )
         """
-        if axes is not None and (axes == '' or not (frozenset(axes) <= frozenset('XYZ'))):
-            raise ValueError(f'Invalid axes "{axes}", only "X", "Y", and "Z" are supported')
+        if axes is None:
+            axes = self.axes
+        else:
+            if (len(axes) < 2 or not (frozenset(axes) <= frozenset('XYZ')) or len(frozenset(axes)) != len(axes)):
+                raise ValueError(
+                    f'Invalid axes "{axes}", must contain at least two axes out of "X", "Y", and "Z", '
+                    'and the axes must be unique',
+                )
 
         # Determine the pixel/voxel size
         voxel_size = list()
@@ -315,12 +321,12 @@ class Image:
                     return None  # unknown size
                 else:
                     voxel_size.append(self.metadata.pixel_size[0])
-            if axis == 'Y':
+            elif axis == 'Y':
                 if self.metadata.pixel_size is None:
                     return None  # unknown size
                 else:
                     voxel_size.append(self.metadata.pixel_size[1])
-            if axis == 'Z':
+            elif axis == 'Z':
                 if self.metadata.z_spacing is None:
                     return None  # unknown size
                 else:
@@ -330,5 +336,5 @@ class Image:
         if any(abs(s) < eps for s in voxel_size):
             return None  # unknown size
         else:
-            denom = _np.exp(_np.log(voxel_size).mean())  # geometric mean
+            denom = pow(_np.prod(voxel_size), 1 / len(voxel_size))  # geometric mean
             return tuple(_np.divide(voxel_size, denom).tolist())

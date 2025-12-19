@@ -533,6 +533,13 @@ class Image__get_anisotropy(unittest.TestCase):
     def setUp(self):
         self.array = np.zeros((10, 20, 30))
 
+    def test__invalid_axes(self):
+        for axes in ['', ' ', 'X', 'Y', 'Z', 'XYX', 'XY ', 'XYA', 'ABCD']:
+            with self.subTest(axes=axes):
+                img = giatools.Image(data=self.array, axes='CYX')
+                with self.assertRaises(ValueError):
+                    img.get_anisotropy(axes)
+
     def test__cyx__unknown_resolution(self):
         img = giatools.Image(data=self.array, axes='CYX')
         self.assertIsNone(img.get_anisotropy())
