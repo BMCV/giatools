@@ -571,7 +571,7 @@ class Image__is_isotropic(unittest.TestCase):
         self.assertTrue(img.is_isotropic())
 
     @permutate('XY', name='known_axes')
-    def test__3d__anisotropic_xy__unknown_z(self, known_axes: str):
+    def test__3d__isotropic_xy__unknown_z(self, known_axes: str):
         img = giatools.Image(data=self.array, axes='ZYX')
         img.metadata.pixel_size = (1.0, 1.0)
         self.assertTrue(img.is_isotropic(axes=known_axes))
