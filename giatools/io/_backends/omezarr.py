@@ -160,11 +160,10 @@ def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata,) -> dict:
                 Y='space',
                 X='space',
             )[axis],
-            unit=metadata.unit,
         )
 
         # Only include the `unit` if it is a spatial axis
-        if axis in 'ZYX' and metadata.unit is not None:
+        if axis_data['type'] == 'space' and metadata.unit is not None:
             axis_data['unit'] = metadata.unit
 
         result.append(axis_data)
