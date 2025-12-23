@@ -193,6 +193,32 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'ZYX')
         validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1., unit='um')
 
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image12(self):
+        """
+        Test OME-Zarr file with ZYX axes, but without unit annotations.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input12.zarr')
+        self.assertEqual(img.shape, (2, 100, 100))
+        self.assertEqual(img.dtype, bool)
+        self.assertAlmostEqual(round(img.mean().compute(), 2), 0.50)
+        self.assertEqual(axes, 'ZYX')
+        validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1.)
+
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image13(self):
+        """
+        Test OME-Zarr file with CYX axes.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input13.zarr')
+        self.assertEqual(img.shape, (2, 64, 64))
+        self.assertEqual(img.dtype, np.uint8)
+        self.assertEqual(list(sorted(np.unique(np.asarray(img).reshape(-1)))), [0, 100, 200])
+        self.assertEqual(axes, 'CYX')
+        validate_metadata(self, metadata, resolution=(1., 1.))
+
 
 class peek_num_images_in_file(unittest.TestCase):
 
@@ -417,24 +443,39 @@ class ModuleTestCase(unittest.TestCase):
     Module-level tests for :mod:`giatools.io`.
     """
 
-    @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
-    def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
+    def _test__write_and_read(self, axes: str, filepath: str, data: np.ndarray, metadata: dict):
         """
         Verify that written images can be read back correctly with correct data and metadata.
         """
-        expected_axes = 'YXZC'
-        expected_metadata = dict(resolution=(0.2, 0.4), z_spacing=0.5, z_position=0.8, unit='km')
 
         # Write the image and read back
         giatools.io.imwrite(
-            expected_data,
+            data,
             filepath,
-            axes=expected_axes,
-            metadata=giatools.metadata.Metadata(**expected_metadata),
+            axes=axes,
+            metadata=giatools.metadata.Metadata(**metadata),
         )
 
         # Read the image back and validate
         data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
-        np.testing.assert_array_equal(data1, expected_data)
-        self.assertEqual(axes1, expected_axes)
-        validate_metadata(self, metadata1, **expected_metadata)
+        np.testing.assert_array_equal(data1, data)
+        self.assertEqual(axes1, axes)
+        validate_metadata(self, metadata1, **metadata)
+
+    @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
+    def test__write_and_read__tiff(self, filepath: str, data: np.ndarray):
+        self._test__write_and_read(
+            'YXZC',
+            filepath,
+            data,
+            dict(resolution=(0.2, 0.4), z_spacing=0.5, z_position=0.8, unit='km'),
+        )
+
+    @minimum_python_version(3, 11)
+    @random_io_test(shape=(4, 10, 10, 5, 2), dtype=np.float32, ext='zarr')
+    def test__write_and_read__zarr(self, filepath: str, data: np.ndarray):
+        for metadata in (
+            dict(resolution=(0.2, 0.4), z_spacing=0.5, unit='km'),
+            dict(resolution=(0.2, 0.4), z_spacing=0.5),
+        ):
+            self._test__write_and_read('TCYXZ', filepath, data, metadata)

@@ -76,17 +76,17 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
 def _select_python_version(op: Literal['min', 'max']):
     def create_decorator(major: int, minor: int):
         def decorator(test_impl):
-            def wrapper(self):
+            def wrapper(self, *args, **kwargs):
                 if op == 'min':
                     if sys.version_info < (major, minor):
                         self.skipTest(f'Requires Python {major}.{minor} or later')
                     else:
-                        test_impl(self)
+                        test_impl(self, *args, **kwargs)
                 elif op == 'max':
                     if sys.version_info > (major, minor):
                         self.skipTest(f'Requires Python {major}.{minor} or earlier')
                     else:
-                        test_impl(self)
+                        test_impl(self, *args, **kwargs)
                 else:
                     raise ValueError(f'Unknown operation "{op}"')
             return wrapper
@@ -127,10 +127,11 @@ def mock_array(*shape, name: str = 'array'):
 def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
     def decorator(test_func):
         def wrapper(self, *args, **kwargs):
-            for ext in extensions:
-                with self.subTest(extension=ext):
-                    kwargs = dict(kwargs)
-                    kwargs[name] = f'{prefix}.{ext}'
-                    test_func(self, *args, **kwargs)
+            with tempfile.TemporaryDirectory() as temp_path:
+                for ext in extensions:
+                    with self.subTest(extension=ext):
+                        kwargs = dict(kwargs)
+                        kwargs[name] = os.path.join(temp_path, f'{prefix}.{ext}')
+                        test_func(self, *args, **kwargs)
         return wrapper
     return decorator

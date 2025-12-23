@@ -28,9 +28,13 @@ from .backend import (
 )
 
 try:
-    from ._backends.omezarr import OMEZarrReader as _OMEZarrReader
+    from ._backends.omezarr import (
+        OMEZarrReader as _OMEZarrReader,
+        OMEZarrWriter as _OMEZarrWriter,
+    )
 except ImportError:
     _OMEZarrReader = None  # type: ignore
+    _OMEZarrWriter = None  # type: ignore
 
 __all__ = [
     'backends',
@@ -60,7 +64,7 @@ backends = [
     Backend('tifffile', _TiffReader, _TiffWriter),
 ] + (
     [
-        Backend('omezarr', _OMEZarrReader),
+        Backend('omezarr', _OMEZarrReader, _OMEZarrWriter),
     ]
     if _OMEZarrReader is not None else []
 ) + [
