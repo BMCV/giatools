@@ -117,15 +117,11 @@ class OMEZarrWriter(_backend.Writer):
         metadata: _metadata.Metadata,
         **kwargs: _T.Any,
     ):
-        if os.path.exists(filepath):
+        if os.path.isdir(filepath):
             shutil.rmtree(filepath)
-        try:
-            store = _ome_zarr_io.parse_url(filepath, mode='w', **kwargs).store
-        except TypeError:  # this is too generic to be added to `unsupported_file_errors`
-            raise _backend.UnsupportedFileError(
-                filepath,
-                f'This backend does not accept the given keyword arguments: {kwargs}',
-            )
+        elif os.path.isfile(filepath):
+            os.remove(filepath)
+        store = _ome_zarr_io.parse_url(filepath, mode='w', **kwargs).store
 
         # Determine appropriate chunk sizes
         chunks = [1] * len(axes)

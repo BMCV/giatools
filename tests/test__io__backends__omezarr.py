@@ -1,6 +1,8 @@
+import os
 import unittest
 import unittest.mock
 
+import giatools.io
 import giatools.metadata
 
 from .tools import (
@@ -113,6 +115,14 @@ class OMEZarrWriter__write(unittest.TestCase):
     @minimum_python_version(3, 11)
     @mock_array(10, 10, 1)
     @filenames('zarr', 'ome.zarr')
+    def test__incompatible_data_error(self, mock_write_image, array, filename):
+        mock_write_image.side_effect = ValueError()
+        with self.assertRaises(giatools.io.IncompatibleDataError):
+            self.writer.write(array, filepath=filename, axes='YX', metadata=giatools.metadata.Metadata())
+
+    @minimum_python_version(3, 11)
+    @mock_array(10, 10, 1)
+    @filenames('zarr', 'ome.zarr')
     def test__yxc(self, mock_write_image, array, filename):
         metadata = dict(z_spacing=0.5, unit='cm')
         self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata(**metadata))
@@ -182,3 +192,20 @@ class OMEZarrWriter__write(unittest.TestCase):
                 ]
             ]
         )
+
+    @minimum_python_version(3, 11)
+    @mock_array(10, 10, 1)
+    @filenames('zarr', 'ome.zarr')
+    def test__overwrite_file(self, mock_write_image, array, filename):
+        with open(filename, 'w') as f:
+            f.write('existing file content')
+        self.writer.write(array, filepath=filename, axes='YX', metadata=giatools.metadata.Metadata())
+        mock_write_image.assert_called()
+
+    @minimum_python_version(3, 11)
+    @mock_array(10, 10, 1)
+    @filenames('zarr', 'ome.zarr')
+    def test__overwrite_directory(self, mock_write_image, array, filename):
+        os.makedirs(filename, exist_ok=False)
+        self.writer.write(array, filepath=filename, axes='YX', metadata=giatools.metadata.Metadata())
+        mock_write_image.assert_called()
