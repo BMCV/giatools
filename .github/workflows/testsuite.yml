@@ -10,7 +10,7 @@ on:
       - develop
       - master
     paths:
-      - .github/workflows/testsuite.yml
+      - .github/workflows/testsuite.yml 
       - giatools/**/*.py
       - setup.py
       - tests/*.py
