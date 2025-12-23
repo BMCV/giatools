@@ -194,6 +194,31 @@ class OMEZarrWriter__write(unittest.TestCase):
         )
 
     @minimum_python_version(3, 11)
+    @mock_array(8, 9, 10, 2)
+    @filenames('zarr', 'ome.zarr')
+    def test__yxqs(self, mock_write_image, array, filename):
+        metadata = dict(resolution=(0.4, 0.8), unit='cm')
+        self.writer.write(array, filepath=filename, axes='YXQS', metadata=giatools.metadata.Metadata(**metadata))
+        mock_write_image.assert_called()
+        self.assertEqual(
+            mock_write_image.call_args.kwargs['axes'],
+            [
+                dict(name='Y', type='space', unit='cm'),
+                dict(name='X', type='space', unit='cm'),
+                dict(name='Q', type='unknown'),
+                dict(name='S', type='channel'),
+            ]
+        )
+        self.assertEqual(
+            mock_write_image.call_args.kwargs['coordinate_transformations'],
+            [
+                [
+                    dict(type='scale', scale=[1.25, 2.5, 1.0, 1.0]),
+                ]
+            ]
+        )
+
+    @minimum_python_version(3, 11)
     @mock_array(10, 10, 1)
     @filenames('zarr', 'ome.zarr')
     def test__overwrite_file(self, mock_write_image, array, filename):

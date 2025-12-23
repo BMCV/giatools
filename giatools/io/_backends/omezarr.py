@@ -125,7 +125,7 @@ class OMEZarrWriter(_backend.Writer):
 
         # Determine appropriate chunk sizes
         chunks = [1] * len(axes)
-        for axis in ('YX'):
+        for axis in 'YX':
             axis_idx = axes.index(axis)
             chunks[axis_idx] = data.shape[axis_idx]
 
@@ -158,9 +158,11 @@ def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata) -> dict:
             type=dict(
                 T='time',
                 C='channel',
+                S='channel',
                 Z='space',
                 Y='space',
                 X='space',
+                Q='unknown',
             )[axis],
         )
 
