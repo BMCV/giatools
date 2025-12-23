@@ -29,7 +29,7 @@ from .tools import (
 )
 
 
-class imreadraw(unittest.TestCase):
+class imreadraw(unittest.TestCase):  # TODO: part of these tests should be moved to test__io__backends__*.py
 
     @random_io_test(shape=(10, 10, 3), dtype=np.uint8, ext='not-an-image')
     def test__invalid_file(self, filepath, data):

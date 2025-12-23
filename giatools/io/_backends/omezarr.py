@@ -1,5 +1,10 @@
+import os
+import shutil
+
 import ome_zarr.io as _ome_zarr_io
 import ome_zarr.reader as _ome_zarr_reader
+import ome_zarr.writer as _ome_zarr_writer
+import ome_zarr.format as _ome_zarr_format
 
 from ... import (
     metadata as _metadata,
@@ -90,3 +95,43 @@ def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _metadata.Meta
         pass
 
     return metadata
+
+
+class OMEZarrWriter(_backend.Writer):
+
+    supported_extensions = (
+        'zarr',
+    )
+
+    def write(
+        self,
+        data: _T.NDArray,
+        filepath: str,
+        axes: str,
+        metadata: _metadata.Metadata,
+        **kwargs: _T.Any,
+    ):
+        if os.path.exists(filepath):
+            shutil.rmtree(filepath)
+        try:
+            store = _ome_zarr_io.parse_url(filepath, mode='w', **kwargs)
+        except TypeError:  # this is too generic to be added to `unsupported_file_errors`
+            raise _backend.UnsupportedFileError(
+                filepath,
+                f'This backend does not accept the given keyword arguments: {kwargs}',
+            )
+
+        # Determine appropriate chunk sizes
+        chunks = [1] * len(axes)
+        for axis in ('YX'):
+            axis_idx = axes.index(axis)
+            chunks[axis_idx] = data.shape[axis_idx]
+
+        _ome_zarr_writer.write_image(
+            data,
+            store=store,
+            axes=axes,
+            fmt=_ome_zarr_format.CurrentFormat(),
+            chunks=chunks,
+            # TODO: write metadata from `metadata`
+        )
