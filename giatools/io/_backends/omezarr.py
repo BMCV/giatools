@@ -61,8 +61,13 @@ def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _metadata.Meta
     axes = _get_omezarr_axes(omezarr_node)
     metadata = _metadata.Metadata()
 
-    # Extract the `unit`, if it is constant across all axes
-    units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', []) if 'unit' in axis))
+    # Extract the `unit`, if it is constant across all spatial axes
+    units = frozenset(
+        (
+            axis['unit'] for axis in omezarr_node.metadata.get('axes', [])
+            if 'unit' in axis and axis['name'].upper() in 'ZYX'
+        )
+    )
     if (
         len(units) == 1 and (unit := next(iter(units))) and
         (normalized_unit := _backend.normalize_unit(unit)) is not None
@@ -130,8 +135,64 @@ class OMEZarrWriter(_backend.Writer):
         _ome_zarr_writer.write_image(
             data,
             store=store,
-            axes=axes,
+            axes=_create_omezarr_axes(axes, metadata),
+            coordinate_transformations=_create_omezarr_transformations(axes, metadata),
             fmt=_ome_zarr_format.CurrentFormat(),
             chunks=chunks,
-            # TODO: write metadata from `metadata`
         )
+
+
+def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata,) -> dict:
+    """
+    Create a dictionary representation of the OME-Zarr axes from the given axes string and image.
+    """
+
+    result = list()
+    for axis in axes.upper():
+
+        # Create axis metadata
+        axis_data = dict(
+            name=axis,
+            type=dict(
+                T='time',
+                C='channel',
+                Z='space',
+                Y='space',
+                X='space',
+            )[axis],
+            unit=metadata.unit,
+        )
+
+        # Only include the `unit` if it is a spatial axis
+        if axis in 'ZYX' and metadata.unit is not None:
+            axis_data['unit'] = metadata.unit
+
+        result.append(axis_data)
+
+    return result
+
+
+def _create_omezarr_transformations(axes: str, metadata: _metadata.Metadata,) -> list:
+    """
+    Create a list representation of the OME-Zarr coordinate transformations from the given axes string and image.
+    """
+
+    scales = list()
+    for axis in axes.upper():
+        if axis == 'X' and metadata.pixel_size is not None:
+            scales.append(float(metadata.pixel_size[0]))
+        elif axis == 'Y' and metadata.pixel_size is not None:
+            scales.append(float(metadata.pixel_size[1]))
+        elif axis == 'Z' and metadata.z_spacing is not None:
+            scales.append(float(metadata.z_spacing))
+        else:
+            scales.append(1.0)
+
+    return [
+        [
+            {
+                'type': 'scale',
+                'scale': scales,
+            }
+        ]
+    ]
