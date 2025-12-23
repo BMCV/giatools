@@ -144,7 +144,7 @@ class OMEZarrWriter(_backend.Writer):
             raise _backend.IncompatibleDataError(filepath, f'Failed to write OME-Zarr image: {err}') from err
 
 
-def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata,) -> dict:
+def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata) -> dict:
     """
     Create a dictionary representation of the OME-Zarr axes from the given axes string and image.
     """
@@ -173,7 +173,7 @@ def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata,) -> dict:
     return result
 
 
-def _create_omezarr_transformations(axes: str, metadata: _metadata.Metadata,) -> list:
+def _create_omezarr_transformations(axes: str, metadata: _metadata.Metadata) -> list:
     """
     Create a list representation of the OME-Zarr coordinate transformations from the given axes string and image.
     """
