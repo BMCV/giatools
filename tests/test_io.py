@@ -474,9 +474,8 @@ class ModuleTestCase(unittest.TestCase):
     @minimum_python_version(3, 11)
     @random_io_test(shape=(4, 10, 10, 5, 2), dtype=np.float32, ext='zarr')
     def test__write_and_read__zarr(self, filepath: str, data: np.ndarray):
-        self._test__write_and_read(
-            'TCYXZ',
-            filepath,
-            data,
+        for metadata in (
             dict(resolution=(0.2, 0.4), z_spacing=0.5, unit='km'),
-        )
+            dict(resolution=(0.2, 0.4), z_spacing=0.5),
+        ):
+            self._test__write_and_read('TCYXZ', filepath, data, metadata)
