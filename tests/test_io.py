@@ -201,7 +201,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input12.zarr')
         self.assertEqual(img.shape, (2, 100, 100))
-        self.assertEqual(img.dtype, np.bool)
+        self.assertEqual(img.dtype, bool)
         self.assertAlmostEqual(round(img.mean().compute(), 2), 0.50)
         self.assertEqual(axes, 'ZYX')
         validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1.)
