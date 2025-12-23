@@ -443,24 +443,40 @@ class ModuleTestCase(unittest.TestCase):
     Module-level tests for :mod:`giatools.io`.
     """
 
-    @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
-    def test__write_and_read(self, filepath: str, expected_data: np.ndarray):
+    def _test__write_and_read(self, axes: str, filepath: str, data: np.ndarray, metadata: dict):
         """
         Verify that written images can be read back correctly with correct data and metadata.
         """
-        expected_axes = 'YXZC'
-        expected_metadata = dict(resolution=(0.2, 0.4), z_spacing=0.5, z_position=0.8, unit='km')
 
         # Write the image and read back
         giatools.io.imwrite(
-            expected_data,
+            data,
             filepath,
-            axes=expected_axes,
-            metadata=giatools.metadata.Metadata(**expected_metadata),
+            axes=axes,
+            metadata=giatools.metadata.Metadata(**metadata),
         )
 
         # Read the image back and validate
         data1, axes1, metadata1 = giatools.io.imreadraw(filepath)
-        np.testing.assert_array_equal(data1, expected_data)
-        self.assertEqual(axes1, expected_axes)
-        validate_metadata(self, metadata1, **expected_metadata)
+        np.testing.assert_array_equal(data1, data)
+        self.assertEqual(axes1, axes)
+        validate_metadata(self, metadata1, **metadata)
+
+    @random_io_test(shape=(10, 10, 5, 2), dtype=np.float32, ext='tiff')
+    def test__write_and_read__tiff(self, filepath: str, data: np.ndarray):
+        self._test__write_and_read(
+            'YXZC',
+            filepath,
+            data,
+            dict(resolution=(0.2, 0.4), z_spacing=0.5, z_position=0.8, unit='km'),
+        )
+
+    @minimum_python_version(3, 11)
+    @random_io_test(shape=(4, 10, 10, 5, 2), dtype=np.float32, ext='zarr')
+    def test__write_and_read__zarr(self, filepath: str, data: np.ndarray):
+        self._test__write_and_read(
+            'TCYXZ',
+            filepath,
+            data,
+            dict(resolution=(0.2, 0.4), z_spacing=0.5, unit='km'),
+        )

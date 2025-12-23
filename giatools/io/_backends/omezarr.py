@@ -5,6 +5,7 @@ import ome_zarr.format as _ome_zarr_format
 import ome_zarr.io as _ome_zarr_io
 import ome_zarr.reader as _ome_zarr_reader
 import ome_zarr.writer as _ome_zarr_writer
+import zarr as _zarr
 
 from ... import (
     metadata as _metadata,
@@ -119,7 +120,7 @@ class OMEZarrWriter(_backend.Writer):
         if os.path.exists(filepath):
             shutil.rmtree(filepath)
         try:
-            store = _ome_zarr_io.parse_url(filepath, mode='w', **kwargs)
+            store = _ome_zarr_io.parse_url(filepath, mode='w', **kwargs).store
         except TypeError:  # this is too generic to be added to `unsupported_file_errors`
             raise _backend.UnsupportedFileError(
                 filepath,
@@ -132,14 +133,19 @@ class OMEZarrWriter(_backend.Writer):
             axis_idx = axes.index(axis)
             chunks[axis_idx] = data.shape[axis_idx]
 
-        _ome_zarr_writer.write_image(
-            data,
-            store=store,
-            axes=_create_omezarr_axes(axes, metadata),
-            coordinate_transformations=_create_omezarr_transformations(axes, metadata),
-            fmt=_ome_zarr_format.CurrentFormat(),
-            chunks=chunks,
-        )
+        try:
+            _ome_zarr_writer.write_image(
+                data,
+                store=store,
+                group=_zarr.group(store=store),
+                axes=_create_omezarr_axes(axes, metadata),
+                coordinate_transformations=_create_omezarr_transformations(axes, metadata),
+                fmt=_ome_zarr_format.CurrentFormat(),
+                storage_options=dict(chunks=chunks),
+                scaler=None,  # skip writing pyramids (MIP, aka "multum in parvo" meaning "much in little")
+            )
+        except ValueError as err:
+            raise _backend.IncompatibleDataError(filepath, f'Failed to write OME-Zarr image: {err}') from err
 
 
 def _create_omezarr_axes(axes: str, metadata: _metadata.Metadata,) -> dict:
