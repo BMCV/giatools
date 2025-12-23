@@ -2,7 +2,7 @@ name: Post pull request comment
 
 on:
   workflow_run:
-    workflows: [Test suite]
+    workflows: [Tests]
     types: [completed]
 
 jobs:
