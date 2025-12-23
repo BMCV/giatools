@@ -1,10 +1,10 @@
 import os
 import shutil
 
+import ome_zarr.format as _ome_zarr_format
 import ome_zarr.io as _ome_zarr_io
 import ome_zarr.reader as _ome_zarr_reader
 import ome_zarr.writer as _ome_zarr_writer
-import ome_zarr.format as _ome_zarr_format
 
 from ... import (
     metadata as _metadata,
