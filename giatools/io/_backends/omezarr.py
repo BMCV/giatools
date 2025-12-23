@@ -57,7 +57,7 @@ def _get_omezarr_metadata(omezarr_node: _ome_zarr_reader.Node) -> _metadata.Meta
     metadata = _metadata.Metadata()
 
     # Extract the `unit`, if it is constant across all axes
-    units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', [])))
+    units = frozenset((axis['unit'] for axis in omezarr_node.metadata.get('axes', []) if 'unit' in axis))
     if (
         len(units) == 1 and (unit := next(iter(units))) and
         (normalized_unit := _backend.normalize_unit(unit)) is not None

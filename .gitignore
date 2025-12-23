@@ -8,3 +8,4 @@ tests/*-out-*
 /.venv
 /env
 /.coverage
+.DS_Store

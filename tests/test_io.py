@@ -193,6 +193,19 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'ZYX')
         validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1., unit='um')
 
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image12(self):
+        """
+        Test OME-Zarr file with ZYX axes, but without unit annotations.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input12.zarr')
+        self.assertEqual(img.shape, (2, 100, 100))
+        self.assertEqual(img.dtype, np.bool)
+        self.assertAlmostEqual(round(img.mean().compute(), 2), 0.50)
+        self.assertEqual(axes, 'ZYX')
+        validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1.)
+
 
 class peek_num_images_in_file(unittest.TestCase):
 
