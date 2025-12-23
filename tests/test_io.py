@@ -206,6 +206,19 @@ class imreadraw(unittest.TestCase):
         self.assertEqual(axes, 'ZYX')
         validate_metadata(self, metadata, resolution=(1., 1.), z_spacing=1.)
 
+    @minimum_python_version(3, 11)
+    @without_logging
+    def test__omezarr__examples__image13(self):
+        """
+        Test OME-Zarr file with CYX axes.
+        """
+        img, axes, metadata = giatools.io.imreadraw('tests/data/input13.zarr')
+        self.assertEqual(img.shape, (2, 64, 64))
+        self.assertEqual(img.dtype, np.uint8)
+        self.assertEqual(list(sorted(np.unique(np.asarray(img).reshape(-1)))), [0, 100, 200])
+        self.assertEqual(axes, 'CYX')
+        validate_metadata(self, metadata, resolution=(1., 1.))
+
 
 class peek_num_images_in_file(unittest.TestCase):
 
