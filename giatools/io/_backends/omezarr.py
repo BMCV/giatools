@@ -138,7 +138,7 @@ class OMEZarrWriter(_backend.Writer):
                 coordinate_transformations=_create_omezarr_transformations(axes, metadata),
                 fmt=_ome_zarr_format.CurrentFormat(),
                 storage_options=dict(chunks=chunks),
-                scaler=None,  # skip writing pyramids (MIP, aka "multum in parvo" meaning "much in little")
+                scaler=None,  # skip writing multi-resolution pyramids (MIP)
             )
         except ValueError as err:
             raise _backend.IncompatibleDataError(filepath, f'Failed to write OME-Zarr image: {err}') from err
