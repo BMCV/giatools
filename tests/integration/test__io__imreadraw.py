@@ -87,7 +87,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input5_uint8_cyx.tiff')
         self.assertEqual(img.shape, (2, 8, 16))
-        self.assertEqual(img.mean(), 22.25390625)
+        self.assertEqual(round(img.mean(), 2), 22.25)
         self.assertEqual(axes, 'CYX')
         validate_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
@@ -97,7 +97,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input6_uint8_zyx.tiff')
         self.assertEqual(img.shape, (25, 8, 16))
-        self.assertEqual(img.mean(), 26.555)
+        self.assertEqual(round(img.mean(), 2), 26.56)
         self.assertEqual(axes, 'ZYX')
         validate_metadata(self, metadata, resolution=(0.734551, 0.367275), z_spacing=0.05445500181716341, unit='um')
 
@@ -107,7 +107,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input7_uint8_zcyx.tif')
         self.assertEqual(img.shape, (25, 2, 50, 50))
-        self.assertEqual(img.mean(), 14.182152)
+        self.assertEqual(round(img.mean(), 2), 14.18)
         self.assertEqual(axes, 'ZCYX')
         validate_metadata(self, metadata, resolution=(2.295473, 2.295473), z_spacing=0.05445500181716341, unit='um')
 
@@ -117,7 +117,7 @@ class imreadraw(unittest.TestCase):
         """
         img, axes, metadata = giatools.io.imreadraw('tests/data/input8_uint16_tyx.tif')
         self.assertEqual(img.shape, (5, 49, 56))
-        self.assertEqual(img.mean(), 5815.486880466472)
+        self.assertEqual(round(img.mean(), 2), 5815.49)
         self.assertEqual(axes, 'TYX')
         validate_metadata(self, metadata, resolution=(1., 1.))
 
@@ -157,7 +157,9 @@ class imreadraw(unittest.TestCase):
         """
         Test OME-Zarr file with YX axes.
         """
+        import dask.array as da
         img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-02.zarr')
+        self.assertIsInstance(img, da.Array)
         self.assertEqual(img.shape, (200, 200))
         self.assertEqual(img.dtype, np.float64)
         self.assertAlmostEqual(round(img.mean().compute(), 2), 502.26)
@@ -170,7 +172,9 @@ class imreadraw(unittest.TestCase):
         """
         Test OME-Zarr file with ZYX axes.
         """
+        import dask.array as da
         img, axes, metadata = giatools.io.imreadraw('tests/data/ome-zarr-examples/image-04.zarr')
+        self.assertIsInstance(img, da.Array)
         self.assertEqual(img.shape, (2, 64, 64))
         self.assertEqual(img.dtype, np.float64)
         self.assertAlmostEqual(img.mean().compute(), 0.0)

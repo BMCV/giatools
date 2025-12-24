@@ -1,5 +1,6 @@
 import contextlib
 import io
+import itertools
 import logging
 import os
 import sys
@@ -12,6 +13,7 @@ import numpy as np
 import giatools.metadata
 from giatools.typing import (
     Any,
+    List,
     Literal,
     Tuple,
     Union,
@@ -134,4 +136,19 @@ def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
                         kwargs[name] = os.path.join(temp_path, f'{prefix}.{ext}')
                         test_func(self, *args, **kwargs)
         return wrapper
+    return decorator
+
+
+def permutate_axes(axes: str, name='axes') -> List[str]:
+    permutations = list(''.join(axis) for axis in itertools.permutations(axes, len(axes)))
+
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            for axis in permutations:
+                kwargs = dict(kwargs)
+                kwargs[name] = axis
+                with self.subTest(**dict({name: axis})):
+                    func(self, *args, **kwargs)
+        return wrapper
+
     return decorator
