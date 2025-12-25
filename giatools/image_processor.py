@@ -12,10 +12,19 @@ class ImageProcessor:
     """
 
     inputs: _T.Dict[_T.Union[str, int], _Image]
+    """
+    Dictionary of the input images, keyed by strings (keyword arguments) or integers (positional arguments).
+    """
 
-    outputs: _T.Dict[_T.Union[str, int], _Image]
+    outputs: _T.Dict[_T.Any, _Image]
+    """
+    Dictionary of the output images with arbitrary keys.
+    """
 
     image0: _Image
+    """
+    An input image that is used to determine the shape, axes, and metadata of the output images.
+    """
 
     def __init__(self, *args: _Image, **kwargs: _Image):
         for key, input in enumerate(args):
@@ -49,7 +58,7 @@ class ImageProcessor:
             iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0])
             yield iter
 
-    def create_output_image(self, key: _T.Union[str, int], dtype: _np.dtype):
+    def create_output_image(self, key: _T.Any, dtype: _np.dtype):
         """
         Create an output image with the given key and data type.
 
@@ -95,7 +104,7 @@ class ProcessorIteration:
         """
         return self._input_sections[key]
 
-    def __setitem__(self, key: _T.Union[str, int], data: _T.NDArray):
+    def __setitem__(self, key: _T.Any, data: _T.NDArray):
         """
         Set the output image section corresponding to the given key.
         """
