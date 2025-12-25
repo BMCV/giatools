@@ -9,6 +9,9 @@ from giatools.image import Image as _Image
 class ImageProcessor:
     """
     Processes one or more images with the same shape and axes, and yields one or more output images of the same shape.
+
+    Raises:
+        ValueError: If no input images are provided, or if the input images do not have the same shape and axes.
     """
 
     inputs: _T.Dict[_T.Union[str, int], _Image]
