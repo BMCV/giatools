@@ -44,7 +44,7 @@ class ImageProcessor:
     def process(self, joint_axes: str) -> _T.Iterator[_T.Self]:
         """
         Iterate over all slices of the input images along the given axes, yielding :py:class:`ProcessorIteration`
-        objects that can be used to define the corresponding slices of the output images.
+        objects that provide access to the corresponding slices of the output images.
 
         .. note::
 
