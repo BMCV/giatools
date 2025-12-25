@@ -64,7 +64,9 @@ class ImageProcessor:
                 >>>
                 >>> processor = ImageProcessor(image)
                 >>> for section in processor.process('XY'):
-                ...     section['result'] = (section[0].data > section[0].data.mean())
+                ...     section['result'] = (
+                ...         section[0].data > section[0].data.mean()
+                ...     )
                 >>>
                 >>> import numpy as np
                 >>> expected_result = np.stack(
