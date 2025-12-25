@@ -65,6 +65,15 @@ class ImageProcessor:
                 >>> processor = ImageProcessor(image)
                 >>> for section in processor.process('XY'):
                 ...     section['result'] = (section[0].data > section[0].data.mean())
+                >>>
+                >>> import numpy as np
+                >>> expected_result = np.dstack(
+                ...     [
+                ...         image.data[..., c] > image.data[..., c].mean()
+                ...         for c in range(image.data.shape[-1])
+                ...     ],
+                ...     axis=-1,
+                ... )
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
