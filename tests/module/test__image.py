@@ -12,7 +12,7 @@ from giatools.typing import Tuple
 
 from ..tools import (
     minimum_python_version,
-    permutate_axes,
+    permute_axes,
 )
 
 
@@ -197,24 +197,24 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test('YX', (10, 11), 'Y')
 
     @minimum_python_version(3, 11)
-    @permutate_axes('YX', name='joint_axes')
+    @permute_axes('YX', name='joint_axes')
     def test__img_yx__iterate_yx(self, joint_axes: str):
         self._test('YX', (10, 11), joint_axes)
 
     @minimum_python_version(3, 11)
-    @permutate_axes('YX', name='joint_axes')
+    @permute_axes('YX', name='joint_axes')
     def test__img_zyx__iterate_yx(self, joint_axes: str):
         self._test('ZYX', (1, 11, 12), joint_axes)
         self._test('ZYX', (5, 11, 12), joint_axes)
 
     @minimum_python_version(3, 11)
-    @permutate_axes('ZYX', name='joint_axes')
+    @permute_axes('ZYX', name='joint_axes')
     def test__img_zyx__iterate_zyx(self, joint_axes: str):
         self._test('ZYX', (1, 11, 12), joint_axes)
         self._test('ZYX', (5, 11, 12), joint_axes)
 
     @minimum_python_version(3, 11)
-    @permutate_axes('ZYX', name='joint_axes')
+    @permute_axes('ZYX', name='joint_axes')
     def test__img_tzyxc__iterate_zyx(self, joint_axes: str):
         self._test('TZYXC', (1, 1, 11, 12, 3), joint_axes)
         self._test('TZYXC', (1, 5, 11, 12, 3), joint_axes)
@@ -236,6 +236,6 @@ class Image__iterate_jointly(unittest.TestCase):
         np.testing.assert_array_equal(counter, np.ones(counter.shape, np.uint8))
 
     @minimum_python_version(3, 11)
-    @permutate_axes('YX', name='joint_axes')
+    @permute_axes('YX', name='joint_axes')
     def test__dask_array__zyx__iterate__yx(self, joint_axes: str):
         self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))

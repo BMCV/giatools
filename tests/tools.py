@@ -139,7 +139,7 @@ def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
     return decorator
 
 
-def permutate_axes(axes: str, name='axes') -> List[str]:
+def permute_axes(axes: str, name='axes') -> List[str]:
     permutations = list(''.join(axis) for axis in itertools.permutations(axes, len(axes)))
 
     def decorator(func):

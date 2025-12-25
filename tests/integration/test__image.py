@@ -13,7 +13,7 @@ import giatools.metadata
 
 from ..tools import (
     minimum_python_version,
-    permutate_axes,
+    permute_axes,
     random_io_test,
     validate_metadata,
     without_logging,
@@ -118,7 +118,7 @@ class Image__get_anisotropy(unittest.TestCase):
         self.assertAlmostEqual(1.1 / ret[1], 1.0 / ret[2])
         self.assertAlmostEqual(1.1 / ret[1], 1.2 / ret[0])
 
-    @permutate_axes('YX', name='known_axes')
+    @permute_axes('YX', name='known_axes')
     def test__3d__yx__unknown_z(self, known_axes: str):
         img = giatools.Image(data=self.array, axes='ZYX')
         img.metadata.pixel_size = (1.0, 1.1)  # X, Y
