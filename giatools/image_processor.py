@@ -67,7 +67,7 @@ class ImageProcessor:
                 >>>
                 >>> processor = ImageProcessor(image)
                 >>> for section in processor.process('XY'):
-                ...     section['result'] = (
+                ...     section['res'] = (
                 ...         section[0].data > section[0].data.mean()
                 ...     )
                 >>>
@@ -81,9 +81,12 @@ class ImageProcessor:
                 ... )
                 >>> print(
                 ...     np.allclose(
-                ...         processor.outputs['result'].data,
+                ...         processor.outputs['res'].data,
                 ...         expected_result,
                 ...     ),
+                ... )
+                >>> print(
+                ...     processor.outputs['res'].metadata == image.metadata),
                 ... )
 
         Raises:
