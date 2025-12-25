@@ -64,7 +64,7 @@ class ImageProcessor:
                 >>>
                 >>> processor = ImageProcessor(image)
                 >>> for section in processor.process('XY'):
-                ...     section['result'] = (section.data > section.data.mean())
+                ...     section['result'] = (section[0].data > section[0].data.mean())
                 >>>
                 >>> expected_result = image.data.copy()
                 >>> for c in range(image.data.shape[-1]):
