@@ -89,7 +89,7 @@ class ImageProcessor:
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
-            iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0])
+            iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0], joint_axes)
             yield iter
 
     def create_output_image(self, key: _T.Any, dtype: _np.dtype) -> _Image:
@@ -127,15 +127,22 @@ class ProcessorIteration:
 
     _processor: ImageProcessor
 
+    joint_axes: str
+    """
+    The axes of the image sections in this iteration.
+    """
+
     def __init__(
         self,
         processor: ImageProcessor,
         input_sections: _T.Dict[_T.Union[str, int], _Image],
         output_slice: _T.NDSlice,
+        joint_axes: str,
     ):
         self._processor = processor
         self._input_sections = input_sections
         self._output_slice = output_slice
+        self.joint_axes = joint_axes
 
     def __getitem__(self, key: _T.Union[str, int]) -> _Image:
         """
@@ -149,4 +156,7 @@ class ProcessorIteration:
         """
         if key not in self._processor.outputs:
             self._processor.create_output_image(key, data.dtype)
-        self._processor.outputs[key].data[self._output_slice] = data
+        section = _Image(data=data, axes=self.joint_axes).reorder_axes_like(
+            ''.join([axis for axis in self._processor.image0.axes if axis in self.joint_axes])
+        )
+        self._processor.outputs[key].data[self._output_slice] = section.data

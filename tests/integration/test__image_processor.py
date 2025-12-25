@@ -10,15 +10,18 @@ import numpy as np
 import giatools.image
 import giatools.image_processor
 
+from ..tools import permute_axes
+
 
 class ImageProcessor(unittest.TestCase):
 
-    def test__1input__1output(self):
+    @permute_axes('YX', name='joint_axes')
+    def test__1input__1output(self, joint_axes):
         image = giatools.image.Image.read('tests/data/input4_uint8.png')
         image_data = image.data.copy()
         image_metadata = copy.deepcopy(image.metadata)
         processor = giatools.image_processor.ImageProcessor(image)
-        for section in processor.process('XY'):
+        for section in processor.process(joint_axes):
             section['result'] = (
                 section[0].data > section[0].data.mean()
             )
