@@ -67,7 +67,7 @@ class ImageProcessor:
                 ...     section['result'] = (section[0].data > section[0].data.mean())
                 >>>
                 >>> import numpy as np
-                >>> expected_result = np.dstack(
+                >>> expected_result = np.stack(
                 ...     [
                 ...         image.data[..., c] > image.data[..., c].mean()
                 ...         for c in range(image.data.shape[-1])
