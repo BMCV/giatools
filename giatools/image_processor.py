@@ -58,20 +58,25 @@ class ImageProcessor:
             iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0])
             yield iter
 
-    def create_output_image(self, key: _T.Any, dtype: _np.dtype):
+    def create_output_image(self, key: _T.Any, dtype: _np.dtype) -> _Image:
         """
-        Create an output image with the given key and data type.
+        Create and return an output image with the given key and data type.
+
+        The output image will have the same shape, axes, and metadata as the input images. The metadata is copied.
 
         Raises:
             ValueError: If an output image with the given key already exists.
         """
         if key not in self.outputs:
-            self.outputs[key] = _Image(
-                data=_np.empty(self.image0.shape, dtype=dtype),
-                axes=self.image0.axes,
-                original_axes=self.image0.original_axes,
-                metadata=_copy.deepcopy(self.image0.metadata.copy()),
+            self.outputs[key] = (
+                _image := _Image(
+                    data=_np.empty(self.image0.shape, dtype=dtype),
+                    axes=self.image0.axes,
+                    original_axes=self.image0.original_axes,
+                    metadata=_copy.deepcopy(self.image0.metadata.copy()),
+                )
             )
+            return _image
         else:
             raise ValueError(f'Output image with key "{key}" already exists.')
 
