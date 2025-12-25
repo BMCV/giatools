@@ -9,12 +9,14 @@ from .image import (
     Image,
     default_normalized_axes,
 )
+from .image_processor import ImageProcessor as ImageProcessor
 from .version import __version__
 
 __all__ = [
     '__version__',
     'default_normalized_axes',
     'Image',
+    'ImageProcessor',
     'require_backend',
     'VERSION',
 ]

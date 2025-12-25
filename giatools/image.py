@@ -244,6 +244,9 @@ class Image:
                 ...         section.original_axes,
                 ...     )
                 ...     break
+
+        Raises:
+            RuntimeError: If Python version is less than 3.11.
         """
         if _sys.version_info < (3, 11):
             raise RuntimeError('Image.iterate_jointly requires Python 3.11 or later')
