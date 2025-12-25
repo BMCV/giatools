@@ -1,3 +1,7 @@
+"""
+Unit tests for the `giatools.io._backends.tiff` module.
+"""
+
 import unittest
 import unittest.mock
 
@@ -6,7 +10,7 @@ import giatools.io._backends.tiff
 import giatools.metadata
 from giatools.typing import get_args
 
-from .tools import (
+from ..tools import (
     filenames,
     mock_array,
 )
@@ -33,20 +37,30 @@ valid_tiff_units = (
 assert frozenset(u[1] for u in valid_tiff_units) == frozenset(get_args(giatools.metadata.Unit))
 
 
-@unittest.mock.patch('giatools.io._backends.tiff._tifffile.imwrite')
-class TiffWriter__write(unittest.TestCase):
+class MockedTestCase(unittest.TestCase):
 
     def setUp(self):
+        self._tifffile = unittest.mock.patch(
+            'giatools.io._backends.tiff._tifffile'
+        ).start()
+
+        self.addCleanup(unittest.mock.patch.stopall)
+
+
+class TiffWriter__write(MockedTestCase):
+
+    def setUp(self):
+        super().setUp()
         self.writer = giatools.io._backends.tiff.TiffWriter()
 
     @mock_array(10, 10, 1)
     @filenames('tif', 'tiff')
-    def test__valid(self, mock_imwrite, array, filename):
+    def test__valid(self, array, filename):
         metadata = dict(z_spacing=0.5, unit='cm')
         self.writer.write(array, filepath=filename, axes='YXC', metadata=giatools.metadata.Metadata(**metadata))
-        mock_imwrite.assert_called()
+        self._tifffile.imwrite.assert_called()
         self.assertEqual(
-            mock_imwrite.call_args.kwargs['metadata'],
+            self._tifffile.imwrite.call_args.kwargs['metadata'],
             dict(
                 spacing=metadata['z_spacing'],
                 unit=metadata['unit'],
@@ -55,10 +69,10 @@ class TiffWriter__write(unittest.TestCase):
         )
 
 
-class TiffReader__get_image_metadata(unittest.TestCase):
+class TiffReader__get_image_metadata(MockedTestCase):
 
-    @unittest.mock.patch('giatools.io._backends.tiff._tifffile.TiffFile')
-    def setUp(self, mock_tiff_file):
+    def setUp(self):
+        super().setUp()
         self.reader = giatools.io._backends.tiff.TiffReader('filepath').__enter__()
         self.image = self.reader.select_image(0)
 

@@ -1,3 +1,7 @@
+"""
+Unit tests for the `giatools.io.backend` module.
+"""
+
 import unittest
 import unittest.mock
 
@@ -22,6 +26,13 @@ class BackendTestCase(unittest.TestCase):
         self.reader_cls = unittest.mock.MagicMock()
         self.writer_cls = unittest.mock.MagicMock()
         self.backend = giatools.io.backend.Backend('name', self.reader_cls, self.writer_cls)
+
+        self._os_path_exists = unittest.mock.patch(
+            'giatools.io.backend._os.path.exists'
+        ).start()
+        self._os_path_exists.return_value = True
+
+        self.addCleanup(unittest.mock.patch.stopall)
 
     @property
     def reader_init(self):
@@ -64,11 +75,11 @@ class Backend(BackendTestCase):
 class Backend__peek_num_images_in_file(BackendTestCase):
 
     def test__missing_file(self):
+        self._os_path_exists.return_value = False
         with self.assertRaises(FileNotFoundError):
             self.backend.peek_num_images_in_file('nonexistent_file.tiff')
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__unsupported_file(self, mock_os_path_exists):
+    def test__unsupported_file(self):
         for error_in in (
             'reader_init',
             'reader_enter',
@@ -79,8 +90,7 @@ class Backend__peek_num_images_in_file(BackendTestCase):
                 mock.side_effect = giatools.io.UnsupportedFileError('some_file')
                 self.assertIsNone(self.backend.peek_num_images_in_file('some_file'))
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__valid(self, mock_os_path_exists):
+    def test__valid(self):
         self.reader_get_num_images.return_value = 5
         self.assertEqual(self.backend.peek_num_images_in_file('some_file'), 5)
 
@@ -88,11 +98,11 @@ class Backend__peek_num_images_in_file(BackendTestCase):
 class Backend__read(BackendTestCase):
 
     def test__missing_file(self):
+        self._os_path_exists.return_value = False
         with self.assertRaises(FileNotFoundError):
             self.backend.read('nonexistent_file.tiff')
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__unsupported_file(self, mock_os_path_exists):
+    def test__unsupported_file(self):
         for error_in in (
             'reader_init',
             'reader_enter',
@@ -103,14 +113,12 @@ class Backend__read(BackendTestCase):
                 mock.side_effect = giatools.io.UnsupportedFileError('some_file')
                 self.assertIsNone(self.backend.read('some_file'))
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__invalid_position(self, mock_os_path_exists):
+    def test__invalid_position(self):
         self.reader_get_num_images.return_value = 3
         with self.assertRaises(IndexError):
             self.backend.read('some_file', position=3)
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__invalid_axes(self, mock_os_path_exists):
+    def test__invalid_axes(self):
         self.reader_get_num_images.return_value = 1
         for axes in invalid_axes:
             with self.subTest(axes=axes):
@@ -118,8 +126,7 @@ class Backend__read(BackendTestCase):
                 with self.assertRaises(giatools.io.CorruptFileError):
                     self.backend.read('some_file')
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__valid(self, mock_os_path_exists):
+    def test__valid(self):
         self.reader_get_num_images.return_value = 1
         for axes in ('YXC', 'YXS'):
             self.reader_get_axes.return_value = axes
@@ -145,8 +152,7 @@ class Backend__write(BackendTestCase):
         with self.assertRaises(ValueError):
             self.backend.write(self.im_arr, 'some_file', axes='YX', metadata=None)
 
-    @unittest.mock.patch('giatools.io.backend._os.path.exists', return_value=True)
-    def test__valid(self, mock_os_path_exists):
+    def test__valid(self):
         kwarg = unittest.mock.MagicMock()
         for axes in ('YXC', 'YXS'):
             metadata = giatools.metadata.Metadata()

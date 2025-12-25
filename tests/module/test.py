@@ -1,8 +1,12 @@
+"""
+Module tests for the `giatools` root module.
+"""
+
 import unittest
 
 import giatools
 
-from .tools import (
+from ..tools import (
     maximum_python_version,
     minimum_python_version,
 )

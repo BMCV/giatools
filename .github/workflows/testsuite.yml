@@ -46,7 +46,7 @@ jobs:
 
   run_testsuite:
     name: Test suite
-    uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@main
+    uses: BMCV/github-workflows/.github/workflows/coverage-run.yml@report-test-coverage-action_v2.0
     with:
       main_branch: master
       python_versions: '["3.9", "3.10", "3.11", "3.12", "3.13"]'

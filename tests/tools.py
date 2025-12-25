@@ -1,5 +1,6 @@
 import contextlib
 import io
+import itertools
 import logging
 import os
 import sys
@@ -134,4 +135,19 @@ def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
                         kwargs[name] = os.path.join(temp_path, f'{prefix}.{ext}')
                         test_func(self, *args, **kwargs)
         return wrapper
+    return decorator
+
+
+def permute_axes(axes: str, name='axes'):
+    permutations = list(''.join(axis) for axis in itertools.permutations(axes, len(axes)))
+
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            for axis in permutations:
+                kwargs = dict(kwargs)
+                kwargs[name] = axis
+                with self.subTest(**dict({name: axis})):
+                    func(self, *args, **kwargs)
+        return wrapper
+
     return decorator
