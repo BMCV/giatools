@@ -13,7 +13,6 @@ import numpy as np
 import giatools.metadata
 from giatools.typing import (
     Any,
-    List,
     Literal,
     Tuple,
     Union,
@@ -139,7 +138,7 @@ def filenames(*extensions, prefix: str = 'filename', name: str = 'filename'):
     return decorator
 
 
-def permute_axes(axes: str, name='axes') -> List[str]:
+def permute_axes(axes: str, name='axes'):
     permutations = list(''.join(axis) for axis in itertools.permutations(axes, len(axes)))
 
     def decorator(func):
