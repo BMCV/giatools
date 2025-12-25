@@ -1,3 +1,7 @@
+"""
+Unit tests for the `giatools.io.backend` module.
+"""
+
 import unittest
 import unittest.mock
 

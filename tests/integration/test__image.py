@@ -1,3 +1,7 @@
+"""
+Integration tests for the `giatools.image` module.
+"""
+
 import os
 import tempfile
 import unittest

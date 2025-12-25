@@ -1,3 +1,7 @@
+"""
+Integration tests for the `giatools.io.peek_num_images_in_file` function.
+"""
+
 import unittest
 
 import numpy as np

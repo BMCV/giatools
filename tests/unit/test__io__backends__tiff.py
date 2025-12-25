@@ -1,3 +1,7 @@
+"""
+Unit tests for the `giatools.io._backends.tiff` module.
+"""
+
 import unittest
 import unittest.mock
 

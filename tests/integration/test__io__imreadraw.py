@@ -1,3 +1,7 @@
+"""
+Integration tests for the `giatools.io.imreadraw` function.
+"""
+
 import pathlib
 import unittest
 

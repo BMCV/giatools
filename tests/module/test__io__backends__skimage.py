@@ -1,3 +1,7 @@
+"""
+Module tests for the `giatools.io._backends.skimage` module.
+"""
+
 import unittest
 
 import giatools.io

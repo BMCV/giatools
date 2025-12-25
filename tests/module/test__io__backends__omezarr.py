@@ -1,3 +1,7 @@
+"""
+Module tests for the `giatools.io._backends.omezarr` module.
+"""
+
 import unittest
 
 from ..tools import (

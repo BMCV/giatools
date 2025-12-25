@@ -1,3 +1,7 @@
+"""
+Integration tests for the `giatools.io.imwrite` function.
+"""
+
 import json
 import os
 import pathlib

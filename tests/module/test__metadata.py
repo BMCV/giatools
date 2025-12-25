@@ -1,3 +1,7 @@
+"""
+Module tests for the `giatools.metadata` module.
+"""
+
 import unittest
 
 import giatools.metadata

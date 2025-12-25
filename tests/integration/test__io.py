@@ -1,3 +1,7 @@
+"""
+Integration tests that cover multiple functions from the `giatools.io` module.
+"""
+
 import unittest
 
 import numpy as np
