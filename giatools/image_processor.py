@@ -1,4 +1,5 @@
 import copy as _copy
+from types import MappingProxyType as _ImmutableDict
 
 import numpy as _np
 
@@ -14,7 +15,7 @@ class ImageProcessor:
         ValueError: If no input images are provided, or if the input images do not have the same shape and axes.
     """
 
-    inputs: _T.Dict[_T.Union[str, int], _Image]
+    inputs: _ImmutableDict[_T.Union[str, int], _Image]
     """
     Dictionary of the input images, keyed by strings (keyword arguments) or integers (positional arguments).
     """
@@ -30,7 +31,9 @@ class ImageProcessor:
     """
 
     def __init__(self, *args: _Image, **kwargs: _Image):
-        self.inputs = {key: input for key, input in enumerate(args)} | kwargs
+        self.inputs = _ImmutableDict(
+            {key: input for key, input in enumerate(args)} | kwargs
+        )
         self.outputs = dict()
 
         # Verify that at least one input image is provided
@@ -90,7 +93,12 @@ class ImageProcessor:
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
-            iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0], joint_axes)
+            iter = ProcessorIteration(
+                self,
+                _ImmutableDict(dict(zip(input_keys, sections))),
+                source_slices[0],  # same for all input images (due to same shape and axes)
+                joint_axes,
+            )
             yield iter
 
     def create_output_image(self, key: _T.Any, dtype: _np.dtype) -> _Image:
@@ -122,7 +130,7 @@ class ProcessorIteration:
     image sections.
     """
 
-    _input_sections: _T.Dict[_T.Union[str, int], _Image]
+    _input_sections: _ImmutableDict[_T.Union[str, int], _Image]
 
     _output_slice: _T.NDSlice
 
@@ -136,7 +144,7 @@ class ProcessorIteration:
     def __init__(
         self,
         processor: ImageProcessor,
-        input_sections: _T.Dict[_T.Union[str, int], _Image],
+        input_sections: _ImmutableDict[_T.Union[str, int], _Image],
         output_slice: _T.NDSlice,
         joint_axes: str,
     ):
