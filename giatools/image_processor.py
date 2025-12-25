@@ -61,22 +61,6 @@ class ImageProcessor:
                 >>> from giatools import Image, ImageProcessor
                 >>> image = Image.read('data/input4_uint8.png')
                 >>> print(image.axes, image.data.shape)
-                >>>
-                >>> processor = ImageProcessor(image)
-                >>> for section in processor.process('XY'):
-                ...     section['result'] = (section[0].data > section[0].data.mean())
-                >>>
-                >>> import numpy as np
-                >>> expected_result = image.data.copy()
-                >>> for c in range(image.data.shape[-1]):
-                ...     section = expected_result[..., c]
-                ...     expected_result[..., c] = (section > section.mean())
-                >>> print(
-                ...     np.allclose(
-                ...         processor.outputs['result'].data,
-                ...         expected_result,
-                ...     )
-                ... )
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
