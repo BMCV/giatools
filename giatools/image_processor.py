@@ -85,7 +85,9 @@ class ImageProcessor:
                 ...         expected_result,
                 ...     ),
                 ... )
-                >>> print(proc.outputs['result'].metadata == image.metadata)
+                >>> print(
+                ...     proc.outputs['result'].metadata == image.metadata,
+                ... )
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
