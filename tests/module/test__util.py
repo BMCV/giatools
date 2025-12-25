@@ -1,3 +1,7 @@
+"""
+Module tests for the `giatools.util` module.
+"""
+
 import itertools
 import sys
 import unittest
