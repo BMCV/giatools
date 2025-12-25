@@ -30,9 +30,8 @@ class ImageProcessor:
     """
 
     def __init__(self, *args: _Image, **kwargs: _Image):
-        for key, input in enumerate(args):
-            self.inputs[key] = input
-        self.inputs |= kwargs
+        self.inputs = {key: input for key, input in enumerate(args)} | kwargs
+        self.outputs = dict()
 
         # Verify that at least one input image is provided
         if len(self.inputs) == 0:
@@ -41,7 +40,7 @@ class ImageProcessor:
         # Verify that all input images have the same shape and axes
         self.image0 = next(iter(self.inputs.values()))
         for input in self.inputs.values():
-            if self.image0.axes != input.axes or self.image0.shape != input.shape:
+            if self.image0.axes != input.axes or self.image0.data.shape != input.data.shape:
                 raise ValueError('All input images must have the same shape and axes.')
 
     def process(self, joint_axes: str) -> _T.Iterator['ProcessorIteration']:
@@ -59,7 +58,9 @@ class ImageProcessor:
             RuntimeError: If Python version is less than 3.11.
         """
         input_keys, input_images = zip(*self.inputs.items())
-        for source_slices, sections in zip(*[input_image.iterate_jointly(joint_axes) for input_image in input_images]):
+        print([list(input_image.iterate_jointly(joint_axes)) for input_image in input_images])
+        for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
+            source_slices, sections = zip(*inputs_info)
             iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0])
             yield iter
 
@@ -75,10 +76,10 @@ class ImageProcessor:
         if key not in self.outputs:
             self.outputs[key] = (
                 _image := _Image(
-                    data=_np.empty(self.image0.shape, dtype=dtype),
+                    data=_np.empty(self.image0.data.shape, dtype=dtype),
                     axes=self.image0.axes,
                     original_axes=self.image0.original_axes,
-                    metadata=_copy.deepcopy(self.image0.metadata.copy()),
+                    metadata=_copy.deepcopy(self.image0.metadata),
                 )
             )
             return _image
@@ -120,4 +121,4 @@ class ProcessorIteration:
         """
         if key not in self._processor.outputs:
             self._processor.create_output_image(key, data.dtype)
-        self._processor.outputs[key][self._output_slice] = data
+        self._processor.outputs[key].data[self._output_slice] = data
