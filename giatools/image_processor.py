@@ -84,8 +84,6 @@ class ImageProcessor:
                 ...         proc.outputs['result'].data,
                 ...         expected_result,
                 ...     ),
-                ... )
-                >>> print(
                 ...     proc.outputs['result'].metadata == image.metadata,
                 ... )
 
