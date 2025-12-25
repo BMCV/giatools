@@ -5,6 +5,7 @@ Integration tests for the `giatools.image` module.
 import os
 import tempfile
 import unittest
+import unittest.mock
 
 import numpy as np
 
