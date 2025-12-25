@@ -41,7 +41,7 @@ class ImageProcessor:
             if self.image0.axes != input.axes or self.image0.shape != input.shape:
                 raise ValueError('All input images must have the same shape and axes.')
 
-    def process(self, joint_axes: str) -> _T.Iterator[_T.Self]:
+    def process(self, joint_axes: str) -> _T.Iterator['ProcessorIteration']:
         """
         Iterate over all slices of the input images along the given axes, yielding :py:class:`ProcessorIteration`
         objects that provide access to the corresponding sections of the input and output images.
