@@ -85,6 +85,7 @@ class ImageProcessor:
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
+            ValueError: If `joint_axes` contains invalid axes (must be a non-empty subset of the image axes).
         """
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
