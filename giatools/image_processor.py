@@ -65,8 +65,8 @@ class ImageProcessor:
                 >>> image = Image.read('data/input4_uint8.png')
                 >>> print(image.axes, image.data.shape)
                 >>>
-                >>> processor = ImageProcessor(image)
-                >>> for section in processor.process('XY'):
+                >>> proc = ImageProcessor(image)
+                >>> for section in proc.process('XY'):
                 ...     section['res'] = (
                 ...         section[0].data > section[0].data.mean()
                 ...     )
@@ -81,13 +81,11 @@ class ImageProcessor:
                 ... )
                 >>> print(
                 ...     np.allclose(
-                ...         processor.outputs['res'].data,
+                ...         proc.outputs['res'].data,
                 ...         expected_result,
                 ...     ),
                 ... )
-                >>> print(
-                ...     processor.outputs['res'].metadata == image.metadata),
-                ... )
+                >>> print(proc.outputs['res'].metadata == image.metadata)
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
