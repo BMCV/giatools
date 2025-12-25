@@ -66,10 +66,11 @@ class ImageProcessor:
                 >>> for section in processor.process('XY'):
                 ...     section['result'] = (section[0].data > section[0].data.mean())
                 >>>
+                >>> import numpy as np
                 >>> expected_result = image.data.copy()
                 >>> for c in range(image.data.shape[-1]):
                 ...     section = expected_result[..., c]
-                ...     expected_result[..., c] = section > section.mean()
+                ...     expected_result[..., c] = (section > section.mean())
                 >>> print(
                 ...     np.allclose(
                 ...         processor.outputs['result'].data,
@@ -81,7 +82,6 @@ class ImageProcessor:
             RuntimeError: If Python version is less than 3.11.
         """
         input_keys, input_images = zip(*self.inputs.items())
-        print([list(input_image.iterate_jointly(joint_axes)) for input_image in input_images])
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
             iter = ProcessorIteration(self, dict(zip(input_keys, sections)), source_slices[0])
