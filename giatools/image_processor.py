@@ -74,6 +74,12 @@ class ImageProcessor:
                 ...     ],
                 ...     axis=-1,
                 ... )
+                >>> print(
+                ...     np.allclose(
+                ...         processor.outputs['result'].data,
+                ...         expected_result,
+                ...     ),
+                ... )
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
