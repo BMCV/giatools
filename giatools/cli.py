@@ -15,6 +15,8 @@ class ToolBaseplate:
 
     Example:
 
+        .. literalinclude :: examples/cli.py
+
         .. runblock:: pycon
 
             >>> import giatools
