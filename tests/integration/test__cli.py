@@ -8,6 +8,8 @@ import numpy as np
 
 import giatools.cli
 
+from ..tools import minimum_python_version
+
 
 def _threshold(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     return (image1 > image2).astype(np.uint8) * 255
@@ -61,6 +63,7 @@ class ToolBaseplate(unittest.TestCase):
         ):
             self.assertIn(token, result.stdout)
 
+    @minimum_python_version(3, 11)
     def test(self):
         with tempfile.TemporaryDirectory() as temp_path:
             output_filepath = str(pathlib.Path(temp_path) / 'output.png')

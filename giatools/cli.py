@@ -19,10 +19,10 @@ class ToolBaseplate:
 
             >>> import giatools
             >>> if __name__ == '__main__':
-            >>>     tool = giatools.cli.ToolBaseplate(params_required=False)
+            >>>     tool = giatools.ToolBaseplate(params_required=False)
             >>>     tool.add_input_image('input')
             >>>     tool.add_output_image('output')
-            >>>     for proc in tool.run('YX'):
+            >>>     for proc in tool.run('ZYX'):
             >>>         proc['output'] = (
             >>>             proc['input'].data > proc['input'].data.mean()
             >>>         )
@@ -111,6 +111,13 @@ class ToolBaseplate:
 
         The command line arguments are obtained via the :py:meth:`parse_args` method unless an explicit `args`
         namespace is provided.
+
+        .. note::
+
+            This method requires **Python 3.11** or later.
+
+        Raises:
+            RuntimeError: If Python version is less than 3.11.
         """
         if args is None:
             args = self.args or self.parse_args()
