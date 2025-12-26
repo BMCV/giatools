@@ -5,8 +5,6 @@ Unit tests for the `giatools.image_processor` module.
 import unittest
 import unittest.mock
 
-import numpy as np
-
 import giatools.image_processor
 
 
@@ -66,11 +64,11 @@ class ImageProcessor__create_output_image(ImageProcessorTestCase):
     def test(self):
         for key in ('output_key', 42, ('a', 'b'), None):
             with self.subTest(key=key):
-                self.image_processor.create_output_image(key, dtype=np.uint8)
+                self.image_processor.create_output_image(key, dtype='uint8')
 
     def test__value_error(self):
-        self.image_processor.create_output_image('output_key', dtype=np.uint8)
-        for dtype in (np.uint8, np.uint16):
+        self.image_processor.create_output_image('output_key', dtype='uint8')
+        for dtype in ('uint8', 'uint16'):
             with self.subTest(dtype=dtype):
                 with self.assertRaises(ValueError):
                     self.image_processor.create_output_image('output_key', dtype=dtype)
