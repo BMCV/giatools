@@ -5,6 +5,7 @@ Distributed under the MIT license.
 See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 """
 
+from .cli import ToolBaseplate
 from .image import (
     Image,
     default_normalized_axes,
@@ -18,6 +19,7 @@ __all__ = [
     'Image',
     'ImageProcessor',
     'require_backend',
+    'ToolBaseplate',
     'VERSION',
 ]
 
