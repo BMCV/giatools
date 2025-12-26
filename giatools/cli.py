@@ -12,8 +12,14 @@ from . import (
 class ToolBaseplate:
 
     input_keys: _T.List[str]
+    """
+    List of input image keys.
+    """
 
     output_keys: _T.List[str]
+    """
+    List of output image keys.
+    """
 
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser(*args, **kwargs)
@@ -72,6 +78,11 @@ class ToolBaseplate:
         args: _T.Optional[types.SimpleNamespace] = None,
     ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
+        Spin up a `giatools.image_processor.ImageProcessor` with the input images parsed from the command line, and
+        write the output images to the file paths specified via command line arguments.
+
+        The command line arguments are obtained via the :py:meth:`parse_args` method unless an explicit `args`
+        namespace is provided.
         """
         if args is None:
             args = self.parse_args()
