@@ -10,6 +10,23 @@ from . import (
 
 
 class ToolBaseplate:
+    """
+    Baseplate for command-line tools.
+
+    Example:
+
+        .. runblock:: pycon
+
+            >>> import giatools
+            >>> if __name__ == '__main__':
+            >>>     tool = giatools.cli.ToolBaseplate(params_required=False)
+            >>>     tool.add_input_image('input')
+            >>>     tool.add_output_image('output')
+            >>>     for proc in tool.run('YX'):
+            >>>         proc['output'] = (
+            >>>             proc['input'].data > proc['input'].data.mean()
+            >>>         )
+    """
 
     input_keys: _T.List[str]
     """
