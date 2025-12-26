@@ -1,6 +1,7 @@
 import argparse
 import json
 import types
+from functools import cache
 
 from . import (
     image as _image,
@@ -21,9 +22,10 @@ class ToolBaseplate:
     List of output image keys.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, params_required=True, **kwargs):
         self.parser = argparse.ArgumentParser(*args, **kwargs)
-        self.parser.add_argument('params', type=str)
+        self.parser.add_argument('--params', type=str, required=params_required)
+        self.parser.add_argument('--verbose', action='store_true', default=False)
         self.input_keys = list()
         self.output_keys = list()
 
@@ -53,6 +55,7 @@ class ToolBaseplate:
         self.output_keys.append(key)
         self.parser.add_argument(f'--{key}', type=str, required=required)
 
+    @cache
     def parse_args(self) -> types.SimpleNamespace:
         """
         Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
@@ -62,8 +65,11 @@ class ToolBaseplate:
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
         input_images = {key: _image.Image.read(filepath) for key, filepath in input_filepaths.items()}
         output_filepaths = {key: getattr(args, key) for key in self.output_keys}
-        with open(args.params, 'r') as fp_params:
-            params = json.load(fp_params)
+        if args.params is None:
+            params = None
+        else:
+            with open(args.params, 'r') as fp_params:
+                params = json.load(fp_params)
         return types.SimpleNamespace(
             params=params,
             input_filepaths=input_filepaths,

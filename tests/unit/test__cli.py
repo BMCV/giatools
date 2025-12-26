@@ -40,13 +40,36 @@ class ToolBaseplate__init__(MockedTestCase):
     def test(self):
         tool = giatools.cli.ToolBaseplate()
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
-        self.cli_argparse.ArgumentParser.return_value.add_argument.assert_called_with('params', type=str)
+        tool.parser.add_argument.assert_has_calls(
+            [
+                unittest.mock.call('--params', type=str, required=True),
+                unittest.mock.call('--verbose', action='store_true', default=False),
+            ],
+            any_order=True,
+        )
 
     def test__with_args(self):
         tool = giatools.cli.ToolBaseplate('name', description='description')
         self.cli_argparse.ArgumentParser.assert_called_with('name', description='description')
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
-        self.cli_argparse.ArgumentParser.return_value.add_argument.assert_called_with('params', type=str)
+        tool.parser.add_argument.assert_has_calls(
+            [
+                unittest.mock.call('--params', type=str, required=True),
+                unittest.mock.call('--verbose', action='store_true', default=False),
+            ],
+            any_order=True,
+        )
+
+    def test__params_optional(self):
+        tool = giatools.cli.ToolBaseplate(params_required=False)
+        self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
+        tool.parser.add_argument.assert_has_calls(
+            [
+                unittest.mock.call('--params', type=str, required=False),
+                unittest.mock.call('--verbose', action='store_true', default=False),
+            ],
+            any_order=True,
+        )
 
 
 class ToolBaseplate__add_input_image(MockedTestCase):
@@ -123,7 +146,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
 
     def setUp(self):
         super().setUp()
-        self.tool = giatools.cli.ToolBaseplate()
+        self.tool = giatools.cli.ToolBaseplate(params_required=False)
 
     def test(self):
         self.tool.input_keys = ['input1', 'input2']
@@ -222,6 +245,23 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.cli_image.Image.read.assert_not_called()
         self.cli_types.SimpleNamespace.assert_called_with(
             params=self.cli_json.load.return_value,
+            input_filepaths=dict(),
+            input_images=dict(),
+            output_filepaths=dict(),
+            raw_args=self.tool.parser.parse_args.return_value,
+        )
+        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+
+    def test__no_inputs_or_outputs__no_params(self):
+        self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            params=None,
+        )
+        with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
+            args = self.tool.parse_args()
+            mock_open.assert_not_called()
+        self.cli_image.Image.read.assert_not_called()
+        self.cli_types.SimpleNamespace.assert_called_with(
+            params=None,
             input_filepaths=dict(),
             input_images=dict(),
             output_filepaths=dict(),
