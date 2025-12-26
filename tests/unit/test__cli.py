@@ -155,6 +155,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.tool.input_keys = ['input1', 'input2']
         self.tool.output_keys = ['output1']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            verbose=False,
             params='params.json',
             input1='input1.png',
             input2='input2.png',
@@ -190,6 +191,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
     def test__no_inputs(self):
         self.tool.output_keys = ['output1']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            verbose=False,
             params='params.json',
             output1='output1.png',
         )
@@ -212,6 +214,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
     def test__no_outputs(self):
         self.tool.input_keys = ['input1', 'input2']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            verbose=False,
             params='params.json',
             input1='input1.png',
             input2='input2.png',
@@ -243,6 +246,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
 
     def test__no_inputs_or_outputs(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            verbose=False,
             params='params.json',
         )
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
@@ -261,6 +265,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
 
     def test__no_inputs_or_outputs__no_params(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
+            verbose=False,
             params=None,
         )
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:

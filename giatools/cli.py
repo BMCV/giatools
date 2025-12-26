@@ -74,6 +74,14 @@ class ToolBaseplate:
         self.output_keys.append(key)
         self.parser.add_argument(f'--{key}', type=str, required=required)
 
+    def _read_image(self, args: types.SimpleNamespace, key: str, filepath: str) -> _image.Image:
+        image = _image.Image.read(filepath)
+        if args.verbose:
+            print(f'[{key}] Input image axes: {image.axes}')
+            print(f'[{key}] Input image shape: {image.data.shape}')
+            print(f'[{key}] Input image dtype: {image.data.dtype}')
+        return image
+
     def parse_args(self) -> types.SimpleNamespace:
         """
         Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
@@ -81,7 +89,7 @@ class ToolBaseplate:
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
-        input_images = {key: _image.Image.read(filepath) for key, filepath in input_filepaths.items()}
+        input_images = {key: self._read_image(args, key, filepath) for key, filepath in input_filepaths.items()}
         output_filepaths = {key: getattr(args, key) for key in self.output_keys}
         if args.params is None:
             params = None

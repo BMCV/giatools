@@ -67,7 +67,7 @@ class ToolBaseplate(unittest.TestCase):
     def test(self):
         with tempfile.TemporaryDirectory() as temp_path:
             output_filepath = str(pathlib.Path(temp_path) / 'output.png')
-            self._run_cli(
+            result = self._run_cli(
                 '--input1', 'tests/data/input4_uint8.png',
                 '--input2', 'tests/data/input4_uint8.jpg',
                 '--output', output_filepath,
@@ -79,3 +79,26 @@ class ToolBaseplate(unittest.TestCase):
             )
             np.testing.assert_array_equal(output_image.data, expected_image_data)
             self.assertEqual(output_image.axes, 'YXC')
+            self.assertEqual(result.stdout, '')
+
+    @minimum_python_version(3, 11)
+    def test_verbose(self):
+        with tempfile.TemporaryDirectory() as temp_path:
+            output_filepath = str(pathlib.Path(temp_path) / 'output.png')
+            result = self._run_cli(
+                '--verbose',
+                '--input1', 'tests/data/input4_uint8.png',
+                '--input2', 'tests/data/input4_uint8.jpg',
+                '--output', output_filepath,
+            )
+            self.assertEqual(
+                result.stdout.splitlines(),
+                [
+                    '[input1] Input image axes: QTZYXC',
+                    '[input1] Input image shape: (1, 1, 1, 10, 10, 3)',
+                    '[input1] Input image dtype: uint8',
+                    '[input2] Input image axes: QTZYXC',
+                    '[input2] Input image shape: (1, 1, 1, 10, 10, 3)',
+                    '[input2] Input image dtype: uint8',
+                ],
+            )
