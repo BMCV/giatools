@@ -21,4 +21,6 @@ except ImportError:
 
 NDArray: TypeAlias = Union[_np.ndarray, DaskArray]  # noqa: F405
 
+NDSlice: TypeAlias = Tuple[Union[int, slice], ...]  # noqa: F405
+
 PathLike: TypeAlias = Union[str, _pathlib.Path]  # noqa: F405

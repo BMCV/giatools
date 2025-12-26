@@ -16,7 +16,7 @@ from . import (
 def iterate_jointly(
     img: _image.Image,
     axes: str,
-) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.NDArray]]:
+) -> _T.Iterator[_T.Tuple[_T.NDSlice, _T.NDArray]]:
 
     if len(axes) == 0 or not frozenset(axes).issubset(frozenset(img.axes)):
         raise ValueError(f'Cannot iterate jointly over axes "{axes}" of image with axes "{img.axes}"')
