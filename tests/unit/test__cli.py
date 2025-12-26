@@ -126,9 +126,8 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.tool = giatools.cli.ToolBaseplate()
 
     def test(self):
-        self.tool.add_input_image('input1')
-        self.tool.add_input_image('input2')
-        self.tool.add_output_image('output1')
+        self.tool.input_keys = ['input1', 'input2']
+        self.tool.output_keys = ['output1']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
             params='params.json',
             input1='input1.png',
@@ -162,7 +161,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
 
     def test__no_inputs(self):
-        self.tool.add_output_image('output1')
+        self.tool.output_keys = ['output1']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
             params='params.json',
             output1='output1.png',
@@ -183,8 +182,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
 
     def test__no_outputs(self):
-        self.tool.add_input_image('input1')
-        self.tool.add_input_image('input2')
+        self.tool.input_keys = ['input1', 'input2']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
             params='params.json',
             input1='input1.png',
@@ -232,6 +230,46 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
 
 
+@unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
 class ToolBaseplate__run(MockedTestCase):
 
-    ...  # TODO: Add tests for `run` method
+    def setUp(self):
+        super().setUp()
+        self.joint_axes = unittest.mock.Mock()
+        self.tool = giatools.cli.ToolBaseplate()
+        self.tool.input_keys = ['input']
+        self.tool.output_keys = ['output']
+        self.args = unittest.mock.MagicMock()
+        self.args.input_images = {
+            'input': unittest.mock.Mock(),
+        }
+        self.args.output_filepaths = {
+            'input': unittest.mock.Mock(),
+        }
+        self.processor_iteration = unittest.mock.Mock()
+        self.cli_image_processor.ImageProcessor.return_value.process.return_value = iter(
+            [
+                self.processor_iteration,  # object yielded by the only iteration
+            ],
+        )
+
+    def _verify_calls(self):
+        self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
+        self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
+        for key, filepath in self.args.output_filepaths.items():
+            output_image = self.cli_image_processor.ImageProcessor.return_value.outputs[key]
+            output_image.write.assert_called_with(filepath)
+
+    def test__with_args(self, mock_parse_args):
+        processor_iterations = list(self.tool.run(self.joint_axes, self.args))
+        mock_parse_args.assert_not_called()
+        self.assertEqual(processor_iterations, [self.processor_iteration])
+        self._verify_calls()
+
+    def test__without_args(self, mock_parse_args):
+        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
+            mock_parse_args.return_value = self.args
+            processor_iterations = list(self.tool.run(self.joint_axes))
+            mock_parse_args.assert_called_once()
+        self.assertEqual(processor_iterations, [self.processor_iteration])
+        self._verify_calls()
