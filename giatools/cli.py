@@ -86,10 +86,11 @@ class ToolBaseplate:
         self,
         joint_axes: str,
         args: _T.Optional[types.SimpleNamespace] = None,
+        write_outputs: bool = True,
     ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
         Spin up a `giatools.image_processor.ImageProcessor` with the input images parsed from the command line, and
-        write the output images to the file paths specified via command line arguments.
+        write the output images to the file paths specified via command line arguments (if `write_outputs` is `True`).
 
         The command line arguments are obtained via the :py:meth:`parse_args` method unless an explicit `args`
         namespace is provided.
@@ -101,6 +102,7 @@ class ToolBaseplate:
         for processor_iteration in processor.process(joint_axes=joint_axes):
             yield processor_iteration
 
-        for key, filepath in args.output_filepaths.items():
-            output_image = processor.outputs[key]
-            output_image.write(filepath)
+        if write_outputs:
+            for key, filepath in args.output_filepaths.items():
+                output_image = processor.outputs[key].normalize_axes_like(processor.image0.original_axes)
+                output_image.write(filepath)

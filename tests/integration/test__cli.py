@@ -1,9 +1,17 @@
 import pathlib
 import subprocess
 import sys
+import tempfile
 import unittest
 
+import numpy as np
+
 import giatools.cli
+
+
+def _threshold(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
+    return (image1 > image2).astype(np.uint8) * 255
+
 
 if __name__ == '__main__':
     tool = giatools.cli.ToolBaseplate('ToolBaseplate Test', params_required=False)
@@ -13,7 +21,7 @@ if __name__ == '__main__':
     tool.parse_args()
 
     for proc in tool.run('YX'):
-        proc['output'] = (proc['input1'] > proc['input2'])
+        proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
 
 
 class ToolBaseplate(unittest.TestCase):
@@ -34,6 +42,8 @@ class ToolBaseplate(unittest.TestCase):
             cwd=str(self.test_dir),
             **kwargs
         )
+        if result.stderr:
+            print(result.stderr)
         if check_success:
             self.assertEqual(result.stderr, '')
             self.assertEqual(result.returncode, 0)
@@ -51,4 +61,18 @@ class ToolBaseplate(unittest.TestCase):
         ):
             self.assertIn(token, result.stdout)
 
-    # TODO: Add test running without `--help`
+    def test(self):
+        with tempfile.TemporaryDirectory() as temp_path:
+            output_filepath = str(pathlib.Path(temp_path) / 'output.png')
+            self._run_cli(
+                '--input1', 'tests/data/input4_uint8.png',
+                '--input2', 'tests/data/input4_uint8.jpg',
+                '--output', output_filepath,
+            )
+            output_image = giatools.image.Image.read(output_filepath, normalize_axes=None)
+            expected_image_data = _threshold(
+                giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data,
+                giatools.image.Image.read('tests/data/input4_uint8.jpg', normalize_axes=None).data,
+            )
+            np.testing.assert_array_equal(output_image.data, expected_image_data)
+            self.assertEqual(output_image.axes, 'YXC')

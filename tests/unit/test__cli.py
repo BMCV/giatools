@@ -305,7 +305,9 @@ class ToolBaseplate__run(MockedTestCase):
         self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
         self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
         for key, filepath in self.args.output_filepaths.items():
-            output_image = self.cli_image_processor.ImageProcessor.return_value.outputs[key]
+            output_image = self.cli_image_processor.ImageProcessor.return_value.outputs[
+                key
+            ].normalize_axes_like.return_value
             output_image.write.assert_called_with(filepath)
 
     def test__with_explicit_args(self, mock_parse_args):
