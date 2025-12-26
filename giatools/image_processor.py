@@ -51,7 +51,7 @@ class ImageProcessor:
         Iterate over all slices of the input images along the given axes, yielding :py:class:`ProcessorIteration`
         objects that provide access to the corresponding sections of the input and output images.
 
-        The axes in the yielded image sections corresponds exactly to the `joint_axes` parameter (in the given order).
+        The axes in the yielded image sections correspond exactly to the `joint_axes` parameter (in the given order).
 
         .. note::
 
@@ -94,13 +94,13 @@ class ImageProcessor:
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
-            iter = ProcessorIteration(
+            processor_iteration = ProcessorIteration(
                 self,
                 _ImmutableDict(dict(zip(input_keys, sections))),
                 source_slices[0],  # same for all input images (due to same shape and axes)
                 joint_axes,
             )
-            yield iter
+            yield processor_iteration
 
     def create_output_image(self, key: _T.Any, dtype: _np.dtype) -> _Image:
         """
@@ -163,8 +163,8 @@ class ProcessorIteration:
         Get the input image section corresponding to the given key.
 
         Raises:
-            KeyError: If no input image was passed in with by keyword argument equal to the given key.
-            IndexError: If no input image was passed in with by positional argument at the given position.
+            KeyError: If no input image was passed in by keyword argument equal to the given key.
+            IndexError: If no input image was passed in by positional argument at the given position.
         """
         if isinstance(key, int):
             pos = key
