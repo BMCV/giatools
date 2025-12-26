@@ -19,13 +19,12 @@ class ToolBaseplate:
 
             >>> import giatools
             >>> if __name__ == '__main__':
-            >>>     tool = giatools.ToolBaseplate(params_required=False)
-            >>>     tool.add_input_image('input')
-            >>>     tool.add_output_image('output')
-            >>>     for proc in tool.run('ZYX'):
-            >>>         proc['output'] = (
-            >>>             proc['input'].data > proc['input'].data.mean()
-            >>>         )
+            ...     tool = giatools.ToolBaseplate(params_required=False)
+            ...     tool.add_input_image('input')
+            ...     tool.add_output_image('output')
+            ...     for section in tool.run('ZYX'):
+            ...         arr = section['input'].data
+            ...         section['output'] = (arr > arr.mean())
     """
 
     input_keys: _T.List[str]
