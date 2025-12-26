@@ -154,10 +154,26 @@ class ProcessorIteration:
         self._output_slice = output_slice
         self.joint_axes = joint_axes
 
+    @property
+    def _num_positional_arguments(self) -> int:
+        return sum(1 for key in self._input_sections.keys() if isinstance(key, int))
+
     def __getitem__(self, key: _T.Union[str, int]) -> _Image:
         """
         Get the input image section corresponding to the given key.
+
+        Raises:
+            KeyError: If no input image was passed in with by keyword argument equal to the given key.
+            IndexError: If no input image was passed in with by positional argument at the given position.
         """
+        if isinstance(key, int):
+            pos = key
+            if key < 0:
+                key += self._num_positional_arguments
+            if key not in self._input_sections:
+                raise IndexError(f'No input image at position {pos}.')
+        elif key not in self._input_sections:
+            raise KeyError(f'No input image with key "{key}".')
         return self._input_sections[key]
 
     def __setitem__(self, key: _T.Any, data: _T.NDArray):

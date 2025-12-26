@@ -74,3 +74,43 @@ class ImageProcessor__create_output_image(ImageProcessorTestCase):
             with self.subTest(dtype=dtype):
                 with self.assertRaises(ValueError):
                     self.image_processor.create_output_image('output_key', dtype=dtype)
+
+
+class ProcessorIteration(unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.processor = unittest.mock.MagicMock()
+        self.output_slice = unittest.mock.MagicMock()
+        self.input_section1 = unittest.mock.MagicMock()
+        self.input_section2 = unittest.mock.MagicMock()
+        self.input_section3 = unittest.mock.MagicMock()
+        self.processor_iteration = giatools.image_processor.ProcessorIteration(
+            processor=self.processor,
+            input_sections={
+                0: self.input_section1,
+                1: self.input_section2,
+                'input_key': self.input_section3,
+            },
+            output_slice=self.output_slice,
+            joint_axes='YX',
+        )
+
+    def test__getitem__kwarg(self):
+        self.assertIs(self.processor_iteration['input_key'], self.input_section3)
+
+    def test__getitem__spurious_kwarg(self):
+        with self.assertRaisesRegex(KeyError, f'No input image with key "spurious_key".'):
+            self.processor_iteration['spurious_key']
+
+    def test__getitem__posarg(self):
+        self.assertIs(self.processor_iteration[0], self.input_section1)
+        self.assertIs(self.processor_iteration[1], self.input_section2)
+        self.assertIs(self.processor_iteration[-1], self.input_section2)
+        self.assertIs(self.processor_iteration[-2], self.input_section1)
+
+    def test__getitem__invalid_posarg(self):
+        for pos in (2, 3, -3, -4):
+            with self.subTest(pos=pos):
+                with self.assertRaisesRegex(IndexError, f'No input image at position {pos}.'):
+                    self.processor_iteration[pos]
