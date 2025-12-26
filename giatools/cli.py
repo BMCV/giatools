@@ -20,6 +20,9 @@ class ToolBaseplate:
         .. runblock:: console
 
             $ python -m examples.cli --help
+
+        .. runblock:: console
+
             $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
 
