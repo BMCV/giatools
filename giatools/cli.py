@@ -11,12 +11,15 @@ from . import (
 
 class ToolBaseplate:
 
-    input_keys: _T.List[str] = list()
-    output_keys: _T.List[str] = list()
+    input_keys: _T.List[str]
+
+    output_keys: _T.List[str]
 
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser(*args, **kwargs)
         self.parser.add_argument('params', type=str)
+        self.input_keys = list()
+        self.output_keys = list()
 
     def _require_unused_key(self, key: str):
         if key in self.input_keys or key in self.output_keys:
@@ -58,6 +61,7 @@ class ToolBaseplate:
             input_filepaths=input_filepaths,
             input_images=input_images,
             output_filepaths=output_filepaths,
+            raw_args=args,
         )
 
     def run(
