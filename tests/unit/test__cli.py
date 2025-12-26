@@ -26,7 +26,7 @@ class MockedTestCase(unittest.TestCase):
         self.addCleanup(unittest.mock.patch.stopall)
 
 
-class ToolBaseplate(MockedTestCase):
+class ToolBaseplate__init__(MockedTestCase):
 
     def setUp(self):
         super().setUp()
@@ -36,19 +36,22 @@ class ToolBaseplate(MockedTestCase):
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
         self.cli_argparse.ArgumentParser.return_value.add_argument.assert_called_with('params', type=str)
 
-    def test__add_input_image__required_True(self):
+
+class ToolBaseplate__add_input_image(MockedTestCase):
+
+    def test__required_True(self):
         tool = giatools.cli.ToolBaseplate()
         tool.add_input_image('input1', required=True)
         self.assertEqual(tool.input_keys, ['input1'])
         tool.parser.add_argument.assert_called_with('--input1', type=str, required=True)
 
-    def test__add_input_image__required_False(self):
+    def test__required_False(self):
         tool = giatools.cli.ToolBaseplate()
         tool.add_input_image('input1', required=False)
         self.assertEqual(tool.input_keys, ['input1'])
         tool.parser.add_argument.assert_called_with('--input1', type=str, required=False)
 
-    def test__add_input_image__repeated(self):
+    def test__repeated(self):
         tool = giatools.cli.ToolBaseplate()
         tool.add_input_image('input1')
         self.assertEqual(tool.input_keys, ['input1'])
@@ -57,16 +60,58 @@ class ToolBaseplate(MockedTestCase):
         self.assertEqual(tool.input_keys, ['input1', 'input2'])
         tool.parser.add_argument.assert_called_with('--input2', type=str, required=True)
 
-    def test__add_input_image__value_error(self):
+    def test__value_error(self):
         tool = giatools.cli.ToolBaseplate()
-        tool.add_input_image('input1')
-        tool.parser.reset_mock()
-        with self.assertRaises(ValueError):
-            tool.add_input_image('input1')
-        tool.parser.add_argument.assert_not_called()
+        for attr in ('input_keys', 'output_keys'):
+            with self.subTest(attr=attr):
+                setattr(tool, attr, ['input1'])
+                tool.parser.reset_mock()
+                with self.assertRaises(ValueError):
+                    tool.add_input_image('input1')
+                tool.parser.add_argument.assert_not_called()
+                setattr(tool, attr, [])
 
-    # TODO: Add tests for `add_output_image` method
 
-    # TODO: Add tests for `parse_args` method
+class ToolBaseplate__add_output_image(MockedTestCase):
 
-    # TODO: Add tests for `run` method
+    def test__required_True(self):
+        tool = giatools.cli.ToolBaseplate()
+        tool.add_output_image('output1', required=True)
+        self.assertEqual(tool.output_keys, ['output1'])
+        tool.parser.add_argument.assert_called_with('--output1', type=str, required=True)
+
+    def test__required_False(self):
+        tool = giatools.cli.ToolBaseplate()
+        tool.add_output_image('output1', required=False)
+        self.assertEqual(tool.output_keys, ['output1'])
+        tool.parser.add_argument.assert_called_with('--output1', type=str, required=False)
+
+    def test__repeated(self):
+        tool = giatools.cli.ToolBaseplate()
+        tool.add_output_image('output1')
+        self.assertEqual(tool.output_keys, ['output1'])
+        tool.parser.add_argument.assert_called_with('--output1', type=str, required=True)
+        tool.add_output_image('output2')
+        self.assertEqual(tool.output_keys, ['output1', 'output2'])
+        tool.parser.add_argument.assert_called_with('--output2', type=str, required=True)
+
+    def test__value_error(self):
+        tool = giatools.cli.ToolBaseplate()
+        for attr in ('input_keys', 'output_keys'):
+            with self.subTest(attr=attr):
+                setattr(tool, attr, ['output1'])
+                tool.parser.reset_mock()
+                with self.assertRaises(ValueError):
+                    tool.add_output_image('output1')
+                tool.parser.add_argument.assert_not_called()
+                setattr(tool, attr, [])
+
+
+class ToolBaseplate__parse_args(MockedTestCase):
+
+    ...  # TODO: Add tests for `parse_args` method
+
+
+class ToolBaseplate__run(MockedTestCase):
+
+    ...  # TODO: Add tests for `run` method
