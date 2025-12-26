@@ -42,8 +42,8 @@ class ImageProcessor:
 
         # Verify that all input images have the same shape and axes
         self.image0 = next(iter(self.inputs.values()))
-        for input in self.inputs.values():
-            if self.image0.axes != input.axes or self.image0.data.shape != input.data.shape:
+        for input_image in self.inputs.values():
+            if self.image0.axes != input_image.axes or self.image0.data.shape != input_image.data.shape:
                 raise ValueError('All input images must have the same shape and axes.')
 
     def process(self, joint_axes: str) -> _T.Iterator['ProcessorIteration']:
