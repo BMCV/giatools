@@ -10,7 +10,10 @@ import numpy as np
 import giatools.image
 import giatools.image_processor
 
-from ..tools import permute_axes
+from ..tools import (
+    minimum_python_version,
+    permute_axes,
+)
 
 
 class ImageProcessorTestCase(unittest.TestCase):
@@ -26,13 +29,14 @@ class ImageProcessorTestCase(unittest.TestCase):
         self.images.clear()
 
 
-class ImageProcessor(ImageProcessorTestCase):
+class ImageProcessor__process(ImageProcessorTestCase):
 
     image_filepaths = [
         'tests/data/input4_uint8.png',
         'tests/data/input4_uint8.jpg',
     ]
 
+    @minimum_python_version(3, 11)
     def test__immutability(self):
         """
         Test that the input image is not modified by the processing, and that the output image is isolated from the
@@ -53,6 +57,7 @@ class ImageProcessor(ImageProcessorTestCase):
         self.assertIsNot(processor.outputs['result'].metadata, image.metadata)
         self.assertFalse(np.shares_memory(processor.outputs['result'].data, image.data))
 
+    @minimum_python_version(3, 11)
     @permute_axes('YX', name='joint_axes')
     def test__1_positional_input__1output__yx(self, joint_axes):
         processor = giatools.image_processor.ImageProcessor(self.images[0])
@@ -69,6 +74,7 @@ class ImageProcessor(ImageProcessorTestCase):
         self.assertEqual(processor.outputs['result'].axes, self.images[0].axes)
         self.assertEqual(processor.outputs['result'].metadata, self.images[0].metadata)
 
+    @minimum_python_version(3, 11)
     def test__1_positional_input__1output(self):
         for joint_axes in ('YXC', self.images[0].axes):
             with self.subTest(joint_axes=joint_axes):
@@ -80,6 +86,7 @@ class ImageProcessor(ImageProcessorTestCase):
                 self.assertEqual(processor.outputs['result'].axes, self.images[0].axes)
                 self.assertEqual(processor.outputs['result'].metadata, self.images[0].metadata)
 
+    @minimum_python_version(3, 11)
     @permute_axes('YX', name='joint_axes')
     def test__2_positional_inputs__1output(self, joint_axes):
         processor = giatools.image_processor.ImageProcessor(*self.images[0:2])
@@ -96,6 +103,7 @@ class ImageProcessor(ImageProcessorTestCase):
         self.assertEqual(processor.outputs['result'].axes, self.images[0].axes)
         self.assertEqual(processor.outputs['result'].metadata, self.images[0].metadata)
 
+    @minimum_python_version(3, 11)
     @permute_axes('YX', name='joint_axes')
     def test__2_keyword_inputs__1output(self, joint_axes):
         processor = giatools.image_processor.ImageProcessor(input1=self.images[0], input2=self.images[1])
@@ -112,6 +120,7 @@ class ImageProcessor(ImageProcessorTestCase):
         self.assertEqual(processor.outputs['result'].axes, self.images[0].axes)
         self.assertEqual(processor.outputs['result'].metadata, self.images[0].metadata)
 
+    @minimum_python_version(3, 11)
     @permute_axes('YX', name='joint_axes')
     def test__2_mixed_inputs__2outputs(self, joint_axes):
         processor = giatools.image_processor.ImageProcessor(self.images[0], input2=self.images[1])
