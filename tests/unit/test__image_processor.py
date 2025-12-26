@@ -114,3 +114,15 @@ class ProcessorIteration(unittest.TestCase):
             with self.subTest(pos=pos):
                 with self.assertRaisesRegex(IndexError, f'No input image at position {pos}.'):
                     self.processor_iteration[pos]
+
+    @unittest.mock.patch('giatools.image_processor._Image')
+    def test__setitem__(self, mock_image):
+        output_data = unittest.mock.MagicMock()
+        self.processor_iteration['output_key'] = output_data
+        self.processor.create_output_image.assert_called_once_with('output_key', output_data.dtype)
+
+    @unittest.mock.patch('giatools.image_processor._Image')
+    def test__setitem__repeated(self, mock_image):
+        self.processor.outputs = {'output_key': unittest.mock.MagicMock()}
+        self.processor_iteration['output_key'] = unittest.mock.MagicMock()
+        self.processor.create_output_image.assert_not_called()
