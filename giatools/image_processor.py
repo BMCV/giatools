@@ -51,7 +51,7 @@ class ImageProcessor:
         Iterate over all slices of the input images along the given axes, yielding :py:class:`ProcessorIteration`
         objects that provide access to the corresponding sections of the input and output images.
 
-        The axes in the yielded image sections corresponds exactly to the `joint_axes` parameter (in the given order).
+        The axes in the yielded image sections correspond exactly to the `joint_axes` parameter (in the given order).
 
         .. note::
 
