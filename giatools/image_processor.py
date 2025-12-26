@@ -94,13 +94,13 @@ class ImageProcessor:
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
-            iter = ProcessorIteration(
+            processor_iteration = ProcessorIteration(
                 self,
                 _ImmutableDict(dict(zip(input_keys, sections))),
                 source_slices[0],  # same for all input images (due to same shape and axes)
                 joint_axes,
             )
-            yield iter
+            yield processor_iteration
 
     def create_output_image(self, key: _T.Any, dtype: _np.dtype) -> _Image:
         """
