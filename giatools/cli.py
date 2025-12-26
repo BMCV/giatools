@@ -49,6 +49,8 @@ class ToolBaseplate:
 
     def parse_args(self) -> types.SimpleNamespace:
         """
+        Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
+        images, and the output image file paths.
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
