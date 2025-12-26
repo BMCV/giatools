@@ -163,8 +163,8 @@ class ProcessorIteration:
         Get the input image section corresponding to the given key.
 
         Raises:
-            KeyError: If no input image was passed in with by keyword argument equal to the given key.
-            IndexError: If no input image was passed in with by positional argument at the given position.
+            KeyError: If no input image was passed in by keyword argument equal to the given key.
+            IndexError: If no input image was passed in by positional argument at the given position.
         """
         if isinstance(key, int):
             pos = key
