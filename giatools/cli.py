@@ -20,6 +20,7 @@ class ToolBaseplate:
         .. runblock:: console
 
             $ python -m examples.cli --help
+            $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
 
     input_keys: _T.List[str]
