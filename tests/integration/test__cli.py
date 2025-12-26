@@ -10,7 +10,7 @@ if __name__ == '__main__':
     tool.add_input_image('input1')
     tool.add_input_image('input2')
     tool.add_output_image('output')
-    args = tool.parse_args()  # TODO: Instead of returning args, set them as attribute `tool.args`
+    tool.parse_args()
 
     for proc in tool.run('YX'):
         proc['output'] = (proc['input1'] > proc['input2'])

@@ -1,7 +1,6 @@
 import argparse
 import json
 import types
-from functools import cache
 
 from . import (
     image as _image,
@@ -20,6 +19,11 @@ class ToolBaseplate:
     output_keys: _T.List[str]
     """
     List of output image keys.
+    """
+
+    args: _T.Optional[types.SimpleNamespace] = None
+    """
+    Command-line arguments parsed from the command line (including the loaded input images).
     """
 
     def __init__(self, *args, params_required=True, **kwargs):
@@ -55,11 +59,10 @@ class ToolBaseplate:
         self.output_keys.append(key)
         self.parser.add_argument(f'--{key}', type=str, required=required)
 
-    @cache
     def parse_args(self) -> types.SimpleNamespace:
         """
         Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
-        images, and the output image file paths.
+        images, and the output image file paths. The py:data:`args` attribute is also updated.
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
@@ -70,13 +73,14 @@ class ToolBaseplate:
         else:
             with open(args.params, 'r') as fp_params:
                 params = json.load(fp_params)
-        return types.SimpleNamespace(
+        self.args = types.SimpleNamespace(
             params=params,
             input_filepaths=input_filepaths,
             input_images=input_images,
             output_filepaths=output_filepaths,
             raw_args=args,
         )
+        return self.args
 
     def run(
         self,
@@ -91,7 +95,7 @@ class ToolBaseplate:
         namespace is provided.
         """
         if args is None:
-            args = self.parse_args()
+            args = self.args or self.parse_args()
 
         processor = _image_processor.ImageProcessor(**args.input_images)
         for processor_iteration in processor.process(joint_axes=joint_axes):

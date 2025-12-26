@@ -40,6 +40,7 @@ class ToolBaseplate__init__(MockedTestCase):
     def test(self):
         tool = giatools.cli.ToolBaseplate()
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
+        self.assertIsNone(tool.args)
         tool.parser.add_argument.assert_has_calls(
             [
                 unittest.mock.call('--params', type=str, required=True),
@@ -52,6 +53,7 @@ class ToolBaseplate__init__(MockedTestCase):
         tool = giatools.cli.ToolBaseplate('name', description='description')
         self.cli_argparse.ArgumentParser.assert_called_with('name', description='description')
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
+        self.assertIsNone(tool.args)
         tool.parser.add_argument.assert_has_calls(
             [
                 unittest.mock.call('--params', type=str, required=True),
@@ -63,6 +65,7 @@ class ToolBaseplate__init__(MockedTestCase):
     def test__params_optional(self):
         tool = giatools.cli.ToolBaseplate(params_required=False)
         self.assertIs(tool.parser, self.cli_argparse.ArgumentParser.return_value)
+        self.assertIsNone(tool.args)
         tool.parser.add_argument.assert_has_calls(
             [
                 unittest.mock.call('--params', type=str, required=False),
@@ -182,6 +185,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
             raw_args=self.tool.parser.parse_args.return_value,
         )
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+        self.assertIs(args, self.tool.args)
 
     def test__no_inputs(self):
         self.tool.output_keys = ['output1']
@@ -203,6 +207,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
             raw_args=self.tool.parser.parse_args.return_value,
         )
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+        self.assertIs(args, self.tool.args)
 
     def test__no_outputs(self):
         self.tool.input_keys = ['input1', 'input2']
@@ -234,6 +239,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
             raw_args=self.tool.parser.parse_args.return_value,
         )
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+        self.assertIs(args, self.tool.args)
 
     def test__no_inputs_or_outputs(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
@@ -251,6 +257,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
             raw_args=self.tool.parser.parse_args.return_value,
         )
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+        self.assertIs(args, self.tool.args)
 
     def test__no_inputs_or_outputs__no_params(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
@@ -268,6 +275,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
             raw_args=self.tool.parser.parse_args.return_value,
         )
         self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+        self.assertIs(args, self.tool.args)
 
 
 @unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
@@ -300,16 +308,24 @@ class ToolBaseplate__run(MockedTestCase):
             output_image = self.cli_image_processor.ImageProcessor.return_value.outputs[key]
             output_image.write.assert_called_with(filepath)
 
-    def test__with_args(self, mock_parse_args):
+    def test__with_explicit_args(self, mock_parse_args):
         processor_iterations = list(self.tool.run(self.joint_axes, self.args))
         mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
         self._verify_calls()
 
-    def test__without_args(self, mock_parse_args):
+    def test__without_explicit_args(self, mock_parse_args):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
             mock_parse_args.return_value = self.args
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_called_once()
+        self.assertEqual(processor_iterations, [self.processor_iteration])
+        self._verify_calls()
+
+    def test__without_explicit_args__with_args_attr(self, mock_parse_args):
+        self.tool.args = self.args
+        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
+            processor_iterations = list(self.tool.run(self.joint_axes))
+            mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
         self._verify_calls()
