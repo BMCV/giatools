@@ -1,5 +1,5 @@
 """
-Unit tests for the `giatools.image` module.
+Unit tests for the `giatools.image_processor` module.
 """
 
 import unittest
