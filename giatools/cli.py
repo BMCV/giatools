@@ -117,7 +117,7 @@ class ToolBaseplate:
         write_output_images: bool = True,
     ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
-        Use the :py:ref:`create_processor` method to spin up an `giatools.image_processor.ImageProcessor` with the
+        Use the :py:meth:`create_processor` method to spin up an `giatools.image_processor.ImageProcessor` with the
         input images parsed from the command line, and write the output images to the file paths specified via command
         line arguments (if `write_outputs` is `True`).
 
