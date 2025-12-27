@@ -327,7 +327,12 @@ class ToolBaseplate__run(MockedTestCase):
 
     def test__without_args_attr(self, mock_parse_args):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-            mock_parse_args.return_value = self.args
+
+            def _parse_args_side_effect():
+                self.tool.args = self.args
+                return self.args
+
+            mock_parse_args.side_effect = _parse_args_side_effect
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_called_once()
         self.assertEqual(processor_iterations, [self.processor_iteration])
