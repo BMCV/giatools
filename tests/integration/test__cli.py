@@ -1,3 +1,4 @@
+import json
 import pathlib
 import subprocess
 import sys
@@ -21,6 +22,9 @@ if __name__ == '__main__':
     tool.add_input_image('input2')
     tool.add_output_image('output')
     tool.parse_args()
+
+    if tool.args.params is not None:
+        print(tool.args.params)
 
     for proc in tool.run('YX'):
         proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
@@ -82,7 +86,7 @@ class ToolBaseplate(unittest.TestCase):
             self.assertEqual(result.stdout, '')
 
     @minimum_python_version(3, 11)
-    def test_verbose(self):
+    def test__verbose(self):
         with tempfile.TemporaryDirectory() as temp_path:
             output_filepath = str(pathlib.Path(temp_path) / 'output.png')
             result = self._run_cli(
@@ -102,3 +106,19 @@ class ToolBaseplate(unittest.TestCase):
                     '[input2] Input image dtype: uint8',
                 ],
             )
+
+    @minimum_python_version(3, 11)
+    def test__params(self):
+        with tempfile.TemporaryDirectory() as temp_path:
+            params_filepath = str(pathlib.Path(temp_path) / 'params.json')
+            params = dict(key1='value', key2=12)
+            with open(params_filepath, 'w') as params_fp:
+                json.dump(params, params_fp)
+            output_filepath = str(pathlib.Path(temp_path) / 'output.png')
+            result = self._run_cli(
+                '--params', params_filepath,
+                '--input1', 'tests/data/input4_uint8.png',
+                '--input2', 'tests/data/input4_uint8.jpg',
+                '--output', output_filepath,
+            )
+            self.assertEqual(result.stdout.strip('\n'), str(params))
