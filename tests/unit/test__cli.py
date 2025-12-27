@@ -325,13 +325,7 @@ class ToolBaseplate__run(MockedTestCase):
         if not verbose:
             self.builtins_print.assert_not_called()
 
-    def test__with_explicit_args(self, mock_parse_args):
-        processor_iterations = list(self.tool.run(self.joint_axes, self.args))
-        mock_parse_args.assert_not_called()
-        self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(verbose=False)
-
-    def test__without_explicit_args(self, mock_parse_args):
+    def test__without_args_attr(self, mock_parse_args):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
             mock_parse_args.return_value = self.args
             processor_iterations = list(self.tool.run(self.joint_axes))
@@ -339,7 +333,7 @@ class ToolBaseplate__run(MockedTestCase):
         self.assertEqual(processor_iterations, [self.processor_iteration])
         self._verify_calls(verbose=False)
 
-    def test__without_explicit_args__with_args_attr(self, mock_parse_args):
+    def test__with_args_attr(self, mock_parse_args):
         self.tool.args = self.args
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
             processor_iterations = list(self.tool.run(self.joint_axes))
@@ -347,9 +341,11 @@ class ToolBaseplate__run(MockedTestCase):
         self.assertEqual(processor_iterations, [self.processor_iteration])
         self._verify_calls(verbose=False)
 
-    def test__verbose(self, mock_parse_args):
+    def test__with_args_attr__verbose(self, mock_parse_args):
         self.args.verbose = True
-        processor_iterations = list(self.tool.run(self.joint_axes, self.args))
-        mock_parse_args.assert_not_called()
+        self.tool.args = self.args
+        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
+            processor_iterations = list(self.tool.run(self.joint_axes))
+            mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
         self._verify_calls(verbose=True)

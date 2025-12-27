@@ -128,6 +128,10 @@ class ToolBaseplate:
         if write_outputs:
             self.write_outputs()
 
+    def _test(self):
+        self.args = types.SimpleNamespace(x=2)
+        return self.args
+
     def create_processor(self) -> _image_processor.ImageProcessor:
         """
         Create an `giatools.image_processor.ImageProcessor` with the input images parsed from the command line. The
@@ -138,6 +142,7 @@ class ToolBaseplate:
         attribute is already populated (which has precedence).
         """
         args = self.args or self.parse_args()
+        assert self.args is not None  # sanity check
         self.processor = _image_processor.ImageProcessor(**args.input_images)
         return self.processor
 
