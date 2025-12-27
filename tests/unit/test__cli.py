@@ -26,6 +26,7 @@ class MockedTestCase(unittest.TestCase):
         self.cli_image = unittest.mock.patch(
             'giatools.cli._image',
         ).start()
+        self.cli_image.Image.read.side_effect = lambda filepath: unittest.mock.Mock(loaded_from=filepath)
         self.cli_image_processor = unittest.mock.patch(
             'giatools.cli._image_processor',
         ).start()
@@ -190,18 +191,9 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.assertEqual(args.input_filepaths, {'input1': 'input1.png', 'input2': 'input2.png'})
         self.assertEqual(args.output_filepaths, {'output1': 'output1.png'})
         self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
-        self.assertEqual(
-            args.input_images,
-            {
-                key: self.cli_image.Image.read.return_value for key in ('input1', 'input2')
-            }
-        )
-        self.cli_image.Image.read.assert_has_calls(
-            [
-                unittest.mock.call('input1.png'),
-                unittest.mock.call('input2.png'),
-            ]
-        )
+        self.assertEqual(args.input_images.keys(), {'input1', 'input2'})
+        self.assertEqual(args.input_images['input1'].loaded_from, 'input1.png')
+        self.assertEqual(args.input_images['input2'].loaded_from, 'input2.png')
         self._verify_verbose_output()
 
     def test(self):
@@ -247,18 +239,9 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self.assertEqual(args.input_filepaths, {'input1': 'input1.png', 'input2': 'input2.png'})
         self.assertEqual(args.output_filepaths, dict())
         self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
-        self.assertEqual(
-            args.input_images,
-            {
-                key: self.cli_image.Image.read.return_value for key in ('input1', 'input2')
-            }
-        )
-        self.cli_image.Image.read.assert_has_calls(
-            [
-                unittest.mock.call('input1.png'),
-                unittest.mock.call('input2.png'),
-            ]
-        )
+        self.assertEqual(args.input_images.keys(), {'input1', 'input2'})
+        self.assertEqual(args.input_images['input1'].loaded_from, 'input1.png')
+        self.assertEqual(args.input_images['input2'].loaded_from, 'input2.png')
         self._verify_verbose_output()
 
     def test__no_inputs_or_outputs(self):
