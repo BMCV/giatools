@@ -354,6 +354,15 @@ class ToolBaseplate__create_processor(MockedTestCase):
         mock_parse_args.assert_not_called()
         self._verify(processor)
 
+    def test__repeated(self, mock_parse_args):
+        self.cli_image_processor.ImageProcessor.side_effect = lambda *args, **kwargs: unittest.mock.Mock()
+        self.tool.args = self.args
+        processor1 = self.tool.create_processor()
+        processor2 = self.tool.create_processor()
+        mock_parse_args.assert_not_called()
+        self.assertIsNot(processor1, processor2)
+        self.assertIs(processor2, self.tool.processor)
+
 
 class ToolBaseplate__write_output_images(MockedTestCase):
 
