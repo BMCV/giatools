@@ -345,6 +345,43 @@ class ToolBaseplate__run(MockedTestCase):
         self._verify_calls(mock_write_output_images, write_output_images=False)
 
 
+@unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
+class ToolBaseplate__create_processor(MockedTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.tool = giatools.cli.ToolBaseplate()
+        self.tool.input_keys = ['input']
+        self.args = unittest.mock.MagicMock()
+        self.args.input_images = {
+            'input': unittest.mock.Mock(),
+        }
+
+    def _verify(self, processor):
+        self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
+        self.assertIs(processor, self.tool.processor)
+        self.assertIs(processor, self.cli_image_processor.ImageProcessor.return_value)
+
+    def test__without_args_attr(self, mock_parse_args):
+        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
+
+            def _parse_args_side_effect():
+                self.tool.args = self.args
+                return self.args
+
+            mock_parse_args.side_effect = _parse_args_side_effect
+            processor = self.tool.create_processor()
+            mock_parse_args.assert_called_once()
+        self._verify(processor)
+
+    def test__with_args_attr(self, mock_parse_args):
+        self.tool.args = self.args
+        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
+            processor = self.tool.create_processor()
+            mock_parse_args.assert_not_called()
+        self._verify(processor)
+
+
 class ToolBaseplate__write_output_images(MockedTestCase):
 
     def setUp(self):
