@@ -128,10 +128,6 @@ class ToolBaseplate:
         if write_outputs:
             self.write_outputs()
 
-    def _test(self):
-        self.args = types.SimpleNamespace(x=2)
-        return self.args
-
     def create_processor(self) -> _image_processor.ImageProcessor:
         """
         Create an `giatools.image_processor.ImageProcessor` with the input images parsed from the command line. The
