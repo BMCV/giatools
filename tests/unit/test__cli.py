@@ -283,66 +283,41 @@ class ToolBaseplate__parse_args(MockedTestCase):
 
 
 @unittest.mock.patch('giatools.cli.ToolBaseplate.write_output_images')
-@unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
+@unittest.mock.patch('giatools.cli.ToolBaseplate.create_processor')
 class ToolBaseplate__run(MockedTestCase):
 
     def setUp(self):
         super().setUp()
         self.joint_axes = unittest.mock.Mock()
         self.tool = giatools.cli.ToolBaseplate()
-        self.tool.input_keys = ['input']
-        self.tool.output_keys = ['output']
-        self.args = unittest.mock.MagicMock()
-        self.args.input_images = {
-            'input': unittest.mock.Mock(),
-        }
-        self.args.output_filepaths = {
-            'output': unittest.mock.Mock(),
-        }
         self.processor_iteration = unittest.mock.Mock()
-        self.cli_image_processor.ImageProcessor.return_value.process.return_value = iter(
+
+    def _setup_mocks(self, mock_create_processor):
+        mock_create_processor.return_value.process.return_value = iter(
             [
                 self.processor_iteration,  # object yielded by the only iteration
             ],
         )
 
-    def _verify_calls(self, mock_write_output_images, write_output_images: bool):
-        self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
-        self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
+    def _verify_calls(self, mock_create_processor, mock_write_output_images, write_output_images: bool):
+        mock_create_processor.assert_called_once()
+        mock_create_processor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
         if write_output_images:
             mock_write_output_images.assert_called_once()
         else:
             mock_write_output_images.assert_not_called()
 
-    def test__without_args_attr__write_output_images(self, mock_parse_args, mock_write_output_images):
-        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-
-            def _parse_args_side_effect():
-                self.tool.args = self.args
-                return self.args
-
-            mock_parse_args.side_effect = _parse_args_side_effect
-            processor_iterations = list(self.tool.run(self.joint_axes))
-            mock_parse_args.assert_called_once()
+    def test(self, mock_create_processor, mock_write_output_images):
+        self._setup_mocks(mock_create_processor)
+        processor_iterations = list(self.tool.run(self.joint_axes))
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_output_images, write_output_images=True)
+        self._verify_calls(mock_create_processor, mock_write_output_images, write_output_images=True)
 
-    def test__with_args_attr__write_output_images(self, mock_parse_args, mock_write_output_images):
-        self.tool.args = self.args
-        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-            processor_iterations = list(self.tool.run(self.joint_axes))
-            mock_parse_args.assert_not_called()
+    def test__write_output_images_off(self, mock_create_processor, mock_write_output_images):
+        self._setup_mocks(mock_create_processor)
+        processor_iterations = list(self.tool.run(self.joint_axes, write_output_images=False))
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_output_images, write_output_images=True)
-
-    def test__with_args_attr__write_output_images_off(self, mock_parse_args, mock_write_output_images):
-        self.args.verbose = True
-        self.tool.args = self.args
-        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-            processor_iterations = list(self.tool.run(self.joint_axes, write_output_images=False))
-            mock_parse_args.assert_not_called()
-        self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_output_images, write_output_images=False)
+        self._verify_calls(mock_create_processor, mock_write_output_images, write_output_images=False)
 
 
 @unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
@@ -363,22 +338,20 @@ class ToolBaseplate__create_processor(MockedTestCase):
         self.assertIs(processor, self.cli_image_processor.ImageProcessor.return_value)
 
     def test__without_args_attr(self, mock_parse_args):
-        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
 
-            def _parse_args_side_effect():
-                self.tool.args = self.args
-                return self.args
+        def _parse_args_side_effect():
+            self.tool.args = self.args
+            return self.args
 
-            mock_parse_args.side_effect = _parse_args_side_effect
-            processor = self.tool.create_processor()
-            mock_parse_args.assert_called_once()
+        mock_parse_args.side_effect = _parse_args_side_effect
+        processor = self.tool.create_processor()
+        mock_parse_args.assert_called_once()
         self._verify(processor)
 
     def test__with_args_attr(self, mock_parse_args):
         self.tool.args = self.args
-        with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-            processor = self.tool.create_processor()
-            mock_parse_args.assert_not_called()
+        processor = self.tool.create_processor()
+        mock_parse_args.assert_not_called()
         self._verify(processor)
 
 
