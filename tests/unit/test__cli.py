@@ -282,7 +282,7 @@ class ToolBaseplate__parse_args(MockedTestCase):
         self._verify_verbose_output()
 
 
-@unittest.mock.patch('giatools.cli.ToolBaseplate.write_outputs')
+@unittest.mock.patch('giatools.cli.ToolBaseplate.write_output_images')
 @unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
 class ToolBaseplate__run(MockedTestCase):
 
@@ -306,15 +306,15 @@ class ToolBaseplate__run(MockedTestCase):
             ],
         )
 
-    def _verify_calls(self, mock_write_outputs, write_outputs: bool):
+    def _verify_calls(self, mock_write_output_images, write_output_images: bool):
         self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
         self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
-        if write_outputs:
-            mock_write_outputs.assert_called_once()
+        if write_output_images:
+            mock_write_output_images.assert_called_once()
         else:
-            mock_write_outputs.assert_not_called()
+            mock_write_output_images.assert_not_called()
 
-    def test__without_args_attr__write_outputs(self, mock_parse_args, mock_write_outputs):
+    def test__without_args_attr__write_output_images(self, mock_parse_args, mock_write_output_images):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
 
             def _parse_args_side_effect():
@@ -325,27 +325,27 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_called_once()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, write_outputs=True)
+        self._verify_calls(mock_write_output_images, write_output_images=True)
 
-    def test__with_args_attr__write_outputs(self, mock_parse_args, mock_write_outputs):
+    def test__with_args_attr__write_output_images(self, mock_parse_args, mock_write_output_images):
         self.tool.args = self.args
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, write_outputs=True)
+        self._verify_calls(mock_write_output_images, write_output_images=True)
 
-    def test__with_args_attr__write_outputs_off(self, mock_parse_args, mock_write_outputs):
+    def test__with_args_attr__write_output_images_off(self, mock_parse_args, mock_write_output_images):
         self.args.verbose = True
         self.tool.args = self.args
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-            processor_iterations = list(self.tool.run(self.joint_axes, write_outputs=False))
+            processor_iterations = list(self.tool.run(self.joint_axes, write_output_images=False))
             mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, write_outputs=False)
+        self._verify_calls(mock_write_output_images, write_output_images=False)
 
 
-class ToolBaseplate__write_outputs(MockedTestCase):
+class ToolBaseplate__write_output_images(MockedTestCase):
 
     def setUp(self):
         super().setUp()
@@ -380,20 +380,20 @@ class ToolBaseplate__write_outputs(MockedTestCase):
 
     def test(self):
         self.args.verbose = False
-        self.tool.write_outputs()
+        self.tool.write_output_images()
         self._verify_calls(verbose=False)
 
     def test__verbose(self):
         self.args.verbose = True
-        self.tool.write_outputs()
+        self.tool.write_output_images()
         self._verify_calls(verbose=True)
 
     def test__args_is_none(self):
         self.tool.args = None
         with self.assertRaises(RuntimeError):
-            self.tool.write_outputs()
+            self.tool.write_output_images()
 
     def test__processor_is_none(self):
         self.tool.processor = None
         with self.assertRaises(RuntimeError):
-            self.tool.write_outputs()
+            self.tool.write_output_images()

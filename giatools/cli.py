@@ -111,7 +111,11 @@ class ToolBaseplate:
         )
         return self.args
 
-    def run(self, joint_axes: str, write_outputs: bool = True) -> _T.Iterator[_image_processor.ProcessorIteration]:
+    def run(
+        self,
+        joint_axes: str,
+        write_output_images: bool = True,
+    ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
         Use the :py:ref:`create_processor` method to spin up an `giatools.image_processor.ImageProcessor` with the
         input images parsed from the command line, and write the output images to the file paths specified via command
@@ -125,8 +129,8 @@ class ToolBaseplate:
             RuntimeError: If Python version is less than 3.11.
         """
         yield from self.create_processor().process(joint_axes=joint_axes)
-        if write_outputs:
-            self.write_outputs()
+        if write_output_images:
+            self.write_output_images()
 
     def create_processor(self) -> _image_processor.ImageProcessor:
         """
@@ -142,7 +146,7 @@ class ToolBaseplate:
         self.processor = _image_processor.ImageProcessor(**args.input_images)
         return self.processor
 
-    def write_outputs(self):
+    def write_output_images(self):
         """
         Write the output images to the file paths specified via command line arguments.
 
