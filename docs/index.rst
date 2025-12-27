@@ -10,6 +10,7 @@ API
    :maxdepth: 1
 
    giatools
+   giatools.cli
    giatools.image
    giatools.image_processor
    giatools.io
