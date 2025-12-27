@@ -53,6 +53,10 @@ jobs:
       main_python_version: "3.11"
       gist-id: 07509ac0c0aa1d5a65ca03806bd3600b
       gist-filename: giatools.json
+      run: |
+        coverage run -m unittest discover -t "." -s "tests/$GROUP"
+        coverage combine || true
+        python -m coverage json --omit "tests/*" || true
     secrets:
       gist-auth: ${{ secrets.GIST_SECRET }}
 

@@ -9,3 +9,4 @@ tests/*-out-*
 /env
 /.coverage
 .DS_Store
+coverage.json

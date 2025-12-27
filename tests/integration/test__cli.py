@@ -1,4 +1,5 @@
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -17,6 +18,12 @@ def _threshold(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
 
 
 if __name__ == '__main__':
+    try:
+        import coverage
+        coverage.process_startup()
+    except ImportError:
+        pass
+
     tool = giatools.cli.ToolBaseplate('ToolBaseplate Test', params_required=False)
     tool.add_input_image('input1')
     tool.add_input_image('input2')
@@ -35,6 +42,7 @@ class ToolBaseplate(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.test_dir = pathlib.Path(__file__).parent.parent.parent
+        os.environ['COVERAGE_PROCESS_START'] = '.coveragerc'
 
     def _run_cli(self, *extra_args: str, check_success: bool = True, **kwargs) -> subprocess.CompletedProcess:
         kwargs = dict(kwargs)
