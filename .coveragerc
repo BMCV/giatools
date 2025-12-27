@@ -1,5 +1,3 @@
 [run]
 omit = tests/*
 parallel = True
-branch = True
-concurrency = multiprocessing

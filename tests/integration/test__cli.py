@@ -103,9 +103,13 @@ class ToolBaseplate(unittest.TestCase):
                 '--input2', 'tests/data/input4_uint8.jpg',
                 '--output', output_filepath,
             )
-            for key in ('input1', 'input2'):  # verify that each input image was loaded only once
+            for key in ('input1', 'input2'):  # verify that each input image was read only once
                 self.assertEqual(
                     sum(1 for line in result.stdout.splitlines() if line == f'[{key}] Input image axes: QTZYXC'), 1,
+                )
+            for key in ('output',):  # verify that each output image was written only once
+                self.assertEqual(
+                    sum(1 for line in result.stdout.splitlines() if line == f'[{key}] Output image axes: YXC'), 1,
                 )
 
     @minimum_python_version(3, 11)

@@ -10,3 +10,4 @@ tests/*-out-*
 /.coverage
 .DS_Store
 coverage.json
+.coverage.*
