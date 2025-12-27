@@ -26,6 +26,11 @@ class ToolBaseplate:
             $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
 
+    args: _T.Optional[types.SimpleNamespace] = None
+    """
+    Command-line arguments parsed from the command line (including the loaded input images).
+    """
+
     input_keys: _T.List[str]
     """
     List of input image keys.
@@ -36,9 +41,9 @@ class ToolBaseplate:
     List of output image keys.
     """
 
-    args: _T.Optional[types.SimpleNamespace] = None
+    processor: _T.Optional[_image_processor.ImageProcessor] = None
     """
-    Command-line arguments parsed from the command line (including the loaded input images).
+    The `giatools.image_processor.ImageProcessor` instantiated via the :py:meth:`create_processor` method.
     """
 
     def __init__(self, *args, params_required=True, **kwargs):
@@ -85,7 +90,7 @@ class ToolBaseplate:
     def parse_args(self) -> types.SimpleNamespace:
         """
         Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
-        images, and the output image file paths. The py:data:`args` attribute is also updated.
+        images, and the output image file paths. The py:data:`args` attribute is also populated.
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
@@ -106,18 +111,11 @@ class ToolBaseplate:
         )
         return self.args
 
-    def run(
-        self,
-        joint_axes: str,
-        args: _T.Optional[types.SimpleNamespace] = None,
-        write_outputs: bool = True,
-    ) -> _T.Iterator[_image_processor.ProcessorIteration]:
+    def run(self, joint_axes: str, write_outputs: bool = True) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
-        Spin up a `giatools.image_processor.ImageProcessor` with the input images parsed from the command line, and
-        write the output images to the file paths specified via command line arguments (if `write_outputs` is `True`).
-
-        The command line arguments are obtained via the :py:meth:`parse_args` method unless an explicit `args`
-        namespace is provided.
+        Use the :py:ref:`create_processor` method to spin up an `giatools.image_processor.ImageProcessor` with the
+        input images parsed from the command line, and write the output images to the file paths specified via command
+        line arguments (if `write_outputs` is `True`).
 
         .. note::
 
@@ -126,18 +124,38 @@ class ToolBaseplate:
         Raises:
             RuntimeError: If Python version is less than 3.11.
         """
-        if args is None:
-            args = self.args or self.parse_args()
-
-        processor = _image_processor.ImageProcessor(**args.input_images)
-        for processor_iteration in processor.process(joint_axes=joint_axes):
-            yield processor_iteration
-
+        yield from self.create_processor().process(joint_axes=joint_axes)
         if write_outputs:
-            for key, filepath in args.output_filepaths.items():
-                output_image = processor.outputs[key].normalize_axes_like(processor.image0.original_axes)
-                if args.verbose:
-                    print(f'[{key}] Output image axes: {output_image.axes}')
-                    print(f'[{key}] Output image shape: {output_image.data.shape}')
-                    print(f'[{key}] Output image dtype: {output_image.data.dtype}')
-                output_image.write(filepath)
+            self.write_outputs()
+
+    def create_processor(self) -> _image_processor.ImageProcessor:
+        """
+        Create an `giatools.image_processor.ImageProcessor` with the input images parsed from the command line. The
+        `giatools.image_processor.ImageProcessor` is returned and also made available via the :py:attr:`processor`
+        attribute.
+
+        The command line arguments are obtained via the :py:meth:`parse_args` method unless the py:data:`args`
+        attribute is already populated (which has precedence).
+        """
+        args = self.args or self.parse_args()
+        self.processor = _image_processor.ImageProcessor(**args.input_images)
+        return self.processor
+
+    def write_outputs(self):
+        """
+        Write the output images to the file paths specified via command line arguments.
+
+        The command line arguments must be provided via the py:data:`args` attribute.
+
+        Raises:
+            RuntimeError: If the py:data:`args` attribute is not populated.
+        """
+        if self.args is None:
+            raise RuntimeError('Command-line arguments have not been parsed; cannot write outputs.')
+        for key, filepath in self.args.output_filepaths.items():
+            output_image = self.processor.outputs[key].normalize_axes_like(self.processor.image0.original_axes)
+            if self.args.verbose:
+                print(f'[{key}] Output image axes: {output_image.axes}')
+                print(f'[{key}] Output image shape: {output_image.data.shape}')
+                print(f'[{key}] Output image dtype: {output_image.data.dtype}')
+            output_image.write(filepath)
