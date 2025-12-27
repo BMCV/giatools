@@ -135,4 +135,8 @@ class ToolBaseplate:
         if write_outputs:
             for key, filepath in args.output_filepaths.items():
                 output_image = processor.outputs[key].normalize_axes_like(processor.image0.original_axes)
+                if args.verbose:
+                    print(f'[{key}] Output image axes: {output_image.axes}')
+                    print(f'[{key}] Output image shape: {output_image.data.shape}')
+                    print(f'[{key}] Output image dtype: {output_image.data.dtype}')
                 output_image.write(filepath)

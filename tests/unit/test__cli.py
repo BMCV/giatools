@@ -28,6 +28,9 @@ class MockedTestCase(unittest.TestCase):
         self.cli_image_processor = unittest.mock.patch(
             'giatools.cli._image_processor',
         ).start()
+        self.builtins_print = unittest.mock.patch(
+            'builtins.print',
+        ).start()
 
         self.addCleanup(unittest.mock.patch.stopall)
 
@@ -293,11 +296,12 @@ class ToolBaseplate__run(MockedTestCase):
         self.tool.input_keys = ['input']
         self.tool.output_keys = ['output']
         self.args = unittest.mock.MagicMock()
+        self.args.verbose = False
         self.args.input_images = {
             'input': unittest.mock.Mock(),
         }
         self.args.output_filepaths = {
-            'input': unittest.mock.Mock(),
+            'output': unittest.mock.Mock(),
         }
         self.processor_iteration = unittest.mock.Mock()
         self.cli_image_processor.ImageProcessor.return_value.process.return_value = iter(
@@ -306,7 +310,7 @@ class ToolBaseplate__run(MockedTestCase):
             ],
         )
 
-    def _verify_calls(self):
+    def _verify_calls(self, verbose: bool):
         self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
         self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
         for key, filepath in self.args.output_filepaths.items():
@@ -314,12 +318,22 @@ class ToolBaseplate__run(MockedTestCase):
                 key
             ].normalize_axes_like.return_value
             output_image.write.assert_called_with(filepath)
+            if verbose:
+                self.builtins_print.assert_called()
+                for line in (
+                    f'[output] Output image shape: {output_image.data.shape}',
+                    f'[output] Output image dtype: {output_image.data.dtype}',
+                    f'[output] Output image axes: {output_image.axes}',
+                ):
+                    self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
+        if not verbose:
+            self.builtins_print.assert_not_called()
 
     def test__with_explicit_args(self, mock_parse_args):
         processor_iterations = list(self.tool.run(self.joint_axes, self.args))
         mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls()
+        self._verify_calls(verbose=False)
 
     def test__without_explicit_args(self, mock_parse_args):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
@@ -327,7 +341,7 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_called_once()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls()
+        self._verify_calls(verbose=False)
 
     def test__without_explicit_args__with_args_attr(self, mock_parse_args):
         self.tool.args = self.args
@@ -335,4 +349,11 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls()
+        self._verify_calls(verbose=False)
+
+    def test__verbose(self, mock_parse_args):
+        self.args.verbose = True
+        processor_iterations = list(self.tool.run(self.joint_axes, self.args))
+        mock_parse_args.assert_not_called()
+        self.assertEqual(processor_iterations, [self.processor_iteration])
+        self._verify_calls(verbose=True)

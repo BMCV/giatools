@@ -95,17 +95,10 @@ class ToolBaseplate(unittest.TestCase):
                 '--input2', 'tests/data/input4_uint8.jpg',
                 '--output', output_filepath,
             )
-            self.assertEqual(
-                result.stdout.splitlines(),
-                [
-                    '[input1] Input image axes: QTZYXC',
-                    '[input1] Input image shape: (1, 1, 1, 10, 10, 3)',
-                    '[input1] Input image dtype: uint8',
-                    '[input2] Input image axes: QTZYXC',
-                    '[input2] Input image shape: (1, 1, 1, 10, 10, 3)',
-                    '[input2] Input image dtype: uint8',
-                ],
-            )
+            for key in ('input1', 'input2'):  # verify that each input image was loaded only once
+                self.assertEqual(
+                    sum(1 for line in result.stdout.splitlines() if line == f'[{key}] Input image axes: QTZYXC'), 1,
+                )
 
     @minimum_python_version(3, 11)
     def test__params(self):
