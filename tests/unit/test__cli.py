@@ -293,7 +293,6 @@ class ToolBaseplate__run(MockedTestCase):
         self.tool.input_keys = ['input']
         self.tool.output_keys = ['output']
         self.args = unittest.mock.MagicMock()
-        self.args.verbose = False
         self.args.input_images = {
             'input': unittest.mock.Mock(),
         }
@@ -307,28 +306,13 @@ class ToolBaseplate__run(MockedTestCase):
             ],
         )
 
-    def _verify_calls(self, mock_write_outputs, verbose: bool, write_outputs: bool):
+    def _verify_calls(self, mock_write_outputs, write_outputs: bool):
         self.cli_image_processor.ImageProcessor.assert_called_with(**self.args.input_images)
         self.cli_image_processor.ImageProcessor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
         if write_outputs:
             mock_write_outputs.assert_called_once()
         else:
             mock_write_outputs.assert_not_called()
-        # for key, filepath in self.args.output_filepaths.items():
-        #     output_image = self.cli_image_processor.ImageProcessor.return_value.outputs[
-        #         key
-        #     ].normalize_axes_like.return_value
-        #     output_image.write.assert_called_with(filepath)
-        #     if verbose:
-        #         self.builtins_print.assert_called()
-        #         for line in (
-        #             f'[output] Output image shape: {output_image.data.shape}',
-        #             f'[output] Output image dtype: {output_image.data.dtype}',
-        #             f'[output] Output image axes: {output_image.axes}',
-        #         ):
-        #             self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
-        # if not verbose:
-        #     self.builtins_print.assert_not_called()
 
     def test__without_args_attr__write_outputs(self, mock_parse_args, mock_write_outputs):
         with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
@@ -341,7 +325,7 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_called_once()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, verbose=False, write_outputs=True)
+        self._verify_calls(mock_write_outputs, write_outputs=True)
 
     def test__with_args_attr__write_outputs(self, mock_parse_args, mock_write_outputs):
         self.tool.args = self.args
@@ -349,16 +333,7 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes))
             mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, verbose=False, write_outputs=True)
-
-    # def test__with_args_attr__verbose(self, mock_parse_args, mock_write_outputs):
-    #     self.args.verbose = True
-    #     self.tool.args = self.args
-    #     with unittest.mock.patch.object(self.tool, 'parse_args') as mock_parse_args:
-    #         processor_iterations = list(self.tool.run(self.joint_axes))
-    #         mock_parse_args.assert_not_called()
-    #     self.assertEqual(processor_iterations, [self.processor_iteration])
-    #     self._verify_calls(mock_write_outputs, verbose=True)
+        self._verify_calls(mock_write_outputs, write_outputs=True)
 
     def test__with_args_attr__write_outputs_off(self, mock_parse_args, mock_write_outputs):
         self.args.verbose = True
@@ -367,4 +342,58 @@ class ToolBaseplate__run(MockedTestCase):
             processor_iterations = list(self.tool.run(self.joint_axes, write_outputs=False))
             mock_parse_args.assert_not_called()
         self.assertEqual(processor_iterations, [self.processor_iteration])
-        self._verify_calls(mock_write_outputs, verbose=False, write_outputs=False)
+        self._verify_calls(mock_write_outputs, write_outputs=False)
+
+
+class ToolBaseplate__write_outputs(MockedTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.args = unittest.mock.MagicMock()
+        self.args.verbose = False
+        self.args.output_filepaths = {
+            'output': unittest.mock.Mock(),
+        }
+        self.tool = giatools.cli.ToolBaseplate()
+        self.tool.args = self.args
+        self.tool.processor = unittest.mock.MagicMock()
+        self.tool.processor.outputs = {
+            'output': unittest.mock.Mock(),
+        }
+
+    def _verify_calls(self, verbose: bool):
+        for key, filepath in self.args.output_filepaths.items():
+            output_image = self.tool.processor.outputs[
+                key
+            ].normalize_axes_like.return_value
+            output_image.write.assert_called_with(filepath)
+            if verbose:
+                self.builtins_print.assert_called()
+                for line in (
+                    f'[output] Output image shape: {output_image.data.shape}',
+                    f'[output] Output image dtype: {output_image.data.dtype}',
+                    f'[output] Output image axes: {output_image.axes}',
+                ):
+                    self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
+        if not verbose:
+            self.builtins_print.assert_not_called()
+
+    def test(self):
+        self.args.verbose = False
+        self.tool.write_outputs()
+        self._verify_calls(verbose=False)
+
+    def test__verbose(self):
+        self.args.verbose = True
+        self.tool.write_outputs()
+        self._verify_calls(verbose=True)
+
+    def test__args_is_none(self):
+        self.tool.args = None
+        with self.assertRaises(RuntimeError):
+            self.tool.write_outputs()
+
+    def test__processor_is_none(self):
+        self.tool.processor = None
+        with self.assertRaises(RuntimeError):
+            self.tool.write_outputs()

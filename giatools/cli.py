@@ -146,13 +146,16 @@ class ToolBaseplate:
         """
         Write the output images to the file paths specified via command line arguments.
 
-        The command line arguments must be provided via the py:data:`args` attribute.
+        The output images are obtained from the `giatools.image_processor.ImageProcessor` referenced by the
+        :py:attr:`processor` attribute. The command line arguments must be provided via the py:data:`args` attribute.
 
         Raises:
-            RuntimeError: If the py:data:`args` attribute is not populated.
+            RuntimeError: If the py:data:`args` or py:data:`processor` attributes are not populated.
         """
         if self.args is None:
             raise RuntimeError('Command-line arguments have not been parsed; cannot write outputs.')
+        if self.processor is None:
+            raise RuntimeError('Image processor has not been created; cannot write outputs.')
         for key, filepath in self.args.output_filepaths.items():
             output_image = self.processor.outputs[key].normalize_axes_like(self.processor.image0.original_axes)
             if self.args.verbose:
