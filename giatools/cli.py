@@ -98,6 +98,7 @@ class ToolBaseplate:
                 params = json.load(fp_params)
         self.args = types.SimpleNamespace(
             params=params,
+            verbose=args.verbose,
             input_filepaths=input_filepaths,
             input_images=input_images,
             output_filepaths=output_filepaths,

@@ -22,6 +22,7 @@ class MockedTestCase(unittest.TestCase):
         self.cli_types = unittest.mock.patch(
             'giatools.cli.types',
         ).start()
+        self.cli_types.SimpleNamespace.side_effect = MockedTestCase.mock_namespace
         self.cli_image = unittest.mock.patch(
             'giatools.cli._image',
         ).start()
@@ -33,6 +34,9 @@ class MockedTestCase(unittest.TestCase):
         ).start()
 
         self.addCleanup(unittest.mock.patch.stopall)
+
+    def mock_namespace(**kwargs):
+        return unittest.mock.Mock(**kwargs)
 
 
 class ToolBaseplate__init__(MockedTestCase):
@@ -154,11 +158,24 @@ class ToolBaseplate__parse_args(MockedTestCase):
         super().setUp()
         self.tool = giatools.cli.ToolBaseplate(params_required=False)
 
-    def test(self):
+    def _verify_verbose_output(self):
+        if self.tool.args.verbose:
+            self.builtins_print.assert_called()
+            for key, input_image in self.tool.args.input_images.items():
+                for line in (
+                    f'[{key}] Input image shape: {input_image.data.shape}',
+                    f'[{key}] Input image dtype: {input_image.data.dtype}',
+                    f'[{key}] Input image axes: {input_image.axes}',
+                ):
+                    self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
+        else:
+            self.builtins_print.assert_not_called()
+
+    def _test_default(self, verbose: bool):
         self.tool.input_keys = ['input1', 'input2']
         self.tool.output_keys = ['output1']
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
-            verbose=False,
+            verbose=verbose,
             params='params.json',
             input1='input1.png',
             input2='input2.png',
@@ -167,29 +184,31 @@ class ToolBaseplate__parse_args(MockedTestCase):
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
             args = self.tool.parse_args()
             self.cli_json.load.assert_called_with(mock_open())
+        self.assertIs(args, self.tool.args)
+        self.assertIs(args.params, self.cli_json.load.return_value)
+        self.assertIs(args.verbose, verbose)
+        self.assertEqual(args.input_filepaths, {'input1': 'input1.png', 'input2': 'input2.png'})
+        self.assertEqual(args.output_filepaths, {'output1': 'output1.png'})
+        self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
+        self.assertEqual(
+            args.input_images,
+            {
+                key: self.cli_image.Image.read.return_value for key in ('input1', 'input2')
+            }
+        )
         self.cli_image.Image.read.assert_has_calls(
             [
                 unittest.mock.call('input1.png'),
                 unittest.mock.call('input2.png'),
             ]
         )
-        self.cli_types.SimpleNamespace.assert_called_with(
-            params=self.cli_json.load.return_value,
-            input_filepaths={
-                'input1': 'input1.png',
-                'input2': 'input2.png',
-            },
-            input_images={
-                'input1': self.cli_image.Image.read.return_value,
-                'input2': self.cli_image.Image.read.return_value,
-            },
-            output_filepaths={
-                'output1': 'output1.png',
-            },
-            raw_args=self.tool.parser.parse_args.return_value,
-        )
-        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
-        self.assertIs(args, self.tool.args)
+        self._verify_verbose_output()
+
+    def test(self):
+        self._test_default(verbose=False)
+
+    def test__verbose(self):
+        self._test_default(verbose=True)
 
     def test__no_inputs(self):
         self.tool.output_keys = ['output1']
@@ -201,18 +220,15 @@ class ToolBaseplate__parse_args(MockedTestCase):
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
             args = self.tool.parse_args()
             self.cli_json.load.assert_called_with(mock_open())
-        self.cli_image.Image.read.assert_not_called()
-        self.cli_types.SimpleNamespace.assert_called_with(
-            params=self.cli_json.load.return_value,
-            input_filepaths=dict(),
-            input_images=dict(),
-            output_filepaths={
-                'output1': 'output1.png',
-            },
-            raw_args=self.tool.parser.parse_args.return_value,
-        )
-        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
         self.assertIs(args, self.tool.args)
+        self.assertIs(args.params, self.cli_json.load.return_value)
+        self.assertIs(args.verbose, False)
+        self.assertEqual(args.input_filepaths, dict())
+        self.assertEqual(args.output_filepaths, {'output1': 'output1.png'})
+        self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
+        self.assertEqual(args.input_images, dict())
+        self.cli_image.Image.read.assert_not_called()
+        self._verify_verbose_output()
 
     def test__no_outputs(self):
         self.tool.input_keys = ['input1', 'input2']
@@ -225,27 +241,25 @@ class ToolBaseplate__parse_args(MockedTestCase):
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
             args = self.tool.parse_args()
             self.cli_json.load.assert_called_with(mock_open())
+        self.assertIs(args, self.tool.args)
+        self.assertIs(args.params, self.cli_json.load.return_value)
+        self.assertIs(args.verbose, False)
+        self.assertEqual(args.input_filepaths, {'input1': 'input1.png', 'input2': 'input2.png'})
+        self.assertEqual(args.output_filepaths, dict())
+        self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
+        self.assertEqual(
+            args.input_images,
+            {
+                key: self.cli_image.Image.read.return_value for key in ('input1', 'input2')
+            }
+        )
         self.cli_image.Image.read.assert_has_calls(
             [
                 unittest.mock.call('input1.png'),
                 unittest.mock.call('input2.png'),
             ]
         )
-        self.cli_types.SimpleNamespace.assert_called_with(
-            params=self.cli_json.load.return_value,
-            input_filepaths={
-                'input1': 'input1.png',
-                'input2': 'input2.png',
-            },
-            input_images={
-                'input1': self.cli_image.Image.read.return_value,
-                'input2': self.cli_image.Image.read.return_value,
-            },
-            output_filepaths=dict(),
-            raw_args=self.tool.parser.parse_args.return_value,
-        )
-        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
-        self.assertIs(args, self.tool.args)
+        self._verify_verbose_output()
 
     def test__no_inputs_or_outputs(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
@@ -255,16 +269,15 @@ class ToolBaseplate__parse_args(MockedTestCase):
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
             args = self.tool.parse_args()
             self.cli_json.load.assert_called_with(mock_open())
-        self.cli_image.Image.read.assert_not_called()
-        self.cli_types.SimpleNamespace.assert_called_with(
-            params=self.cli_json.load.return_value,
-            input_filepaths=dict(),
-            input_images=dict(),
-            output_filepaths=dict(),
-            raw_args=self.tool.parser.parse_args.return_value,
-        )
-        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
         self.assertIs(args, self.tool.args)
+        self.assertIs(args.params, self.cli_json.load.return_value)
+        self.assertIs(args.verbose, False)
+        self.assertEqual(args.input_filepaths, dict())
+        self.assertEqual(args.output_filepaths, dict())
+        self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
+        self.assertEqual(args.input_images, dict())
+        self.cli_image.Image.read.assert_not_called()
+        self._verify_verbose_output()
 
     def test__no_inputs_or_outputs__no_params(self):
         self.tool.parser.parse_args.return_value = unittest.mock.Mock(
@@ -274,16 +287,16 @@ class ToolBaseplate__parse_args(MockedTestCase):
         with unittest.mock.patch('builtins.open', unittest.mock.mock_open()) as mock_open:
             args = self.tool.parse_args()
             mock_open.assert_not_called()
-        self.cli_image.Image.read.assert_not_called()
-        self.cli_types.SimpleNamespace.assert_called_with(
-            params=None,
-            input_filepaths=dict(),
-            input_images=dict(),
-            output_filepaths=dict(),
-            raw_args=self.tool.parser.parse_args.return_value,
-        )
-        self.assertIs(args, self.cli_types.SimpleNamespace.return_value)
+            self.cli_json.load.assert_not_called()
         self.assertIs(args, self.tool.args)
+        self.assertIsNone(args.params)
+        self.assertIs(args.verbose, False)
+        self.assertEqual(args.input_filepaths, dict())
+        self.assertEqual(args.output_filepaths, dict())
+        self.assertIs(args.raw_args, self.tool.parser.parse_args.return_value)
+        self.assertEqual(args.input_images, dict())
+        self.cli_image.Image.read.assert_not_called()
+        self._verify_verbose_output()
 
 
 @unittest.mock.patch('giatools.cli.ToolBaseplate.parse_args')
