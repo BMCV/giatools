@@ -130,3 +130,21 @@ class ProcessorIteration(unittest.TestCase):
         self.processor.outputs = {'output_key': unittest.mock.MagicMock()}
         self.processor_iteration['output_key'] = unittest.mock.MagicMock()
         self.processor.create_output_image.assert_not_called()
+
+    @unittest.mock.patch('giatools.image_processor.apply_output_dtype_hint')
+    @unittest.mock.patch('giatools.image_processor._Image')
+    def test__setitem__with_output_dtype_hints(self, mock_image, mock_apply_output_dtype_hint):
+        output_dtype_hint = unittest.mock.Mock()
+        self.output_dtype_hints['output_key'] = output_dtype_hint
+        output_data = unittest.mock.MagicMock()
+        self.processor_iteration['output_key'] = output_data
+        mock_image.assert_called_once_with(data=output_data, axes='YX')
+        mock_apply_output_dtype_hint.assert_called_once_with(
+            self.processor.image0,
+            mock_image.return_value.reorder_axes_like(),
+            output_dtype_hint,
+        )
+        self.processor.create_output_image.assert_called_once_with(
+            'output_key',
+            mock_apply_output_dtype_hint.return_value.data.dtype,
+        )
