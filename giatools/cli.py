@@ -17,13 +17,13 @@ class ToolBaseplate:
 
         .. literalinclude :: examples/cli.py
 
-        .. runblock:: console
+    #    .. runblock:: console
 
-            $ python -m examples.cli --help
+    #        $ python -m examples.cli --help
 
-        .. runblock:: console
+    #    .. runblock:: console
 
-            $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
+    #        $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
 
     args: _T.Optional[types.SimpleNamespace] = None

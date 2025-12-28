@@ -59,7 +59,7 @@ class ImageProcessor:
 
         Example:
 
-            .. runblock:: pycon
+            .. testcode::
 
                 >>> from giatools import Image, ImageProcessor
                 >>> image = Image.read('data/input4_uint8.png')

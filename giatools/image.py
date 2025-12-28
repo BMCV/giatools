@@ -32,7 +32,7 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
+        .. testcode::
 
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
@@ -45,7 +45,7 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
+        .. testcode::
 
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
@@ -58,7 +58,7 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
+        .. testcode::
 
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
@@ -74,7 +74,7 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
+        .. testcode::
 
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
@@ -233,7 +233,7 @@ class Image:
 
         Example:
 
-            .. runblock:: pycon
+            .. testcode::
 
                 >>> from giatools import Image
                 >>> image = Image.read('data/input7_uint8_zcyx.tiff')
@@ -273,7 +273,7 @@ class Image:
 
         Example:
 
-            .. runblock:: pycon
+            .. testcode::
 
                 >>> from giatools import Image
                 >>> import numpy as np
@@ -297,7 +297,7 @@ class Image:
 
         Example:
 
-            .. runblock:: pycon
+            .. testcode::
 
                 >>> from giatools import Image
                 >>> import numpy as np

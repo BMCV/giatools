@@ -126,7 +126,7 @@ def peek_num_images_in_file(filepath: _T.PathLike, *args: _T.Any, **kwargs: _T.A
 
     Example:
 
-        .. runblock:: pycon
+        .. testcode::
 
             >>> from giatools.io import peek_num_images_in_file
             >>> print(
