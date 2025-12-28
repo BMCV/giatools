@@ -148,3 +148,154 @@ class ProcessorIteration(unittest.TestCase):
             'output_key',
             mock_apply_output_dtype_hint.return_value.data.dtype,
         )
+
+
+class apply_output_dtype_hint(unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.base_image = unittest.mock.MagicMock()
+        self.image = unittest.mock.MagicMock()
+        self.dtype_hint = unittest.mock.Mock()
+
+    def _setup_np_mock(self, mock_np):
+        for dtype in ('float16', 'float32', 'float64', 'int16', 'uint8'):
+            setattr(mock_np, dtype, unittest.mock.Mock())
+            getattr(mock_np, dtype).name = dtype
+
+        def _issubdtype(dtype, superset):
+            self.assertIs(superset, mock_np.floating)
+            return dtype in (mock_np.float16, mock_np.float32, mock_np.float64)
+
+        mock_np.issubdtype.side_effect = _issubdtype
+
+    def test__invalid_dtype_hint(self):
+        dtype_hint = 'invalid_dtype_hint'
+        with self.assertRaisesRegex(
+            ValueError,
+            f'Invalid dtype hint: "{dtype_hint}"'
+        ):
+            giatools.image_processor.apply_output_dtype_hint(
+                self.base_image,
+                self.image,
+                dtype_hint,
+            )
+
+    def test__binary(self):
+        for dtype_hint in ('binary', 'bool'):
+            with self.subTest(dtype_hint=dtype_hint):
+                self.image.reset_mock()
+                result = giatools.image_processor.apply_output_dtype_hint(
+                    self.base_image,
+                    self.image,
+                    dtype_hint,
+                )
+                self.image.astype.assert_called_once_with(bool)
+                self.assertIs(result, self.image.astype.return_value)
+
+    @unittest.mock.patch('giatools.image_processor._np')
+    def test__exact_float_types(self, mock_np):
+        self._setup_np_mock(mock_np)
+        for dtype_hint in ('float16', 'float32', 'float64'):
+            with self.subTest(dtype_hint=dtype_hint):
+                self.image.reset_mock()
+                result = giatools.image_processor.apply_output_dtype_hint(
+                    self.base_image,
+                    self.image,
+                    dtype_hint,
+                )
+                self.image.clip_to_dtype.assert_called_once_with(getattr(mock_np, dtype_hint))
+                self.image.clip_to_dtype.return_value.astype.assert_called_once_with(getattr(mock_np, dtype_hint))
+                self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+
+    @unittest.mock.patch('giatools.image_processor._np')
+    def test__floating(self, mock_np):
+        self._setup_np_mock(mock_np)
+        for src_dtype in (mock_np.float16, mock_np.int16):
+            with self.subTest(src_dtype=src_dtype.name):
+                self.image.reset_mock()
+                self.image.data.dtype = src_dtype
+                result = giatools.image_processor.apply_output_dtype_hint(
+                    self.base_image,
+                    self.image,
+                    'floating',
+                )
+                if src_dtype is mock_np.float16:
+                    self.assertIs(result, self.image)
+                else:
+                    self.image.clip_to_dtype.assert_called_once_with(mock_np.float64)
+                    self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.float64)
+                    self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+
+    @unittest.mock.patch('giatools.image_processor._np')
+    def test__preserve_floating(self, mock_np):
+        self._setup_np_mock(mock_np)
+        for src_dtype in (mock_np.float16, mock_np.int16):
+            for input_image_dtype in (mock_np.float32, mock_np.uint8):
+                with self.subTest(src_dtype=src_dtype.name, input_image_dtype=input_image_dtype.name):
+                    self.image.reset_mock()
+                    self.base_image.data.dtype = input_image_dtype
+                    self.image.data.dtype = src_dtype
+                    result = giatools.image_processor.apply_output_dtype_hint(
+                        self.base_image,
+                        self.image,
+                        'preserve_floating',
+                    )
+                    if src_dtype is mock_np.float16:
+                        # Image is already float16, so no conversion needed
+                        self.image.clip_to_dtype.assert_not_called()
+                        self.image.astype.assert_not_called()
+                        self.assertIs(result, self.image)
+                    elif input_image_dtype is mock_np.float32:
+                        # Image is not floating, but input image is float32, so convert to input image dtype (float32)
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.float32)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.float32)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    elif input_image_dtype is mock_np.uint8:
+                        # Image is not floating, input image is uint8, so convert to float64
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.float64)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.float64)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    else:
+                        assert False, (  # sanity check (should not be reached)
+                            f'src_dtype={src_dtype.name}, input_image_dtype={input_image_dtype.name}'
+                        )
+
+    @unittest.mock.patch('giatools.image_processor._np')
+    def test__preserve(self, mock_np):
+        self._setup_np_mock(mock_np)
+        for src_dtype in (mock_np.float16, mock_np.int16):
+            for input_image_dtype in (mock_np.float32, mock_np.uint8):
+                with self.subTest(src_dtype=src_dtype.name, input_image_dtype=input_image_dtype.name):
+                    self.image.reset_mock()
+                    self.base_image.data.dtype = input_image_dtype
+                    self.image.data.dtype = src_dtype
+                    result = giatools.image_processor.apply_output_dtype_hint(
+                        self.base_image,
+                        self.image,
+                        'preserve',
+                    )
+                    if src_dtype is mock_np.float16 and input_image_dtype is mock_np.float32:
+                        # Image must be converted to float32 (input image dtype)
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.float32)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.float32)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    elif src_dtype is mock_np.float16 and input_image_dtype is mock_np.uint8:
+                        # Image must be converted to uint8 (input image dtype)
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.uint8)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.uint8)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    elif src_dtype is mock_np.int16 and input_image_dtype is mock_np.float32:
+                        # Image must be converted to float32 (input image dtype)
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.float32)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.float32)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    elif src_dtype is mock_np.int16 and input_image_dtype is mock_np.uint8:
+                        # Image must be converted to uint8 (input image dtype)
+                        self.image.clip_to_dtype.assert_called_once_with(mock_np.uint8)
+                        self.image.clip_to_dtype.return_value.astype.assert_called_once_with(mock_np.uint8)
+                        self.assertIs(result, self.image.clip_to_dtype.return_value.astype.return_value)
+                    else:
+                        assert False, (  # sanity check (should not be reached)
+                            f'src_dtype={src_dtype.name}, input_image_dtype={input_image_dtype.name}'
+                        )

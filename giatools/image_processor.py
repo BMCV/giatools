@@ -13,8 +13,8 @@ OutputDTypeHint = _T.Literal[
     'float16',
     'float32',
     'float64',
-    'floating',           # any float type (keep the float type passed to the processor, or convert to float64)
-    'preserve_floating',  # use the same dtype as the input image if it is a float type; otherwise same as `floating`
+    'floating',           # use the "native" float type passed to the processor, or convert to float64
+    'preserve_floating',  # use the float types of the following precedence: (i) native, (ii) input, (iii) float64
     'preserve',           # use the same dtype as the input image
 ]
 
@@ -39,18 +39,25 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
             else:
                 return image.clip_to_dtype(_np.float64).astype(_np.float64)  # clip and convert to float64
         else:
-            return image.clip_to_dtype(dtype_hint).astype(dtype_hint)  # clip and convert to specified float type
+            dtype = getattr(_np, dtype_hint)
+            return image.clip_to_dtype(dtype).astype(dtype)  # clip and convert to specified float type
 
     # Use the same dtype as the input image if it is a float type; otherwise same as `floating`
     if dtype_hint == 'preserve_floating':
-        if _np.issubdtype(base_image.data.dtype, _np.floating):
-            return apply_output_dtype_hint(base_image, image, base_image.data.dtype.name)
+        if _np.issubdtype(image.data.dtype, _np.floating):
+            return image  # no conversion needed, already a float type
+        elif _np.issubdtype(base_image.data.dtype, _np.floating):
+            return apply_output_dtype_hint(base_image, image, 'preserve')  # clip and convert to the input image dtype
         else:
-            return apply_output_dtype_hint(base_image, image, 'floating')
+            return apply_output_dtype_hint(base_image, image, 'float64')  # clip and convert to float64
 
     # Use the same dtype as the input image
     if dtype_hint == 'preserve':
-        return apply_output_dtype_hint(base_image, image, base_image.data.dtype.name)
+        return image.clip_to_dtype(  # clip and convert to the input image dtype
+            base_image.data.dtype,
+        ).astype(
+            base_image.data.dtype,
+        )
 
     # Invalid dtype hint
     else:
