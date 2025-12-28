@@ -90,7 +90,7 @@ class ToolBaseplate:
     def parse_args(self) -> types.SimpleNamespace:
         """
         Parse the command-line arguments and return a namespace that contains the JSON-encoded parameters, the input
-        images, and the output image file paths. The py:data:`args` attribute is also populated.
+        images, and the output image file paths. The :py:attr:`args` attribute is also populated.
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
@@ -138,7 +138,7 @@ class ToolBaseplate:
         `giatools.image_processor.ImageProcessor` is returned and also made available via the :py:attr:`processor`
         attribute.
 
-        The command line arguments are obtained via the :py:meth:`parse_args` method unless the py:data:`args`
+        The command line arguments are obtained via the :py:meth:`parse_args` method unless the :py:attr:`args`
         attribute is already populated (which has precedence).
         """
         args = self.args or self.parse_args()
@@ -151,10 +151,10 @@ class ToolBaseplate:
         Write the output images to the file paths specified via command line arguments.
 
         The output images are obtained from the `giatools.image_processor.ImageProcessor` referenced by the
-        :py:attr:`processor` attribute. The command line arguments must be provided via the py:data:`args` attribute.
+        :py:attr:`processor` attribute. The command line arguments must be provided via the :py:attr:`args` attribute.
 
         Raises:
-            RuntimeError: If the py:data:`args` or py:data:`processor` attributes are not populated.
+            RuntimeError: If the :py:attr:`args` or :py:attr:`processor` attributes are not populated.
         """
         if self.args is None:
             raise RuntimeError('Command-line arguments have not been parsed; cannot write outputs.')
