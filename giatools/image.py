@@ -32,11 +32,10 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
-
-            >>> from giatools import Image
-            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.axes)
+        >>> from giatools import Image
+        >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+        >>> print(image.axes)
+        QTZYXC
     """
 
     data: _T.NDArray
@@ -45,11 +44,10 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
-
-            >>> from giatools import Image
-            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.data.shape)
+        >>> from giatools import Image
+        >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+        >>> print(image.data.shape)
+        (1, 1, 25, 50, 50, 2)
     """
 
     metadata: _metadata.Metadata
@@ -58,13 +56,14 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
-
-            >>> from giatools import Image
-            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.metadata.pixel_size)
-            >>> print(image.metadata.z_spacing)
-            >>> print(image.metadata.unit)
+        >>> from giatools import Image
+        >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+        >>> print(image.metadata.pixel_size)
+        (0.43564006198286803, 0.43564006198286803)
+        >>> print(image.metadata.z_spacing)
+        0.05445500181716341
+        >>> print(image.metadata.unit)
+        um
     """
 
     original_axes: _T.Optional[str]
@@ -74,11 +73,10 @@ class Image:
 
     Example:
 
-        .. runblock:: pycon
-
-            >>> from giatools import Image
-            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.original_axes)
+        >>> from giatools import Image
+        >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+        >>> print(image.original_axes)
+        ZCYX
     """
 
     def __init__(
@@ -233,17 +231,16 @@ class Image:
 
         Example:
 
-            .. runblock:: pycon
-
-                >>> from giatools import Image
-                >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-                >>> for _, section in image.iterate_jointly('XY'):
-                ...     print(
-                ...         section.data.shape,
-                ...         section.axes,
-                ...         section.original_axes,
-                ...     )
-                ...     break
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> for _, section in image.iterate_jointly('XY'):
+            ...     print(
+            ...         section.data.shape,
+            ...         section.axes,
+            ...         section.original_axes,
+            ...     )
+            ...     break
+            (50, 50) XY YX
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
@@ -273,44 +270,48 @@ class Image:
 
         Example:
 
-            .. runblock:: pycon
-
-                >>> from giatools import Image
-                >>> import numpy as np
-                >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
-                >>> print(image.get_anisotropy())
-                >>>
-                >>> image.metadata.pixel_size = (1.0, 1.2)
-                >>> print(image.get_anisotropy())
-                >>> print(image.get_anisotropy('XY'))
-                >>> image.metadata.pixel_size = (1.0, 1.0)
-                >>> print(image.get_anisotropy())
-                >>>
-                >>> image.axes = 'ZYX'
-                >>> print(image.get_anisotropy())
-                >>> print(image.get_anisotropy(axes='YX'))
-                >>> image.metadata.z_spacing = 1.0
-                >>> print(image.get_anisotropy())
+            >>> from giatools import Image
+            >>> import numpy as np
+            >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
+            >>> print(image.get_anisotropy())
+            None
+            >>>
+            >>> image.metadata.pixel_size = (1.0, 1.2)
+            >>> print(image.get_anisotropy())
+            (1.0954451150103324, 0.9128709291752769)
+            >>> print(image.get_anisotropy('XY'))
+            (0.9128709291752769, 1.0954451150103324)
+            >>> image.metadata.pixel_size = (1.0, 1.0)
+            >>> print(image.get_anisotropy())
+            (1.0, 1.0)
+            >>>
+            >>> image.axes = 'ZYX'
+            >>> print(image.get_anisotropy())
+            None
+            >>> print(image.get_anisotropy(axes='YX'))
+            (1.0, 1.0)
+            >>> image.metadata.z_spacing = 1.0
+            >>> print(image.get_anisotropy())
+            (1.0, 1.0, 1.0)
 
         Scaling the pixel/voxel size of each axis by the reciprocal of the corresponding anisotropy factor yields the
         isotropic pixel/voxel size.
 
         Example:
 
-            .. runblock:: pycon
-
-                >>> from giatools import Image
-                >>> import numpy as np
-                >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
-                >>> image.metadata.pixel_size = (1.0, 1.2)  # X, Y
-                >>> image.metadata.z_spacing = 1.1
-                >>>
-                >>> anisotropy = image.get_anisotropy('XYZ')
-                >>> print(
-                ...     image.metadata.pixel_size[0] / anisotropy[0],  # X
-                ...     image.metadata.pixel_size[1] / anisotropy[1],  # Y
-                ...     image.metadata.z_spacing / anisotropy[2],
-                ... )
+            >>> from giatools import Image
+            >>> import numpy as np
+            >>> image = Image(np.zeros((10, 20, 30)), axes='CYX')
+            >>> image.metadata.pixel_size = (1.0, 1.2)  # X, Y
+            >>> image.metadata.z_spacing = 1.1
+            >>>
+            >>> anisotropy = image.get_anisotropy('XYZ')
+            >>> print(
+            ...     image.metadata.pixel_size[0] / anisotropy[0],  # X
+            ...     image.metadata.pixel_size[1] / anisotropy[1],  # Y
+            ...     image.metadata.z_spacing / anisotropy[2],
+            ... )
+            1.0969613104865237 1.0969613104865237 1.0969613104865237
         """
         if axes is None:
             axes = self.axes

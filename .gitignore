@@ -11,3 +11,4 @@ tests/*-out-*
 .DS_Store
 coverage.json
 .coverage.*
+/docs/_build

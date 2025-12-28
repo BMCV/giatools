@@ -97,3 +97,26 @@ jobs:
           python -c "import giatools.metadata"
           python -c "import giatools.pandas"
           python -c "import giatools.util"
+
+  doctest:
+    name: doctest
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r docs/requirements.txt
+
+      - name: Run doctest
+        working-directory: ./docs
+        run: |
+          PYTHONPATH=".." sphinx-build -b doctest . _build

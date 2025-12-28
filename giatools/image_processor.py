@@ -59,33 +59,33 @@ class ImageProcessor:
 
         Example:
 
-            .. runblock:: pycon
-
-                >>> from giatools import Image, ImageProcessor
-                >>> image = Image.read('data/input4_uint8.png')
-                >>> print(image.axes, image.data.shape)
-                >>>
-                >>> proc = ImageProcessor(image)
-                >>> for section in proc.process('XY'):
-                ...     section['result'] = (
-                ...         section[0].data > section[0].data.mean()
-                ...     )
-                >>>
-                >>> import numpy as np
-                >>> expected_result = np.stack(
-                ...     [
-                ...         image.data[..., c] > image.data[..., c].mean()
-                ...         for c in range(image.data.shape[-1])
-                ...     ],
-                ...     axis=-1,
-                ... )
-                >>> print(
-                ...     np.allclose(
-                ...         proc.outputs['result'].data,
-                ...         expected_result,
-                ...     ),
-                ...     proc.outputs['result'].metadata == image.metadata,
-                ... )
+            >>> from giatools import Image, ImageProcessor
+            >>> image = Image.read('data/input4_uint8.png')
+            >>> print(image.axes, image.data.shape)
+            QTZYXC (1, 1, 1, 10, 10, 3)
+            >>>
+            >>> proc = ImageProcessor(image)
+            >>> for section in proc.process('XY'):
+            ...     section['result'] = (
+            ...         section[0].data > section[0].data.mean()
+            ...     )
+            >>>
+            >>> import numpy as np
+            >>> expected_result = np.stack(
+            ...     [
+            ...         image.data[..., c] > image.data[..., c].mean()
+            ...         for c in range(image.data.shape[-1])
+            ...     ],
+            ...     axis=-1,
+            ... )
+            >>> print(
+            ...     np.allclose(
+            ...         proc.outputs['result'].data,
+            ...         expected_result,
+            ...     ),
+            ...     proc.outputs['result'].metadata == image.metadata,
+            ... )
+            True True
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
