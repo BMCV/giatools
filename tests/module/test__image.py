@@ -8,7 +8,6 @@ import unittest.mock
 import numpy as np
 
 import giatools.image
-import giatools.metadata
 from giatools.typing import (
     Optional,
     Tuple,
@@ -245,7 +244,7 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))
 
 
-class Image__astype(ImageTestCase):  # TODO: use a mock for `metadata`
+class Image__astype(ImageTestCase):
 
     exact_dtype_list = [
         np.uint8,
@@ -276,7 +275,7 @@ class Image__astype(ImageTestCase):  # TODO: use a mock for `metadata`
         original_axes='QTCYXZ',
         min_value: Optional[float] = None,
         max_value: Optional[float] = None,
-        metadata: Optional[giatools.metadata.Metadata] = None,
+        metadata: Optional[unittest.mock.Mock] = None,
     ) -> giatools.image.Image:
         """
         Create a test image with random data of the given data type.
@@ -293,7 +292,12 @@ class Image__astype(ImageTestCase):  # TODO: use a mock for `metadata`
                 np.random.rand(*shape) * (max_value - min_value) + min_value
             ).clip(min_value, max_value).astype(dtype)
             assert np.isinf(data).sum() == 0, f'min_value={min_value}, max_value={max_value}'  # sanity check
-        return giatools.image.Image(data=data, axes=axes, original_axes=original_axes, metadata=metadata)
+        return giatools.image.Image(
+            data=data,
+            axes=axes,
+            original_axes=original_axes,
+            metadata=metadata if metadata is not None else unittest.mock.Mock(),
+        )
 
     def _test_conversion(
         self,
