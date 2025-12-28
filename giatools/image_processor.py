@@ -6,7 +6,6 @@ import numpy as _np
 import giatools.typing as _T
 from giatools.image import Image as _Image
 
-
 OutputDTypeHint = _T.Literal[
     'binary',  # alias for `bool`
     'bool',    # boolean dtype
