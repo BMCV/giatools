@@ -17,13 +17,9 @@ class ToolBaseplate:
 
         .. literalinclude :: examples/cli.py
 
-    #    .. runblock:: console
+        .. command-output:: python -m examples.cli --help
 
-    #        $ python -m examples.cli --help
-
-    #    .. runblock:: console
-
-    #        $ python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
+        .. command-output:: python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
 
     args: _T.Optional[types.SimpleNamespace] = None

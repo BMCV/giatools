@@ -7,4 +7,5 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
+    'sphinxcontrib.programoutput',
 ]
