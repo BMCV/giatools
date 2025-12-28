@@ -14,14 +14,25 @@ OutputDTypeHint = _T.Literal[
     'float32',
     'float64',
     'floating',           # use the "native" float type passed to the processor, or convert to float64
-    'preserve_floating',  # use the float types of the following precedence: (i) native, (ii) input, (iii) float64
     'preserve',           # use the same dtype as the input image
+    'preserve_floating',  # use the float types of the following precedence: (i) native, (ii) input, (iii) float64
 ]
 
 
 def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: OutputDTypeHint) -> _Image:
     """
-    Applies the specified output data type hint to the given `image`.
+    Convert the data type of the `image` according to the specified output data type hint.
+
+    This image is not changed in place, a new image is returned (the data can be copied, but must not).
+
+    The `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
+
+    - `'binary'` or `'bool'`: Convert to boolean type.
+    - `'float16'`, `'float32'`, `'float64'`: Convert to the explicitly specified float type.
+    - `'floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to float64.
+    - `'preserve'`: Convert to the same dtype as the input image `base_image`.
+    - `'preserve_floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to the
+      float type of the input image `base_image`, if applicable; otherwise, convert to float64.
 
     Raises:
         ValueError: If `dtype_hint` is invalid.
@@ -115,6 +126,10 @@ class ImageProcessor:
         objects that provide access to the corresponding sections of the input and output images.
 
         The axes in the yielded image sections correspond exactly to the `joint_axes` parameter (in the given order).
+
+        The data written to the output images in each iteration is automatically normalized according to the policy
+        specified for the respective output image via the `output_dtype_hints` mapping (dictionary of output keys to
+        the respective policies; see :py:func:`apply_output_dtype_hint` for a list of possible values).
 
         .. note::
 
