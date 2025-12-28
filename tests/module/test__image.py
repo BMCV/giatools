@@ -8,7 +8,10 @@ import unittest.mock
 import numpy as np
 
 import giatools.image
-from giatools.typing import Tuple
+from giatools.typing import (
+    Optional,
+    Tuple,
+)
 
 from ..tools import (
     minimum_python_version,
@@ -239,3 +242,112 @@ class Image__iterate_jointly(unittest.TestCase):
     @permute_axes('YX', name='joint_axes')
     def test__dask_array__zyx__iterate__yx(self, joint_axes: str):
         self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))
+
+
+class Image__astype(ImageTestCase):
+
+    exact_dtype_list = [
+        np.uint8,
+        np.int8,
+        np.uint16,
+        np.int16,
+        np.uint32,
+        np.int32,
+        np.uint64,
+        np.int64,
+        np.float16,
+        np.float32,
+        np.float64,
+    ]
+
+    inexact_dtype_list = [
+        np.floating,
+        np.integer,
+        np.signedinteger,
+        np.unsignedinteger,
+    ]
+
+    def _create_image(
+        self,
+        dtype: np.dtype,
+        shape=(2, 3, 26, 32),
+        axes='CYXZ',
+        original_axes='QTCYXZ'
+    ) -> giatools.image.Image:
+        """
+        Create a test image with random data of the given data type.
+        """
+        np.random.seed(0)
+        if np.issubdtype(dtype, np.integer):
+            value_min = np.iinfo(dtype).min
+            value_max = np.iinfo(dtype).max
+            data = np.random.randint(value_min, value_max, shape, dtype=dtype)
+        else:
+            data = (np.random.rand(*shape) * 2 - 1).astype(dtype)
+        return giatools.image.Image(data=data, axes=axes, original_axes=original_axes)
+
+    def _test_conversion_to(self, img, dtype: np.dtype, force_copy: bool, expected_dtype: Optional[np.dtype] = None):
+        if expected_dtype is None:
+            expected_dtype = dtype
+        original_dtype = img.data.dtype
+        origianl_metadata = img.metadata
+        original_axes = img.axes
+        original_original_axes = img.original_axes
+        img_converted = img.astype(dtype, force_copy=force_copy)
+        self.assertEqual(img.data.dtype, original_dtype)
+        self.assertIs(img_converted.metadata, origianl_metadata)
+        self.assertEqual(img_converted.axes, original_axes)
+        self.assertEqual(img_converted.original_axes, original_original_axes)
+        self.assertEqual(img_converted.data.dtype, expected_dtype)
+        if expected_dtype == original_dtype:
+            if force_copy:
+                self.assertIsNot(img.data, img_converted.data)
+            else:
+                self.assertIs(img.data, img_converted.data)
+
+    def test__exact(self):
+        for src_dtype in self.exact_dtype_list:
+            for dst_dtype in self.exact_dtype_list:
+                for force_copy in (False, True):
+                    with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
+                        img = self._create_image(src_dtype)
+                        self._test_conversion_to(img, dst_dtype, force_copy=force_copy)
+
+    def test__inexact(self):
+        for src_dtype in self.exact_dtype_list:
+            for dst_dtype in self.inexact_dtype_list:
+                for force_copy in (False, True):
+                    with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
+                        img = self._create_image(src_dtype)
+
+                        if dst_dtype == np.floating:
+                            if src_dtype in (np.float16, np.float32, np.float64):
+                                expected_dtype = src_dtype
+                            else:
+                                expected_dtype = np.float64
+
+                        elif dst_dtype == np.integer:
+                            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
+                                expected_dtype = src_dtype
+                            elif src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
+                                expected_dtype = src_dtype
+                            else:
+                                expected_dtype = np.int64
+
+                        elif dst_dtype == np.signedinteger:
+                            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
+                                expected_dtype = src_dtype
+                            else:
+                                expected_dtype = np.int64
+
+                        elif dst_dtype == np.unsignedinteger:
+                            if src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
+                                expected_dtype = src_dtype
+                            else:
+                                expected_dtype = np.uint64
+
+                        self._test_conversion_to(img, dst_dtype, force_copy=force_copy, expected_dtype=expected_dtype)
+
+    def test(self):
+        img = self._create_image(np.float64)
+        self._test_conversion_to(img, np.signedinteger, force_copy=False, expected_dtype=np.int64)
