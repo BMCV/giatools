@@ -433,3 +433,45 @@ class Image:
             original_axes=self.original_axes,
             metadata=self.metadata,
         )
+
+    def clip_to_dtype(self, dtype: _np.dtype, force_copy: bool = False) -> _T.Self:
+        """
+        Clips the values of this image to the valid range of the specified `dtype`.
+
+        This image is not changed in place. If the values of this image are already within the valid range of the
+        target `dtype`, the image itself is returned (unless `force_copy` is `True`). Otherwise, a new image is
+        returned that has the same data type as this image. The new image references the original metadata.
+
+        Raises:
+            TypeError: If `dtype` is `bool`.
+        """
+        if dtype is bool:
+            raise TypeError('Clipping to boolean dtype is not supported.')
+
+        # Determine the actual range of the source image
+        min_src_value = self.data.min().item()  # convert to native Python type (float, int)
+        max_src_value = self.data.max().item()  # convert to native Python type (float, int)
+
+        # Determine the valid range for the target dtype
+        if _np.issubdtype(dtype, _np.integer):
+            min_dst_value = _np.iinfo(dtype).min
+            max_dst_value = _np.iinfo(dtype).max
+        else:
+            min_dst_value = _np.finfo(dtype).min.item()  # convert to native Python type (float)
+            max_dst_value = _np.finfo(dtype).max.item()  # convert to native Python type (float)
+
+        # If the image is already within the valid range and `force_copy=False`, return it as is
+        if not force_copy and (min_src_value >= min_dst_value and max_src_value <= max_dst_value):
+            return self
+
+        # Otherwise, clip the image to the valid range
+        else:
+            clipped_data = self.data.copy()
+            clipped_data[clipped_data < min_dst_value] = min_dst_value
+            clipped_data[clipped_data > max_dst_value] = max_dst_value
+            return Image(
+                data=clipped_data,
+                axes=self.axes,
+                original_axes=self.original_axes,
+                metadata=self.metadata,
+            )
