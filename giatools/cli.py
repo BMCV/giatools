@@ -43,7 +43,7 @@ class ToolBaseplate:
 
     processor: _T.Optional[_image_processor.ImageProcessor] = None
     """
-    The :py:class:`giatools.image_processor.ImageProcessor` instantiated via the :py:meth:`create_processor` method.
+    The :py:class:`ImageProcessor` instantiated via the :py:meth:`create_processor` method.
     """
 
     def __init__(self, *args, params_required=True, **kwargs):
