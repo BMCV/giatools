@@ -32,11 +32,10 @@ class Image:
 
     Example:
 
-        .. testcode::
-
-            >>> from giatools import Image
-            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
-            >>> print(image.axes)
+        >>> from giatools import Image
+        >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+        >>> print(image.axes)
+        QTZYXC
     """
 
     data: _T.NDArray
