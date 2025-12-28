@@ -8,6 +8,7 @@ import unittest.mock
 import numpy as np
 
 import giatools.image
+import giatools.metadata
 from giatools.typing import (
     Optional,
     Tuple,
@@ -244,7 +245,7 @@ class Image__iterate_jointly(unittest.TestCase):
         self._test_dask('ZYX', (10, 20, 30), joint_axes, (2, 5, 5))
 
 
-class Image__astype(ImageTestCase):
+class Image__astype(ImageTestCase):  # TODO: use a mock for `metadata`
 
     exact_dtype_list = [
         np.uint8,
@@ -272,33 +273,124 @@ class Image__astype(ImageTestCase):
         dtype: np.dtype,
         shape=(2, 3, 26, 32),
         axes='CYXZ',
-        original_axes='QTCYXZ'
+        original_axes='QTCYXZ',
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        metadata: Optional[giatools.metadata.Metadata] = None,
     ) -> giatools.image.Image:
         """
         Create a test image with random data of the given data type.
         """
         np.random.seed(0)
         if np.issubdtype(dtype, np.integer):
-            value_min = np.iinfo(dtype).min
-            value_max = np.iinfo(dtype).max
-            data = np.random.randint(value_min, value_max, shape, dtype=dtype)
+            min_value = np.iinfo(dtype).min if min_value is None else min_value
+            max_value = np.iinfo(dtype).max if max_value is None else max_value
+            data = np.random.randint(min_value, max_value, shape, dtype=dtype)
         else:
-            data = (np.random.rand(*shape) * 2 - 1).astype(dtype)
-        return giatools.image.Image(data=data, axes=axes, original_axes=original_axes)
+            min_value = -1 if min_value is None else min_value
+            max_value = +1 if max_value is None else max_value
+            data = (
+                np.random.rand(*shape) * (max_value - min_value) + min_value
+            ).clip(min_value, max_value).astype(dtype)
+            assert np.isinf(data).sum() == 0, f'min_value={min_value}, max_value={max_value}'  # sanity check
+        return giatools.image.Image(data=data, axes=axes, original_axes=original_axes, metadata=metadata)
 
-    def _test_conversion_to(self, img, dtype: np.dtype, force_copy: bool, expected_dtype: Optional[np.dtype] = None):
+    def _test_conversion(
+        self,
+        src_dtype: np.dtype,
+        dst_dtype: np.dtype,
+        force_copy: bool,
+        expected_dtype: Optional[np.dtype] = None,
+    ):
+        # The expected dtype is the same as the destination dtype if not specified
         if expected_dtype is None:
-            expected_dtype = dtype
+            expected_dtype = dst_dtype
+
+        # Create test image
+        img = self._create_image(src_dtype)
         original_dtype = img.data.dtype
         origianl_metadata = img.metadata
         original_axes = img.axes
         original_original_axes = img.original_axes
-        img_converted = img.astype(dtype, force_copy=force_copy)
+
+        # Determine if a `ValueError` is expected to be raised
+        expect_value_error = False
+        if (
+            (  # conversion from signed to unsigned
+                src_dtype in (np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64) and
+                expected_dtype in (np.uint8, np.uint16, np.uint32, np.uint64)
+            ) or any(
+                (  # conversion from larger unsigned to smaller signed
+                    src_dtype == np.uint64 and expected_dtype in (np.int8, np.int16, np.int32, np.int64),
+                    src_dtype == np.uint32 and expected_dtype in (np.int8, np.int16, np.int32),
+                    src_dtype == np.uint16 and expected_dtype in (np.int8, np.int16),
+                    src_dtype == np.uint8  and expected_dtype in (np.int8,),  # noqa: E272
+                ),
+            ) or any(
+                (  # conversion from larger signed to smaller signed
+                    src_dtype == np.int64 and expected_dtype in (np.int8, np.int16, np.int32),
+                    src_dtype == np.int32 and expected_dtype in (np.int8, np.int16),
+                    src_dtype == np.int16 and expected_dtype in (np.int8,),
+                ),
+            ) or any(
+                (  # conversion from larger unsigned to smaller unsigned
+                    src_dtype == np.uint64 and expected_dtype in (np.uint8, np.uint16, np.uint32),
+                    src_dtype == np.uint32 and expected_dtype in (np.uint8, np.uint16),
+                    src_dtype == np.uint16 and expected_dtype in (np.uint8,),
+                ),
+            ) or (  # conversion from larger integer to smaller float
+                src_dtype not in (np.float16, np.float32, np.float64) and
+                expected_dtype in (np.float16, np.float32, np.float64) and
+                (
+                    (img.data.max() > +np.finfo(expected_dtype).max).any() or
+                    (img.data.min() < -np.finfo(expected_dtype).max).any()
+                )
+            )
+        ):
+            expect_value_error = True
+
+            # Define a fallback image which *does not* raise an error under the tested conversion
+            max_src_value = (
+                np.finfo(src_dtype).max.item() if src_dtype in (
+                    np.float16, np.float32, np.float64,
+                ) else np.iinfo(src_dtype).max
+            )
+            max_dst_value = (
+                np.finfo(expected_dtype).max.item() if expected_dtype in (
+                    np.float16, np.float32, np.float64,
+                ) else np.iinfo(expected_dtype).max
+            )
+            fallback_img = self._create_image(
+                src_dtype,
+                min_value=0,
+                max_value=min((max_dst_value, max_src_value)),
+                shape=img.data.shape,
+                axes=img.axes,
+                original_axes=img.original_axes,
+                metadata=img.metadata,
+            )
+
+        # Define the conversion to be tested (and raise an error if unexpected overflows are encountered)
+        def convert(_img):
+            with np.errstate(invalid='raise', over='raise'):  # raise errors instead of printing warnings
+                return _img.astype(dst_dtype, force_copy=force_copy)
+
+        # Perform conversion (and verify that a `ValueError` is raised, if expected)
+        if expect_value_error:
+            with self.assertRaises(ValueError):
+                img_converted = convert(img)
+            img_converted = convert(fallback_img)
+        else:
+            img_converted = convert(img)
+
+        # Verify properties of the converted image
         self.assertEqual(img.data.dtype, original_dtype)
         self.assertIs(img_converted.metadata, origianl_metadata)
         self.assertEqual(img_converted.axes, original_axes)
         self.assertEqual(img_converted.original_axes, original_original_axes)
         self.assertEqual(img_converted.data.dtype, expected_dtype)
+
+        # Verify whether a copy was made or not
         if expected_dtype == original_dtype:
             if force_copy:
                 self.assertIsNot(img.data, img_converted.data)
@@ -310,15 +402,13 @@ class Image__astype(ImageTestCase):
             for dst_dtype in self.exact_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
-                        img = self._create_image(src_dtype)
-                        self._test_conversion_to(img, dst_dtype, force_copy=force_copy)
+                        self._test_conversion(src_dtype, dst_dtype, force_copy=force_copy)
 
     def test__inexact(self):
         for src_dtype in self.exact_dtype_list:
             for dst_dtype in self.inexact_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
-                        img = self._create_image(src_dtype)
 
                         if dst_dtype == np.floating:
                             if src_dtype in (np.float16, np.float32, np.float64):
@@ -346,8 +436,9 @@ class Image__astype(ImageTestCase):
                             else:
                                 expected_dtype = np.uint64
 
-                        self._test_conversion_to(img, dst_dtype, force_copy=force_copy, expected_dtype=expected_dtype)
-
-    def test(self):
-        img = self._create_image(np.float64)
-        self._test_conversion_to(img, np.signedinteger, force_copy=False, expected_dtype=np.int64)
+                        self._test_conversion(
+                            src_dtype,
+                            dst_dtype,
+                            force_copy=force_copy,
+                            expected_dtype=expected_dtype,
+                        )

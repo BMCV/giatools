@@ -367,6 +367,9 @@ class Image:
         The `dtype` parameter may be an inexact type such as `np.floating`, `np.integer`, `np.signedinteger`, or
         `np.unsignedinteger`. In this case, the actual data type is resolved according to the corresponding
         `resolve_*_to` parameter.
+
+        Raises:
+            ValueError: If conversion would lead to overflows.
         """
         if _np.issubdtype(self.data.dtype, dtype):
             if force_copy:
@@ -383,6 +386,23 @@ class Image:
                 dtype = resolve_signedinteger_to
             elif dtype == _np.unsignedinteger:
                 dtype = resolve_unsignedinteger_to
+
+            # Check for overflows
+            src_min = self.data.min().item()  # convert to native Python type (int, float)
+            src_max = self.data.max().item()  # convert to native Python type (int, float)
+            if _np.issubdtype(dtype, _np.integer):
+                dst_min = _np.iinfo(dtype).min
+                dst_max = _np.iinfo(dtype).max
+            else:
+                dst_min = _np.finfo(dtype).min.item()  # convert to native Python type (float)
+                dst_max = _np.finfo(dtype).max.item()  # convert to native Python type (float)
+            info_dst = _np.iinfo(dtype) if _np.issubdtype(dtype, _np.integer) else _np.finfo(dtype)
+            if src_min < dst_min or src_max > dst_max:
+                raise ValueError(
+                    f'Cannot convert image data from {self.data.dtype} to {dtype} without overflows '
+                    f'(actual source range: [{src_min}, {src_max}], '
+                    f'supported destination range: [{info_dst.min}, {info_dst.max}])'
+                )
 
             # With `copy=True`, the `data.astype` method always returns a newly allocated array.
             # With `copy=False`, it may also return the original array.
