@@ -49,6 +49,7 @@ class Image:
             >>> from giatools import Image
             >>> image = Image.read('data/input7_uint8_zcyx.tiff')
             >>> print(image.data.shape)
+            xxx
     """
 
     metadata: _metadata.Metadata
