@@ -112,6 +112,7 @@ class ToolBaseplate:
         self,
         joint_axes: str,
         write_output_images: bool = True,
+        **kwargs: str,
     ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
         Use the :py:meth:`create_processor` method to spin up a :py:class:`giatools.image_processor.ImageProcessor`
@@ -125,7 +126,8 @@ class ToolBaseplate:
         Raises:
             RuntimeError: If Python version is less than 3.11.
         """
-        yield from self.create_processor().process(joint_axes=joint_axes)
+        output_dtype_hints = {kwarg: kwargs[kwarg] for kwarg in kwargs if kwarg.endswith('_dtype')}
+        yield from self.create_processor().process(joint_axes=joint_axes, output_dtype_hints=output_dtype_hints)
         if write_output_images:
             self.write_output_images()
 

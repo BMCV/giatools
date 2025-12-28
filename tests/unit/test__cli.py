@@ -302,7 +302,10 @@ class ToolBaseplate__run(MockedTestCase):
 
     def _verify_calls(self, mock_create_processor, mock_write_output_images, write_output_images: bool):
         mock_create_processor.assert_called_once()
-        mock_create_processor.return_value.process.assert_called_with(joint_axes=self.joint_axes)
+        mock_create_processor.return_value.process.assert_called_with(
+            joint_axes=self.joint_axes,
+            output_dtype_hints=dict(),
+        )
         if write_output_images:
             mock_write_output_images.assert_called_once()
         else:
