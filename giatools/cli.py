@@ -43,7 +43,8 @@ class ToolBaseplate:
 
     processor: _T.Optional[_image_processor.ImageProcessor] = None
     """
-    The :py:class:`giatools.image_processor.ImageProcessor` instantiated via the :py:meth:`create_processor` method.
+    The :py:class:`giatools.image_processor.ImageProcessor` instantiated latest via the :py:meth:`create_processor`
+    method.
     """
 
     def __init__(self, *args, params_required=True, **kwargs):
@@ -154,7 +155,7 @@ class ToolBaseplate:
         :py:attr:`processor` attribute. The command line arguments must be provided via the :py:attr:`args` attribute.
 
         Raises:
-            RuntimeError: If the pre-conditions are not met(:py:attr:`args` or :py:attr:`processor` attributes are not
+            RuntimeError: If the pre-conditions are not met (:py:attr:`args` or :py:attr:`processor` attributes are not
                 populated).
         """
         if self.args is None:
