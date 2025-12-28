@@ -36,6 +36,7 @@ class MockedTestCase(unittest.TestCase):
 
         self.addCleanup(unittest.mock.patch.stopall)
 
+    @staticmethod
     def mock_namespace(**kwargs):
         return unittest.mock.Mock(**kwargs)
 

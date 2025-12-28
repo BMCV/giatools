@@ -120,7 +120,7 @@ class ToolBaseplate:
         """
         Use the :py:meth:`create_processor` method to spin up a :py:class:`giatools.image_processor.ImageProcessor`
         with the input images parsed from the command line, and write the output images to the file paths specified via
-        command line arguments (if `write_outputs` is `True`).
+        command line arguments (if `write_output_images` is `True`).
 
         .. note::
 

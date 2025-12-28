@@ -9,6 +9,7 @@ import unittest
 import numpy as np
 
 import giatools.cli
+import giatools.image
 
 from ..tools import minimum_python_version
 
