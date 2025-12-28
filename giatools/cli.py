@@ -154,7 +154,8 @@ class ToolBaseplate:
         :py:attr:`processor` attribute. The command line arguments must be provided via the :py:attr:`args` attribute.
 
         Raises:
-            RuntimeError: If the :py:attr:`args` or :py:attr:`processor` attributes are not populated.
+            RuntimeError: If the pre-conditions are not met(:py:attr:`args` or :py:attr:`processor` attributes are not
+                populated).
         """
         if self.args is None:
             raise RuntimeError('Command-line arguments have not been parsed; cannot write outputs.')
