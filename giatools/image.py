@@ -369,13 +369,31 @@ class Image:
         `resolve_*_to` parameter.
 
         Raises:
-            ValueError: If conversion would lead to overflows.
+            ValueError: If conversion is not possible due to overflows.
         """
+
+        # Special case: No conversion needed (same dtype or subset)
         if _np.issubdtype(self.data.dtype, dtype):
             if force_copy:
                 new_data = self.data.copy()
             else:
                 new_data = self.data  # no conversion needed
+
+        # Special case: Conversion to `bool`
+        elif dtype == bool:
+            labels = _np.unique(self.data)
+            if len(labels) > 2:
+                raise ValueError(
+                    f'Cannot convert image data from {self.data.dtype} to bool without overflows '
+                    f'(more than two unique values, found {len(labels)}).'
+                )
+            new_data = _np.zeros(self.data.shape, dtype=bool)
+            if len(labels) == 2:
+                new_data[self.data == max(labels)] = True  # set the higher label to `True`
+            elif len(labels) == 1 and labels[0] != 0:
+                new_data[:] = True  # single non-zero label -> all `True`
+
+        # General case
         else:
             # Resolve inexact  `dtype` requirements
             if dtype == _np.floating:
@@ -401,12 +419,14 @@ class Image:
                 raise ValueError(
                     f'Cannot convert image data from {self.data.dtype} to {dtype} without overflows '
                     f'(actual source range: [{src_min}, {src_max}], '
-                    f'supported destination range: [{info_dst.min}, {info_dst.max}])'
+                    f'supported destination range: [{info_dst.min}, {info_dst.max}]).'
                 )
 
             # With `copy=True`, the `data.astype` method always returns a newly allocated array.
             # With `copy=False`, it may also return the original array.
             new_data = self.data.astype(dtype, copy=force_copy)
+
+        # Return new image
         return Image(
             data=new_data,
             axes=self.axes,

@@ -6,6 +6,7 @@ import unittest
 import unittest.mock
 
 import numpy as np
+import numpy.typing as npt
 
 import giatools.image
 from giatools.typing import (
@@ -267,7 +268,7 @@ class Image__astype(ImageTestCase):
         np.unsignedinteger,
     ]
 
-    def _create_image(
+    def _create_non_bool_image(
         self,
         dtype: np.dtype,
         shape=(2, 3, 26, 32),
@@ -280,6 +281,7 @@ class Image__astype(ImageTestCase):
         """
         Create a test image with random data of the given data type.
         """
+        assert dtype != bool, 'This method is only for non-boolean dtypes.'
         np.random.seed(0)
         if np.issubdtype(dtype, np.integer):
             min_value = np.iinfo(dtype).min if min_value is None else min_value
@@ -299,19 +301,21 @@ class Image__astype(ImageTestCase):
             metadata=metadata if metadata is not None else unittest.mock.Mock(),
         )
 
-    def _test_conversion(
+    def _test_non_bool_conversion(
         self,
         src_dtype: np.dtype,
         dst_dtype: np.dtype,
         force_copy: bool,
         expected_dtype: Optional[np.dtype] = None,
     ):
+        assert src_dtype != bool and dst_dtype != bool, 'This method is only for non-boolean dtypes.'
+
         # The expected dtype is the same as the destination dtype if not specified
         if expected_dtype is None:
             expected_dtype = dst_dtype
 
         # Create test image
-        img = self._create_image(src_dtype)
+        img = self._create_non_bool_image(src_dtype)
         original_dtype = img.data.dtype
         origianl_metadata = img.metadata
         original_axes = img.axes
@@ -364,7 +368,7 @@ class Image__astype(ImageTestCase):
                     np.float16, np.float32, np.float64,
                 ) else np.iinfo(expected_dtype).max
             )
-            fallback_img = self._create_image(
+            fallback_img = self._create_non_bool_image(
                 src_dtype,
                 min_value=0,
                 max_value=min((max_dst_value, max_src_value)),
@@ -401,48 +405,109 @@ class Image__astype(ImageTestCase):
             else:
                 self.assertIs(img.data, img_converted.data)
 
-    def test__exact(self):
+    def test__non_bool__exact(self):
         for src_dtype in self.exact_dtype_list:
             for dst_dtype in self.exact_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
-                        self._test_conversion(src_dtype, dst_dtype, force_copy=force_copy)
+                        self._test_non_bool_conversion(src_dtype, dst_dtype, force_copy=force_copy)
 
-    def test__inexact(self):
+    @staticmethod
+    def _get_expected_dtype(src_dtype: np.dtype, dst_dtype: npt.DTypeLike) -> np.dtype:
+        if dst_dtype == np.floating:
+            if src_dtype in (np.float16, np.float32, np.float64):
+                return src_dtype
+            else:
+                return np.float64
+
+        elif dst_dtype == np.integer:
+            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
+                return src_dtype
+            elif src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
+                return src_dtype
+            else:
+                return np.int64
+
+        elif dst_dtype == np.signedinteger:
+            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
+                return src_dtype
+            else:
+                return np.int64
+
+        elif dst_dtype == np.unsignedinteger:
+            if src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
+                return src_dtype
+            else:
+                return np.uint64
+
+        else:
+            return dst_dtype
+
+    def test__non_bool__inexact(self):
         for src_dtype in self.exact_dtype_list:
             for dst_dtype in self.inexact_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
-
-                        if dst_dtype == np.floating:
-                            if src_dtype in (np.float16, np.float32, np.float64):
-                                expected_dtype = src_dtype
-                            else:
-                                expected_dtype = np.float64
-
-                        elif dst_dtype == np.integer:
-                            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
-                                expected_dtype = src_dtype
-                            elif src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
-                                expected_dtype = src_dtype
-                            else:
-                                expected_dtype = np.int64
-
-                        elif dst_dtype == np.signedinteger:
-                            if src_dtype in (np.int8, np.int16, np.int32, np.int64):
-                                expected_dtype = src_dtype
-                            else:
-                                expected_dtype = np.int64
-
-                        elif dst_dtype == np.unsignedinteger:
-                            if src_dtype in (np.uint8, np.uint16, np.uint32, np.uint64):
-                                expected_dtype = src_dtype
-                            else:
-                                expected_dtype = np.uint64
-
-                        self._test_conversion(
+                        expected_dtype = self._get_expected_dtype(src_dtype, dst_dtype)
+                        self._test_non_bool_conversion(
                             src_dtype,
                             dst_dtype,
                             force_copy=force_copy,
                             expected_dtype=expected_dtype,
                         )
+
+    def test__conversion__from_bool(self):
+        img = giatools.image.Image(
+            data=np.random.choice(a=[False, True], size=(2, 3, 26, 32)),
+            axes='CYXZ',
+            original_axes='QTCYXZ',
+        )
+        assert img.data.dtype == bool  # sanity check
+        for dst_dtype in self.exact_dtype_list + self.inexact_dtype_list:
+            for force_copy in (False, True):
+                with self.subTest(f'from bool to {dst_dtype} (force_copy={force_copy})'):
+                    expected_dtype = self._get_expected_dtype(bool, dst_dtype)
+                    img_converted = img.astype(dst_dtype, force_copy=force_copy)
+                    self.assertEqual(img_converted.data.dtype, expected_dtype)
+                    if dst_dtype == bool:
+                        if force_copy:
+                            self.assertIsNot(img.data, img_converted.data)
+                        else:
+                            self.assertIs(img.data, img_converted.data)
+
+    def _test_conversion_to_bool(self, img, expected_data):
+        for force_copy in (False, True):
+            with self.subTest(f'from {img.data.dtype} to bool (force_copy={force_copy})'):
+                img_converted = img.astype(bool, force_copy=force_copy)
+                self.assertEqual(img_converted.data.dtype, bool)
+                np.testing.assert_array_equal(img_converted.data, expected_data)
+
+    def test__conversion__to_bool__2_labels(self):
+        for src_dtype in self.exact_dtype_list:
+            img = self._create_non_bool_image(src_dtype)
+            img.data = 10 + 5 * (img.data > img.data.mean()).astype(img.data.dtype)
+            assert list(np.unique(img.data)) == [10, 15]  # sanity check
+            self._test_conversion_to_bool(img, expected_data=img.data > 12)
+
+    def test__conversion__to_bool__1_non_zero_label(self):
+        for src_dtype in self.exact_dtype_list:
+            img = self._create_non_bool_image(src_dtype)
+            img.data.fill(15)
+            assert img.data.dtype == src_dtype  # sanity check
+            self._test_conversion_to_bool(img, expected_data=np.ones(img.data.shape, dtype=bool))
+
+    def test__conversion__to_bool__1_zero_label(self):
+        for src_dtype in self.exact_dtype_list:
+            img = self._create_non_bool_image(src_dtype)
+            img.data.fill(0)
+            assert img.data.dtype == src_dtype  # sanity check
+            self._test_conversion_to_bool(img, expected_data=np.zeros(img.data.shape, dtype=bool))
+
+    def test__conversion__to_bool__invalid(self):
+        for src_dtype in self.exact_dtype_list:
+            img = self._create_non_bool_image(src_dtype)
+            img.data = np.random.randint(0, 3, img.data.shape).astype(src_dtype)
+            assert len(np.unique(img.data)) > 2  # sanity check
+            with self.subTest(f'from {src_dtype} to bool (invalid case)'):
+                with self.assertRaises(ValueError):
+                    img.astype(bool)
