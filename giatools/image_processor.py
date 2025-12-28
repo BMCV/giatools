@@ -20,11 +20,10 @@ OutputDTypeHint = _T.Literal[
 
 def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: OutputDTypeHint) -> _Image:
     """
-    Convert the data type of the `image` according to the specified output data type hint.
+    Convert the data type of the `image` according to the specified `dtype_hint`.
 
-    This image is not changed in place, a new image is returned (the data can be copied, but must not).
-
-    The `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
+    The `image` is not changed in place, a new image is returned (the data can be copied, but not necessarily). The
+    `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
 
     - `'binary'` or `'bool'`: Convert to boolean type.
     - `'float16'`, `'float32'`, `'float64'`: Convert to the explicitly specified float type.
@@ -34,7 +33,7 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
       float type of the input image `base_image`, if applicable; otherwise, convert to float64.
 
     Raises:
-        ValueError: If `dtype_hint` is invalid.
+        ValueError: If `dtype_hint` is none of the above.
     """
 
     # Convert to bool
