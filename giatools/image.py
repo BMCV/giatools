@@ -213,6 +213,7 @@ class Image:
         references the original metadata.
         """
         squeezed_axes = ''.join(_np.array(list(self.axes))[_np.array(self.data.shape) > 1])
+        squeezed_axes = ''.join(_np.array(list(self.axes))[_np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
 
     def iterate_jointly(
@@ -445,7 +446,7 @@ class Image:
         Raises:
             TypeError: If `dtype` is `bool`.
         """
-        if dtype is bool:
+        if dtype in (bool, _np.bool_):
             raise TypeError('Clipping to boolean dtype is not supported.')
 
         # Determine the actual range of the source image
