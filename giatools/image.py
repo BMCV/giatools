@@ -347,3 +347,26 @@ class Image:
         else:
             denom = pow(_np.prod(voxel_size), 1 / len(voxel_size))  # geometric mean
             return tuple(_np.divide(voxel_size, denom).tolist())
+
+    def astype(self, dtype: _np.dtype, force_copy: bool = False) -> _T.Self:
+        """
+        Cast the image to the specific pixel/voxel data type.
+
+        This image is not changed in place, a new image is returned. With `force_copy=False` (the default), the image
+        data is copied only if necessary. The metadata is not copied (the new image references the original metadata).
+        """
+        if _np.issubdtype(self.data.dtype, dtype):
+            if force_copy:
+                new_data = self.data.copy()
+            else:
+                new_data = self.data  # no conversion needed
+        else:
+            # With `copy=True`, the `data.astype` method always returns a newly allocated array.
+            # With `copy=False`, it may also return the original array.
+            new_data = self.data.astype(dtype, copy=force_copy)
+        return Image(
+            data=new_data,
+            axes=self.axes,
+            original_axes=self.original_axes,
+            metadata=self.metadata,
+        )
