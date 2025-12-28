@@ -80,17 +80,19 @@ class ProcessorIteration(unittest.TestCase):
         super().setUp()
         self.processor = unittest.mock.MagicMock()
         self.output_slice = unittest.mock.MagicMock()
+        self.output_dtype_hints = dict()
         self.input_section1 = unittest.mock.MagicMock()
         self.input_section2 = unittest.mock.MagicMock()
         self.input_section3 = unittest.mock.MagicMock()
         self.processor_iteration = giatools.image_processor.ProcessorIteration(
-            processor=self.processor,
             input_sections={
                 0: self.input_section1,
                 1: self.input_section2,
                 'input_key': self.input_section3,
             },
             output_slice=self.output_slice,
+            output_dtype_hints=self.output_dtype_hints,
+            processor=self.processor,
             joint_axes='YX',
         )
 
@@ -117,7 +119,11 @@ class ProcessorIteration(unittest.TestCase):
     def test__setitem__(self, mock_image):
         output_data = unittest.mock.MagicMock()
         self.processor_iteration['output_key'] = output_data
-        self.processor.create_output_image.assert_called_once_with('output_key', output_data.dtype)
+        mock_image.assert_called_once_with(data=output_data, axes='YX')
+        self.processor.create_output_image.assert_called_once_with(
+            'output_key',
+            mock_image.return_value.reorder_axes_like().data.dtype,
+        )
 
     @unittest.mock.patch('giatools.image_processor._Image')
     def test__setitem__repeated(self, mock_image):
