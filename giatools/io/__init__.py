@@ -126,21 +126,22 @@ def peek_num_images_in_file(filepath: _T.PathLike, *args: _T.Any, **kwargs: _T.A
 
     Example:
 
-        .. testcode::
-
-            >>> from giatools.io import peek_num_images_in_file
-            >>> print(
-            ...     'Images in multi-series TIFF:',
-            ...     peek_num_images_in_file('data/input11.ome.tiff'),
-            ... )
-            >>> print(
-            ...     'Images in single-series TIFF:',
-            ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
-            ... )
-            >>> print(
-            ...     'Images in PNG file:',
-            ...     peek_num_images_in_file('data/input4_uint8.png'),
-            ... )
+        >>> from giatools.io import peek_num_images_in_file
+        >>> print(
+        ...     'Images in multi-series TIFF:',
+        ...     peek_num_images_in_file('data/input11.ome.tiff'),
+        ... )
+        Images in multi-series TIFF: 6
+        >>> print(
+        ...     'Images in single-series TIFF:',
+        ...     peek_num_images_in_file('data/input1_uint8_yx.tiff'),
+        ... )
+        Images in single-series TIFF: 1
+        >>> print(
+        ...     'Images in PNG file:',
+        ...     peek_num_images_in_file('data/input4_uint8.png'),
+        ... )
+        Images in PNG file: 1
 
     Raises:
         FileNotFoundError:
