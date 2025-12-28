@@ -43,7 +43,7 @@ class ToolBaseplate:
 
     processor: _T.Optional[_image_processor.ImageProcessor] = None
     """
-    The :py:class:`ImageProcessor` instantiated via the :py:meth:`create_processor` method.
+    The :py:class:`giatools.image_processor.ImageProcessor` instantiated via the :py:meth:`create_processor` method.
     """
 
     def __init__(self, *args, params_required=True, **kwargs):
@@ -117,9 +117,9 @@ class ToolBaseplate:
         write_output_images: bool = True,
     ) -> _T.Iterator[_image_processor.ProcessorIteration]:
         """
-        Use the :py:meth:`create_processor` method to spin up an `giatools.image_processor.ImageProcessor` with the
-        input images parsed from the command line, and write the output images to the file paths specified via command
-        line arguments (if `write_outputs` is `True`).
+        Use the :py:meth:`create_processor` method to spin up a :py:class:`giatools.image_processor.ImageProcessor`
+        with the input images parsed from the command line, and write the output images to the file paths specified via
+        command line arguments (if `write_outputs` is `True`).
 
         .. note::
 
@@ -134,9 +134,9 @@ class ToolBaseplate:
 
     def create_processor(self) -> _image_processor.ImageProcessor:
         """
-        Create an `giatools.image_processor.ImageProcessor` with the input images parsed from the command line. The
-        `giatools.image_processor.ImageProcessor` is returned and also made available via the :py:attr:`processor`
-        attribute.
+        Create a :py:class:`giatools.image_processor.ImageProcessor` with the input images parsed from the command
+        line. The :py:class:`giatools.image_processor.ImageProcessor` is returned and also made available via the
+        :py:attr:`processor` attribute.
 
         The command line arguments are obtained via the :py:meth:`parse_args` method unless the :py:attr:`args`
         attribute is already populated (which has precedence).
@@ -150,7 +150,7 @@ class ToolBaseplate:
         """
         Write the output images to the file paths specified via command line arguments.
 
-        The output images are obtained from the `giatools.image_processor.ImageProcessor` referenced by the
+        The output images are obtained from the :py:class:`giatools.image_processor.ImageProcessor` referenced by the
         :py:attr:`processor` attribute. The command line arguments must be provided via the :py:attr:`args` attribute.
 
         Raises:
