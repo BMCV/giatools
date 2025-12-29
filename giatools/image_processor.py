@@ -42,7 +42,7 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
     # Convert to binary image (uint8 with 0/255 labels)
     if dtype_hint == 'binary':
         image = apply_output_dtype_hint(base_image, image, 'bool').astype(_np.uint8, force_copy=True)
-        image.data *= 255
+        image.data *= 255  # it is safe to modify in-place after `astype` with `force_copy=True`
         return image
 
     # Convert to bool
