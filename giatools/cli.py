@@ -94,9 +94,12 @@ class ToolBaseplate:
     def _read_image(self, args: types.SimpleNamespace, key: str, filepath: str) -> _image.Image:
         image = _image.Image.read(filepath)
         if args.verbose:
+            image_metadata_str = str(image.metadata)
             print(f'[{key}] Input image axes: {image.original_axes}')
             print(f'[{key}] Input image shape: {image.original_shape}')
             print(f'[{key}] Input image dtype: {image.data.dtype}')
+            if image_metadata_str:
+                print(f'[{key}] Input image {image_metadata_str}')
         return image
 
     def parse_args(self) -> types.SimpleNamespace:
@@ -181,7 +184,10 @@ class ToolBaseplate:
         for key, filepath in self.args.output_filepaths.items():
             output_image = self.processor.outputs[key].normalize_axes_like(self.processor.image0.original_axes)
             if self.args.verbose:
+                output_metadata_str = str(output_image.metadata)
                 print(f'[{key}] Output image axes: {output_image.axes}')
                 print(f'[{key}] Output image shape: {output_image.data.shape}')
                 print(f'[{key}] Output image dtype: {output_image.data.dtype}')
+                if output_metadata_str:
+                    print(f'[{key}] Output image {output_metadata_str}')
             output_image.write(filepath)

@@ -168,8 +168,15 @@ class ToolBaseplate__parse_args(MockedTestCase):
                     f'[{key}] Input image axes: {input_image.original_axes}',
                     f'[{key}] Input image shape: {input_image.original_shape}',
                     f'[{key}] Input image dtype: {input_image.data.dtype}',
+                    f'[{key}] Input image {str(input_image.metadata)}',
                 ):
                     self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
+                self.assertNotIn(
+                    unittest.mock.call(
+                        f'[{key}] Input image ',  # empty metadata string
+                    ),
+                    self.builtins_print.call_args_list,
+                )
         else:
             self.builtins_print.assert_not_called()
 
@@ -396,8 +403,15 @@ class ToolBaseplate__write_output_images(MockedTestCase):
                     f'[output] Output image shape: {output_image.data.shape}',
                     f'[output] Output image dtype: {output_image.data.dtype}',
                     f'[output] Output image axes: {output_image.axes}',
+                    f'[output] Output image {str(output_image.metadata)}',
                 ):
                     self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
+                self.assertNotIn(
+                    unittest.mock.call(
+                        '[output] Output image ',  # empty metadata string
+                    ),
+                    self.builtins_print.call_args_list,
+                )
         if not verbose:
             self.builtins_print.assert_not_called()
 
