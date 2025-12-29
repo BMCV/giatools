@@ -181,17 +181,28 @@ class apply_output_dtype_hint(unittest.TestCase):
                 dtype_hint,
             )
 
-    def test__binary(self):
-        for dtype_hint in ('binary', 'bool'):
-            with self.subTest(dtype_hint=dtype_hint):
-                self.image.reset_mock()
-                result = giatools.image_processor.apply_output_dtype_hint(
-                    self.base_image,
-                    self.image,
-                    dtype_hint,
-                )
-                self.image.astype.assert_called_once_with(bool)
-                self.assertIs(result, self.image.astype.return_value)
+    def test__bool(self):
+        self.image.reset_mock()
+        result = giatools.image_processor.apply_output_dtype_hint(
+            self.base_image,
+            self.image,
+            'bool',
+        )
+        self.image.astype.assert_called_once_with(bool)
+        self.assertIs(result, self.image.astype.return_value)
+
+    @unittest.mock.patch('giatools.image_processor._np')
+    def test__binary(self, mock_np):
+        self._setup_np_mock(mock_np)
+        self.image.reset_mock()
+        result = giatools.image_processor.apply_output_dtype_hint(
+            self.base_image,
+            self.image,
+            'binary',
+        )
+        self.image.astype.assert_called_once_with(bool)
+        self.image.astype.return_value.astype.assert_called_once_with(mock_np.uint8)
+        self.assertIs(result, self.image.astype.return_value.astype.return_value * 255)
 
     @unittest.mock.patch('giatools.image_processor._np')
     def test__exact_float_types(self, mock_np):

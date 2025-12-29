@@ -7,7 +7,7 @@ import giatools.typing as _T
 from giatools.image import Image as _Image
 
 OutputDTypeHint = _T.Literal[
-    'binary',  # alias for `bool`
+    'binary',  # like bool, but uses uint8 with 0/255 labels
     'bool',    # boolean dtype
     'float16',
     'float32',
@@ -25,7 +25,8 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
     The `image` is not changed in place, a new image is returned (the data can be copied, but not necessarily). The
     `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
 
-    - `'binary'` or `'bool'`: Convert to boolean type.
+    - `'binary'`: Like `'bool'`, but convert to uint8 and use 0/255 labels instead of `False`/`True`.
+    - `'bool'`: Convert to boolean type.
     - `'float16'`, `'float32'`, `'float64'`: Convert to the explicitly specified float type.
     - `'floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to float64.
     - `'preserve'`: Convert to the same dtype as the input image `base_image`.
@@ -36,8 +37,12 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
         ValueError: If `dtype_hint` is none of the above.
     """
 
+    # Convert to binary image (uint8 with 0/255 labels)
+    if dtype_hint == 'binary':
+        return apply_output_dtype_hint(base_image, image, 'bool').astype(_np.uint8) * 255
+
     # Convert to bool
-    if dtype_hint in ('binary', 'bool'):
+    if dtype_hint == 'bool':
         return image.astype(bool)
 
     # Use the specified float dtype
