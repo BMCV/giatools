@@ -8,6 +8,7 @@ See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 import sys as _sys
 
 import numpy as _np
+import numpy.typing as _npt
 
 from . import (
     metadata as _metadata,
@@ -347,3 +348,130 @@ class Image:
         else:
             denom = pow(_np.prod(voxel_size), 1 / len(voxel_size))  # geometric mean
             return tuple(_np.divide(voxel_size, denom).tolist())
+
+    def astype(
+        self,
+        dtype: _npt.DTypeLike,
+        force_copy: bool = False,
+        resolve_floating_to: _np.dtype = _np.float64,
+        resolve_integer_to: _np.dtype = _np.int64,
+        resolve_signedinteger_to: _np.dtype = _np.int64,
+        resolve_unsignedinteger_to: _np.dtype = _np.uint64,
+    ) -> _T.Self:
+        """
+        Cast the image to the specific pixel/voxel data type.
+
+        This image is not changed in place, a new image is returned. With `force_copy=False` (the default), the image
+        data is copied only if necessary. The metadata is not copied (the new image references the original metadata).
+
+        The `dtype` parameter may be an inexact type such as `np.floating`, `np.integer`, `np.signedinteger`, or
+        `np.unsignedinteger`. In this case, the actual data type is resolved according to the corresponding
+        `resolve_*_to` parameter.
+
+        Raises:
+            ValueError: If conversion is not possible due to overflows.
+        """
+
+        # Special case: No conversion needed (same dtype or subset)
+        if _np.issubdtype(self.data.dtype, dtype):
+            if force_copy:
+                new_data = self.data.copy()
+            else:
+                new_data = self.data  # no conversion needed
+
+        # Special case: Conversion to `bool`
+        elif dtype == bool:
+            labels = _np.unique(self.data)
+            if len(labels) > 2:
+                raise ValueError(
+                    f'Cannot convert image data from {self.data.dtype} to bool without overflows '
+                    f'(more than two unique values, found {len(labels)}).'
+                )
+            new_data = _np.zeros(self.data.shape, dtype=bool)
+            if len(labels) == 2:
+                new_data[self.data == max(labels)] = True  # set the higher label to `True`
+            elif len(labels) == 1 and labels[0] != 0:
+                new_data[:] = True  # single non-zero label -> all `True`
+
+        # General case
+        else:
+            # Resolve inexact `dtype` requirements
+            if dtype == _np.floating:
+                dtype = resolve_floating_to
+            elif dtype == _np.integer:
+                dtype = resolve_integer_to
+            elif dtype == _np.signedinteger:
+                dtype = resolve_signedinteger_to
+            elif dtype == _np.unsignedinteger:
+                dtype = resolve_unsignedinteger_to
+
+            # Check for overflows
+            src_min = self.data.min().item()  # convert to native Python type (int, float)
+            src_max = self.data.max().item()  # convert to native Python type (int, float)
+            if _np.issubdtype(dtype, _np.integer):
+                dst_min = _np.iinfo(dtype).min
+                dst_max = _np.iinfo(dtype).max
+            else:
+                dst_min = _np.finfo(dtype).min.item()  # convert to native Python type (float)
+                dst_max = _np.finfo(dtype).max.item()  # convert to native Python type (float)
+            info_dst = _np.iinfo(dtype) if _np.issubdtype(dtype, _np.integer) else _np.finfo(dtype)
+            if src_min < dst_min or src_max > dst_max:
+                raise ValueError(
+                    f'Cannot convert image data from {self.data.dtype} to {dtype} without overflows '
+                    f'(actual source range: [{src_min}, {src_max}], '
+                    f'supported destination range: [{info_dst.min}, {info_dst.max}]).'
+                )
+
+            # With `copy=True`, the `data.astype` method always returns a newly allocated array.
+            # With `copy=False`, it may also return the original array.
+            new_data = self.data.astype(dtype, copy=force_copy)
+
+        # Return new image
+        return Image(
+            data=new_data,
+            axes=self.axes,
+            original_axes=self.original_axes,
+            metadata=self.metadata,
+        )
+
+    def clip_to_dtype(self, dtype: _np.dtype, force_copy: bool = False) -> _T.Self:
+        """
+        Clips the values of this image to the valid range of the specified `dtype`.
+
+        This image is not changed in place. If the values of this image are already within the valid range of the
+        target `dtype`, the image itself is returned (unless `force_copy` is `True`). Otherwise, a new image is
+        returned that has the same data type as this image. The new image references the original metadata.
+
+        Raises:
+            TypeError: If `dtype` is `bool`.
+        """
+        if dtype in (bool, _np.bool_):
+            raise TypeError('Clipping to boolean dtype is not supported.')
+
+        # Determine the actual range of the source image
+        min_src_value = self.data.min().item()  # convert to native Python type (float, int)
+        max_src_value = self.data.max().item()  # convert to native Python type (float, int)
+
+        # Determine the valid range for the target dtype
+        if _np.issubdtype(dtype, _np.integer):
+            min_dst_value = _np.iinfo(dtype).min
+            max_dst_value = _np.iinfo(dtype).max
+        else:
+            min_dst_value = _np.finfo(dtype).min.item()  # convert to native Python type (float)
+            max_dst_value = _np.finfo(dtype).max.item()  # convert to native Python type (float)
+
+        # If the image is already within the valid range and `force_copy=False`, return it as is
+        if not force_copy and (min_src_value >= min_dst_value and max_src_value <= max_dst_value):
+            return self
+
+        # Otherwise, clip the image to the valid range
+        else:
+            clipped_data = self.data.copy()
+            clipped_data[clipped_data < min_dst_value] = min_dst_value
+            clipped_data[clipped_data > max_dst_value] = max_dst_value
+            return Image(
+                data=clipped_data,
+                axes=self.axes,
+                original_axes=self.original_axes,
+                metadata=self.metadata,
+            )

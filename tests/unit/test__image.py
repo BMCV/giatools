@@ -30,6 +30,9 @@ class ImageTestCase(unittest.TestCase):
         self.io_imwrite = unittest.mock.patch(
             'giatools.io.imwrite'
         ).start()
+        self._np = unittest.mock.patch(
+            'giatools.image._np'
+        ).start()
 
         self.addCleanup(unittest.mock.patch.stopall)
 
@@ -137,36 +140,6 @@ class Image__reorder_axes_like(ImageTestCase):
             self.img1.reorder_axes_like('ZTCXX')
 
 
-@unittest.mock.patch('giatools.image.Image.squeeze_like')
-class Image__squeeze(ImageTestCase):
-
-    def test__zyxc(self, mock_squeeze_like):
-        img1_squeezed = self.img1.squeeze()
-        mock_squeeze_like.assert_called_once_with('ZYXC')
-        self.assertIs(img1_squeezed, mock_squeeze_like.return_value)
-
-    def test__yx(self, mock_squeeze_like):
-        self.img1.data.shape = (1, 1, 26, 32, 1)
-        img1_squeezed = self.img1.squeeze()
-        mock_squeeze_like.assert_called_once_with('YX')
-        self.assertIs(img1_squeezed, mock_squeeze_like.return_value)
-
-
-class Image__squeeze_like(ImageTestCase):
-
-    def test__squeeze_illegal_axis(self):
-        with self.assertRaises(ValueError):
-            self.img1.squeeze_like('TCYX')
-
-    def test__spurious_axis(self):
-        with self.assertRaises(ValueError):
-            self.img1.squeeze_like('ZCYXW')
-
-    def test__ambigious_axis(self):
-        with self.assertRaises(ValueError):
-            self.img1.squeeze_like('ZCYXX')
-
-
 class Image__normalize_axes_like(ImageTestCase):
 
     def test__ambiguous_axes(self):
@@ -200,3 +173,30 @@ class Image__iterate_jointly(ImageTestCase):
         with self.assertRaises(ValueError):
             for _ in self.img1.iterate_jointly('Z'):
                 pass
+
+
+class Image__clip_to_dtype(ImageTestCase):
+
+    def test__bool(self):
+        with self.assertRaises(TypeError):
+            self.img1.clip_to_dtype(bool)
+
+    def test__to_superset_int(self):
+        self.img1.data.min.return_value.item.return_value = -15
+        self.img1.data.max.return_value.item.return_value = +15
+        self._np.issubdtype.return_value = True  # target dtype is an integer type
+        self._np.iinfo.return_value.min = -15
+        self._np.iinfo.return_value.max = +15
+        img_clipped = self.img1.clip_to_dtype('mocked-int-type')
+        self.assertIs(img_clipped, self.img1)
+        self.img1.data.copy.assert_not_called()
+
+    def test__to_superset_float(self):
+        self.img1.data.min.return_value.item.return_value = -15
+        self.img1.data.max.return_value.item.return_value = +15
+        self._np.issubdtype.return_value = False  # target dtype is a float type
+        self._np.finfo.return_value.min.item.return_value = -15.
+        self._np.finfo.return_value.max.item.return_value = +15.
+        img_clipped = self.img1.clip_to_dtype('mocked-float-type')
+        self.assertIs(img_clipped, self.img1)
+        self.img1.data.copy.assert_not_called()

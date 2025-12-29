@@ -6,6 +6,83 @@ import numpy as _np
 import giatools.typing as _T
 from giatools.image import Image as _Image
 
+OutputDTypeHint = _T.Literal[
+    'binary',  # like bool, but uses uint8 with 0/255 labels
+    'bool',    # boolean dtype
+    'float16',
+    'float32',
+    'float64',
+    'floating',           # use the "native" float type passed to the processor, or convert to float64
+    'preserve',           # use the same dtype as the input image
+    'preserve_floating',  # use the float types of the following precedence: (i) native, (ii) input, (iii) float64
+]
+
+
+def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: OutputDTypeHint) -> _Image:
+    """
+    Convert the data type of the `image` according to the specified `dtype_hint`.
+
+    The `image` is not changed in place, a new image is returned (the data can be copied, but not necessarily). The
+    `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
+
+    - `'binary'`: Like `'bool'`, but convert to uint8 and use 0/255 labels instead of `False`/`True`. Using
+      high-contrast labels facilitates visual inspection.
+    - `'bool'`: Convert to boolean type. Note that bool-typed images cannot be written to some files (e.g., PNG) and
+      `'binary'` should be generally preferred to also facilitate visual inspection.
+    - `'float16'`, `'float32'`, `'float64'`: Convert to the explicitly specified float type.
+    - `'floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to float64.
+    - `'preserve'`: Convert to the same dtype as the input image `base_image`.
+    - `'preserve_floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to the
+      float type of the input image `base_image`, if applicable; otherwise, convert to float64.
+
+    Raises:
+        ValueError: If `dtype_hint` is none of the above.
+    """
+
+    # Convert to binary image (uint8 with 0/255 labels)
+    if dtype_hint == 'binary':
+        image = apply_output_dtype_hint(base_image, image, 'bool').astype(_np.uint8, force_copy=True)
+        image.data *= 255  # it is safe to modify in-place after `astype` with `force_copy=True`
+        return image
+
+    # Convert to bool
+    if dtype_hint == 'bool':
+        return image.astype(bool)
+
+    # Use the specified float dtype
+    if dtype_hint in ('float16', 'float32', 'float64', 'floating'):
+        if dtype_hint == 'floating':
+            if _np.issubdtype(image.data.dtype, _np.floating):
+                return image  # no conversion needed, already a float type
+            else:
+                return image.clip_to_dtype(_np.float64).astype(_np.float64)  # clip and convert to float64
+        else:
+            dtype = getattr(_np, dtype_hint)
+            return image.clip_to_dtype(dtype).astype(dtype)  # clip and convert to specified float type
+
+    # Use the same dtype as the input image if it is a float type; otherwise same as `floating`
+    if dtype_hint == 'preserve_floating':
+        if _np.issubdtype(image.data.dtype, _np.floating):
+            return image  # no conversion needed, already a float type
+        elif _np.issubdtype(base_image.data.dtype, _np.floating):
+            return apply_output_dtype_hint(base_image, image, 'preserve')  # clip and convert to the input image dtype
+        else:
+            return apply_output_dtype_hint(base_image, image, 'float64')  # clip and convert to float64
+
+    # Use the same dtype as the input image
+    if dtype_hint == 'preserve':
+        return image.clip_to_dtype(  # clip and convert to the input image dtype
+            base_image.data.dtype,
+        ).astype(
+            base_image.data.dtype,
+        )
+
+    # Invalid dtype hint
+    else:
+        raise ValueError(
+            f'Invalid dtype hint: "{dtype_hint}"'
+        )
+
 
 class ImageProcessor:
     """
@@ -13,6 +90,11 @@ class ImageProcessor:
 
     Raises:
         ValueError: If no input images are provided, or if the input images do not have the same shape and axes.
+    """
+
+    image0: _Image
+    """
+    An input image that is used to determine the shape, axes, and metadata of the output images.
     """
 
     inputs: _ImmutableDict[_T.Union[str, int], _Image]
@@ -23,11 +105,6 @@ class ImageProcessor:
     outputs: _T.Dict[_T.Any, _Image]
     """
     Dictionary of the output images with arbitrary keys.
-    """
-
-    image0: _Image
-    """
-    An input image that is used to determine the shape, axes, and metadata of the output images.
     """
 
     def __init__(self, *args: _Image, **kwargs: _Image):
@@ -46,12 +123,20 @@ class ImageProcessor:
             if self.image0.axes != input_image.axes or self.image0.data.shape != input_image.data.shape:
                 raise ValueError('All input images must have the same shape and axes.')
 
-    def process(self, joint_axes: str) -> _T.Iterator['ProcessorIteration']:
+    def process(
+        self,
+        joint_axes: str,
+        output_dtype_hints: _T.Optional[_T.Dict[_T.Any, OutputDTypeHint]] = None,
+    ) -> _T.Iterator['ProcessorIteration']:
         """
         Iterate over all slices of the input images along the given axes, yielding :py:class:`ProcessorIteration`
         objects that provide access to the corresponding sections of the input and output images.
 
         The axes in the yielded image sections correspond exactly to the `joint_axes` parameter (in the given order).
+
+        The data written to the output images in each iteration is automatically normalized according to the policy
+        specified for the respective output image via the `output_dtype_hints` mapping (dictionary of output keys to
+        the respective policies; see :py:func:`apply_output_dtype_hint` for a list of possible values).
 
         .. note::
 
@@ -89,8 +174,18 @@ class ImageProcessor:
 
         Raises:
             RuntimeError: If Python version is less than 3.11.
-            ValueError: If `joint_axes` contains invalid axes (must be a non-empty subset of the image axes).
+            ValueError: If `joint_axes` contains invalid axes (must be a non-empty subset of the image axes); or if
+                `output_dtype_hints` contains invalid values.
         """
+        # Validate `output_dtype_hints`
+        output_dtype_hints = _ImmutableDict(output_dtype_hints or dict())
+        for key, dtype_hint in output_dtype_hints.items():
+            if dtype_hint not in _T.get_args(OutputDTypeHint):
+                raise ValueError(
+                    f'Invalid dtype hint "{dtype_hint}" for output image with key "{key}".'
+                )
+
+        # Iterate through input images jointly
         input_keys, input_images = zip(*self.inputs.items())
         for inputs_info in zip(*(input_image.iterate_jointly(joint_axes) for input_image in input_images)):
             source_slices, sections = zip(*inputs_info)
@@ -99,6 +194,7 @@ class ImageProcessor:
                 _ImmutableDict(dict(zip(input_keys, sections))),
                 source_slices[0],  # same for all input images (due to same shape and axes)
                 joint_axes,
+                output_dtype_hints,
             )
             yield processor_iteration
 
@@ -135,6 +231,8 @@ class ProcessorIteration:
 
     _output_slice: _T.NDSlice
 
+    _output_dtype_hints: _ImmutableDict[_T.Any, OutputDTypeHint]
+
     _processor: ImageProcessor
 
     joint_axes: str
@@ -148,10 +246,12 @@ class ProcessorIteration:
         input_sections: _ImmutableDict[_T.Union[str, int], _Image],
         output_slice: _T.NDSlice,
         joint_axes: str,
+        output_dtype_hints: _ImmutableDict[_T.Any, OutputDTypeHint],
     ):
-        self._processor = processor
         self._input_sections = input_sections
         self._output_slice = output_slice
+        self._output_dtype_hints = output_dtype_hints
+        self._processor = processor
         self.joint_axes = joint_axes
 
     @property
@@ -180,9 +280,17 @@ class ProcessorIteration:
         """
         Set the output image section corresponding to the given key.
         """
-        if key not in self._processor.outputs:
-            self._processor.create_output_image(key, data.dtype)
         section = _Image(data=data, axes=self.joint_axes).reorder_axes_like(
             ''.join([axis for axis in self._processor.image0.axes if axis in self.joint_axes])
         )
+
+        # Apply output dtype hint (if provided)
+        if (output_dtype_hint := self._output_dtype_hints.get(key)):
+            section = apply_output_dtype_hint(self._processor.image0, section, output_dtype_hint)
+
+        # Create output image (if it does not exist yet)
+        if key not in self._processor.outputs:
+            self._processor.create_output_image(key, section.data.dtype)
+
+        # Write data to output image
         self._processor.outputs[key].data[self._output_slice] = section.data
