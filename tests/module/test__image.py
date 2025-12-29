@@ -19,6 +19,21 @@ from ..tools import (
     permute_axes,
 )
 
+exact_dtype_list = [
+    np.uint8,
+    np.int8,
+    np.uint16,
+    np.int16,
+    np.uint32,
+    np.int32,
+    np.uint64,
+    np.int64,
+    np.float16,
+    np.float32,
+    np.float64,
+    bool,
+]
+
 
 class ImageTestCase(unittest.TestCase):
 
@@ -269,21 +284,6 @@ class Image__iterate_jointly(unittest.TestCase):
 
 class ImageTestCase__dtype_mixin:
 
-    exact_dtype_list = [
-        np.uint8,
-        np.int8,
-        np.uint16,
-        np.int16,
-        np.uint32,
-        np.int32,
-        np.uint64,
-        np.int64,
-        np.float16,
-        np.float32,
-        np.float64,
-        bool,
-    ]
-
     def create_non_bool_image(
         self,
         dtype: np.dtype,
@@ -342,9 +342,9 @@ class ImageTestCase__dtype_mixin__dask(ImageTestCase__dtype_mixin):
         return img
 
 
-class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
+class Image__astype__mixin:
 
-    exact_dtype_list = list(frozenset(ImageTestCase__dtype_mixin.exact_dtype_list) - {bool})
+    exact_non_bool_dtype_list = list(frozenset(exact_dtype_list) - {bool})
 
     inexact_dtype_list = [
         np.floating,
@@ -458,8 +458,8 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
                 self.assertIs(img.data, img_converted.data)
 
     def test__non_bool__exact(self):
-        for src_dtype in self.exact_dtype_list:
-            for dst_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
+            for dst_dtype in self.exact_non_bool_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
                         self._test_non_bool_conversion(src_dtype, dst_dtype, force_copy=force_copy)
@@ -496,7 +496,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
             return dst_dtype
 
     def test__non_bool__inexact(self):
-        for src_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
             for dst_dtype in self.inexact_dtype_list:
                 for force_copy in (False, True):
                     with self.subTest(f'from {src_dtype} to {dst_dtype} (force_copy={force_copy})'):
@@ -515,7 +515,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
             original_axes='QTCYXZ',
         )
         assert img.data.dtype == bool  # sanity check
-        for dst_dtype in self.exact_dtype_list + self.inexact_dtype_list:
+        for dst_dtype in self.exact_non_bool_dtype_list + self.inexact_dtype_list:
             for force_copy in (False, True):
                 with self.subTest(f'from bool to {dst_dtype} (force_copy={force_copy})'):
                     expected_dtype = self._get_expected_dtype(bool, dst_dtype)
@@ -535,34 +535,42 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
                 np.testing.assert_array_equal(img_converted.data, expected_data)
 
     def test__conversion__to_bool__2_labels(self):
-        for src_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
             img = self.create_non_bool_image(src_dtype)
             img.data = 10 + 5 * (img.data > img.data.mean()).astype(img.data.dtype)
             assert list(np.unique(img.data)) == [10, 15]  # sanity check
             self._test_conversion_to_bool(img, expected_data=img.data > 12)
 
     def test__conversion__to_bool__1_non_zero_label(self):
-        for src_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
             img = self.create_non_bool_image(src_dtype)
             img.data.fill(15)
             assert img.data.dtype == src_dtype  # sanity check
             self._test_conversion_to_bool(img, expected_data=np.ones(img.data.shape, dtype=bool))
 
     def test__conversion__to_bool__1_zero_label(self):
-        for src_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
             img = self.create_non_bool_image(src_dtype)
             img.data.fill(0)
             assert img.data.dtype == src_dtype  # sanity check
             self._test_conversion_to_bool(img, expected_data=np.zeros(img.data.shape, dtype=bool))
 
     def test__conversion__to_bool__invalid(self):
-        for src_dtype in self.exact_dtype_list:
+        for src_dtype in self.exact_non_bool_dtype_list:
             img = self.create_non_bool_image(src_dtype)
             img.data = np.random.randint(0, 3, img.data.shape).astype(src_dtype)
             assert len(np.unique(img.data)) > 2  # sanity check
             with self.subTest(f'from {src_dtype} to bool (invalid case)'):
                 with self.assertRaises(ValueError):
                     img.astype(bool)
+
+
+class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin, Image__astype__mixin):
+    pass  # Tests with NumPy arrays
+
+
+class Image__astype__dask(ImageTestCase, ImageTestCase__dtype_mixin__dask, Image__astype__mixin):
+    pass  # Tests with Dask arrays
 
 
 class Image__clip_to_dtype__mixin:
