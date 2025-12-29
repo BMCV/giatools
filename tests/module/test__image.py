@@ -320,6 +320,27 @@ class ImageTestCase__dtype_mixin:
             metadata=metadata if metadata is not None else unittest.mock.Mock(),
         )
 
+    def create_bool_image(self) -> giatools.image.Image:
+        return giatools.image.Image(
+            data=np.random.choice(a=[False, True], size=(2, 3, 26, 32)),
+            axes='CYXZ',
+        )
+
+
+class ImageTestCase__dtype_mixin__dask(ImageTestCase__dtype_mixin):
+
+    def create_non_bool_image(self, *args, **kwargs) -> giatools.image.Image:
+        import dask.array as da
+        img = super().create_non_bool_image(*args, **kwargs)
+        img.data = da.from_array(img.data, chunks=(5,) * img.data.ndim)
+        return img
+
+    def create_bool_image(self) -> giatools.image.Image:
+        import dask.array as da
+        img = super().create_bool_image()
+        img.data = da.from_array(img.data, chunks=(5,) * img.data.ndim)
+        return img
+
 
 class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
 
@@ -544,13 +565,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
                     img.astype(bool)
 
 
-class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin):
-
-    def create_bool_image(self) -> giatools.image.Image:
-        return giatools.image.Image(
-            data=np.random.choice(a=[False, True], size=(2, 3, 26, 32)),
-            axes='CYXZ',
-        )
+class Image__clip_to_dtype__mixin:
 
     def test__float32_to_int8__no_clip(self):
         img = self.create_non_bool_image(
@@ -594,16 +609,9 @@ class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin):
         self.assertIs(img_clipped, img)
 
 
-class Image__clip_to_dtype__dask(Image__clip_to_dtype):
+class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin, Image__clip_to_dtype__mixin):
+    pass  # Tests with NumPy arrays
 
-    def create_non_bool_image(self, *args, **kwargs) -> giatools.image.Image:
-        import dask.array as da
-        img = super().create_non_bool_image(*args, **kwargs)
-        img.data = da.from_array(img.data, chunks=(1,) * img.data.ndim)
-        return img
 
-    def create_bool_image(self) -> giatools.image.Image:
-        import dask.array as da
-        img = super().create_bool_image()
-        img.data = da.from_array(img.data, chunks=(1,) * img.data.ndim)
-        return img
+class Image__clip_to_dtype__dask(ImageTestCase, ImageTestCase__dtype_mixin__dask, Image__clip_to_dtype__mixin):
+    pass  # Tests with Dask arrays
