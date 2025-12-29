@@ -11,13 +11,28 @@ from . import (
 
 class ToolBaseplate:
     """
-    Baseplate for command-line tools.
+    Baseplate for command-line tools in Galaxy Image Analysis.
 
     Example:
 
+        The following example implements a simple thresholding tool that reads an input image from a file path and
+        performs thresholding based on the mean pixel value. Only the YX axes are processed jointly. This means that,
+        for multi-channel images, the thresholding is applied independently to each channel. For 3-D images, the
+        thresholding is also applied independently to each z-slice, and for multi-frame images (time series), it is
+        applied independently to each frame. The output is written as a binary image (uint8 with 0/255 labels).
+
         .. literalinclude :: examples/cli.py
 
+        This code forges a command-line tool that can cope with different input image formats (including TIFF and
+        Zarr), a variety of different image axes in arbitrary orders, and preserves important image metadata that can
+        be crucial for subsequent analysis steps. The tool can be executed from the command line as follows:
+
         .. command-output:: python -m examples.cli --help
+
+        The `--params` argument is optional in this example, but could be used to provide the path to a JSON file that
+        is generated as `configfile`_ from the Galaxy tool wrapper.
+
+        .. _configfile: https://docs.galaxyproject.org/en/latest/dev/schema.html#tool-configfiles-configfile
 
         .. command-output:: python -m examples.cli --verbose --input data/input4_uint8.png --output /tmp/output.png
     """
