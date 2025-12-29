@@ -109,9 +109,13 @@ class ToolBaseplate(unittest.TestCase):
                 '--input1', 'tests/data/input4_uint8.png',
                 '--output', output_filepath,
             )
+            input_image = giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None)
             output_image = giatools.image.Image.read(output_filepath, normalize_axes=None)
-            expected_image_data = _threshold(
-                giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data, None,
+            expected_image_data = np.stack(
+                [
+                    _threshold(input_image.data[:, :, ch], None) for ch in range(input_image.shape[2])
+                ],
+                axis=2,
             ).astype(np.uint8) * 255
             np.testing.assert_array_equal(output_image.data, expected_image_data)
             self.assertEqual(output_image.axes, 'YXC')
