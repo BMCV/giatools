@@ -104,8 +104,8 @@ class ToolBaseplate(unittest.TestCase):
                 '--input2', 'tests/data/input4_uint8.jpg',
                 '--output', output_filepath,
             )
+            stdout_lines = result.stdout.splitlines()
             for key in ('input1', 'input2'):  # verify that each input image was read only once
-                stdout_lines = result.stdout.splitlines()
                 self.assertEqual(
                     sum(1 for line in stdout_lines if line == f'[{key}] Input image axes: YXC'), 1,
                 )
