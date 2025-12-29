@@ -201,8 +201,8 @@ class apply_output_dtype_hint(unittest.TestCase):
             'binary',
         )
         self.image.astype.assert_called_once_with(bool)
-        self.image.astype.return_value.astype.assert_called_once_with(mock_np.uint8)
-        self.assertIs(result, self.image.astype.return_value.astype.return_value * 255)
+        self.image.astype.return_value.astype.assert_called_once_with(mock_np.uint8, force_copy=True)
+        self.assertIs(result, self.image.astype.return_value.astype.return_value)
 
     @unittest.mock.patch('giatools.image_processor._np')
     def test__exact_float_types(self, mock_np):

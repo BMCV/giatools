@@ -126,7 +126,10 @@ class ToolBaseplate:
         Raises:
             RuntimeError: If Python version is less than 3.11.
         """
-        output_dtype_hints = {kwarg: kwargs[kwarg] for kwarg in kwargs if kwarg.endswith('_dtype')}
+        output_dtype_hints = {
+            kwarg.split('_dtype_hint')[0]: kwargs[kwarg]
+            for kwarg in kwargs if kwarg.endswith('_dtype_hint')
+        }
         yield from self.create_processor().process(joint_axes=joint_axes, output_dtype_hints=output_dtype_hints)
         if write_output_images:
             self.write_output_images()

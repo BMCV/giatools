@@ -39,7 +39,9 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
 
     # Convert to binary image (uint8 with 0/255 labels)
     if dtype_hint == 'binary':
-        return apply_output_dtype_hint(base_image, image, 'bool').astype(_np.uint8) * 255
+        image = apply_output_dtype_hint(base_image, image, 'bool').astype(_np.uint8, force_copy=True)
+        image.data *= 255
+        return image
 
     # Convert to bool
     if dtype_hint == 'bool':
@@ -171,18 +173,15 @@ class ImageProcessor:
         Raises:
             RuntimeError: If Python version is less than 3.11.
             ValueError: If `joint_axes` contains invalid axes (must be a non-empty subset of the image axes); or if
-                `output_dtype_hints` contains invalid keys (must be a subset of the output image keys) or values.
+                `output_dtype_hints` contains invalid values.
         """
         # Validate `output_dtype_hints`
         output_dtype_hints = _ImmutableDict(output_dtype_hints or dict())
         for key, dtype_hint in output_dtype_hints.items():
-            if key in self.outputs:
-                if dtype_hint not in _T.get_args(OutputDTypeHint):
-                    raise ValueError(
-                        f'Invalid dtype hint "{dtype_hint}" for output image with key "{key}".'
-                    )
-            else:
-                raise ValueError(f'Output image with key "{key}" does not exist.')
+            if dtype_hint not in _T.get_args(OutputDTypeHint):
+                raise ValueError(
+                    f'Invalid dtype hint "{dtype_hint}" for output image with key "{key}".'
+                )
 
         # Iterate through input images jointly
         input_keys, input_images = zip(*self.inputs.items())

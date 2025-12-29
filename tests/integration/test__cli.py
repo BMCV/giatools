@@ -15,7 +15,7 @@ from ..tools import minimum_python_version
 
 
 def _threshold(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
-    return (image1 > image2).astype(np.uint8) * 255
+    return image1 > image2
 
 
 if __name__ == '__main__':
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     if tool.args.params is not None:
         print(tool.args.params)
 
-    for proc in tool.run('YX'):
+    for proc in tool.run('YX', output_dtype_hint='binary'):
         proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
 
 
@@ -89,7 +89,7 @@ class ToolBaseplate(unittest.TestCase):
             expected_image_data = _threshold(
                 giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data,
                 giatools.image.Image.read('tests/data/input4_uint8.jpg', normalize_axes=None).data,
-            )
+            ).astype(np.uint8) * 255
             np.testing.assert_array_equal(output_image.data, expected_image_data)
             self.assertEqual(output_image.axes, 'YXC')
             self.assertEqual(result.stdout, '')
