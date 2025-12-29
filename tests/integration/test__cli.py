@@ -10,12 +10,16 @@ import numpy as np
 
 import giatools.cli
 import giatools.image
+import giatools.typing as _T
 
 from ..tools import minimum_python_version
 
 
-def _threshold(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
-    return image1 > image2
+def _threshold(image1: np.ndarray, image2: _T.Optional[np.ndarray]) -> np.ndarray:
+    if image2 is None:
+        return image1 > image1.mean()
+    else:
+        return image1 > image2
 
 
 if __name__ == '__main__':
@@ -27,7 +31,7 @@ if __name__ == '__main__':
 
     tool = giatools.cli.ToolBaseplate('ToolBaseplate Test', params_required=False)
     tool.add_input_image('input1')
-    tool.add_input_image('input2')
+    tool.add_input_image('input2', required=False)
     tool.add_output_image('output')
     tool.parse_args()
 
@@ -35,7 +39,10 @@ if __name__ == '__main__':
         print(tool.args.params)
 
     for proc in tool.run('YX', output_dtype_hint='binary'):
-        proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
+        if proc['input2'] is None:
+            proc['output'] = _threshold(proc['input1'].data)
+        else:
+            proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
 
 
 class ToolBaseplate(unittest.TestCase):
@@ -77,7 +84,7 @@ class ToolBaseplate(unittest.TestCase):
             self.assertIn(token, result.stdout)
 
     @minimum_python_version(3, 11)
-    def test(self):
+    def test__two_inputs(self):
         with tempfile.TemporaryDirectory() as temp_path:
             output_filepath = str(pathlib.Path(temp_path) / 'output.png')
             result = self._run_cli(
@@ -89,6 +96,22 @@ class ToolBaseplate(unittest.TestCase):
             expected_image_data = _threshold(
                 giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data,
                 giatools.image.Image.read('tests/data/input4_uint8.jpg', normalize_axes=None).data,
+            ).astype(np.uint8) * 255
+            np.testing.assert_array_equal(output_image.data, expected_image_data)
+            self.assertEqual(output_image.axes, 'YXC')
+            self.assertEqual(result.stdout, '')
+
+    @minimum_python_version(3, 11)
+    def test__one_input(self):
+        with tempfile.TemporaryDirectory() as temp_path:
+            output_filepath = str(pathlib.Path(temp_path) / 'output.png')
+            result = self._run_cli(
+                '--input1', 'tests/data/input4_uint8.png',
+                '--output', output_filepath,
+            )
+            output_image = giatools.image.Image.read(output_filepath, normalize_axes=None)
+            expected_image_data = _threshold(
+                giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data,
             ).astype(np.uint8) * 255
             np.testing.assert_array_equal(output_image.data, expected_image_data)
             self.assertEqual(output_image.axes, 'YXC')
