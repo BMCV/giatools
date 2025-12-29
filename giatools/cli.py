@@ -94,8 +94,8 @@ class ToolBaseplate:
     def _read_image(self, args: types.SimpleNamespace, key: str, filepath: str) -> _image.Image:
         image = _image.Image.read(filepath)
         if args.verbose:
-            print(f'[{key}] Input image axes: {image.axes}')
-            print(f'[{key}] Input image shape: {image.data.shape}')
+            print(f'[{key}] Input image axes: {image.original_axes}')
+            print(f'[{key}] Input image shape: {image.original_shape}')
             print(f'[{key}] Input image dtype: {image.data.dtype}')
         return image
 

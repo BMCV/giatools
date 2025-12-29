@@ -165,9 +165,9 @@ class ToolBaseplate__parse_args(MockedTestCase):
             self.builtins_print.assert_called()
             for key, input_image in self.tool.args.input_images.items():
                 for line in (
-                    f'[{key}] Input image shape: {input_image.data.shape}',
+                    f'[{key}] Input image axes: {input_image.original_axes}',
+                    f'[{key}] Input image shape: {input_image.original_shape}',
                     f'[{key}] Input image dtype: {input_image.data.dtype}',
-                    f'[{key}] Input image axes: {input_image.axes}',
                 ):
                     self.assertIn(unittest.mock.call(line), self.builtins_print.call_args_list)
         else:

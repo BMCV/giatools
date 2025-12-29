@@ -105,12 +105,16 @@ class ToolBaseplate(unittest.TestCase):
                 '--output', output_filepath,
             )
             for key in ('input1', 'input2'):  # verify that each input image was read only once
+                stdout_lines = result.stdout.splitlines()
                 self.assertEqual(
-                    sum(1 for line in result.stdout.splitlines() if line == f'[{key}] Input image axes: QTZYXC'), 1,
+                    sum(1 for line in stdout_lines if line == f'[{key}] Input image axes: YXC'), 1,
+                )
+                self.assertEqual(
+                    sum(1 for line in stdout_lines if line == f'[{key}] Input image shape: (10, 10, 3)'), 1,
                 )
             for key in ('output',):  # verify that each output image was written only once
                 self.assertEqual(
-                    sum(1 for line in result.stdout.splitlines() if line == f'[{key}] Output image axes: YXC'), 1,
+                    sum(1 for line in stdout_lines if line == f'[{key}] Output image axes: YXC'), 1,
                 )
 
     @minimum_python_version(3, 11)
