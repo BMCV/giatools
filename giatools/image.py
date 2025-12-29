@@ -485,8 +485,15 @@ class Image:
             raise TypeError('Clipping to boolean dtype is not supported.')
 
         # Determine the actual range of the source image
-        min_src_value = self.data.min().item()  # convert to native Python type (float, int)
-        max_src_value = self.data.max().item()  # convert to native Python type (float, int)
+        if hasattr(self.data, 'compute'):  # Dask array
+            import dask.array as da
+            min_src_value, max_src_value = (
+                value.item()  # convert to native Python type (float, int)
+                for value in da.compute(self.data.min(), self.data.max())
+            )
+        else:  # NumPy array
+            min_src_value = self.data.min().item()  # convert to native Python type (float, int)
+            max_src_value = self.data.max().item()  # convert to native Python type (float, int)
 
         # Determine the valid range for the target dtype
         if _np.issubdtype(dtype, _np.integer):

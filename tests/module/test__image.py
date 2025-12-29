@@ -546,6 +546,12 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
 
 class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin):
 
+    def create_bool_image(self) -> giatools.image.Image:
+        return giatools.image.Image(
+            data=np.random.choice(a=[False, True], size=(2, 3, 26, 32)),
+            axes='CYXZ',
+        )
+
     def test__float32_to_int8__no_clip(self):
         img = self.create_non_bool_image(
             dtype=np.float32,
@@ -583,10 +589,7 @@ class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin):
         self.assertEqual(img_clipped.data.max(), +127.0)
 
     def test__bool_to_uint8(self):
-        img = giatools.image.Image(
-            data=np.random.choice(a=[False, True], size=(2, 3, 26, 32)),
-            axes='CYXZ',
-        )
+        img = self.create_bool_image()
         img_clipped = img.clip_to_dtype(np.uint8)
         self.assertIs(img_clipped, img)
 
@@ -599,18 +602,8 @@ class Image__clip_to_dtype__dask(Image__clip_to_dtype):
         img.data = da.from_array(img.data, chunks=(1,) * img.data.ndim)
         return img
 
-    @minimum_python_version(3, 11)
-    def test__float32_to_int8__no_clip(self):
-        super().test__float32_to_int8__no_clip()
-
-    @minimum_python_version(3, 11)
-    def test__float32_to_float16__clip_below(self):
-        super().test__float32_to_float16__clip_below()
-
-    @minimum_python_version(3, 11)
-    def test__float32_to_int8__clip_above(self):
-        super().test__float32_to_int8__clip_above()
-
-    @minimum_python_version(3, 11)
-    def test__bool_to_uint8(self):
-        super().test__bool_to_uint8()
+    def create_bool_image(self) -> giatools.image.Image:
+        import dask.array as da
+        img = super().create_bool_image()
+        img.data = da.from_array(img.data, chunks=(1,) * img.data.ndim)
+        return img
