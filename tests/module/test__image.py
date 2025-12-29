@@ -348,7 +348,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
         # Create test image
         img = self.create_non_bool_image(src_dtype)
         original_dtype = img.data.dtype
-        origianl_metadata = img.metadata
+        original_metadata = img.metadata
         original_axes = img.axes
         original_original_axes = img.original_axes
 
@@ -417,7 +417,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
         # Perform conversion (and verify that a `ValueError` is raised, if expected)
         if expect_value_error:
             with self.assertRaises(ValueError):
-                img_converted = convert(img)
+                convert(img)
             img_converted = convert(fallback_img)
         else:
             img_converted = convert(img)
