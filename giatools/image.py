@@ -214,6 +214,7 @@ class Image:
         """
         squeezed_axes = ''.join(_np.array(list(self.axes))[_np.array(self.data.shape) > 1])
         return self.squeeze_like(squeezed_axes)
+
     def iterate_jointly(
         self, axes: str = 'YX',
     ) -> _T.Iterator[_T.Tuple[_T.Tuple[_T.Union[int, slice], ...], _T.Self]]:
