@@ -97,3 +97,24 @@ class Metadata:
     """
     The unit of measurement.
     """
+
+    def __str__(self) -> str:
+        """
+        Returns string representation of the metadata.
+
+        Example:
+
+            >>> from giatools.metadata import Metadata
+            >>> metadata = Metadata()
+            >>> print('"{}"'.format(str(metadata)))
+            ""
+            >>> metadata.resolution = (512.0, 256.0)
+            >>> metadata.unit = 'cm'
+            >>> print('"{}"'.format(str(metadata)))
+            "resolution=(512.0, 256.0), unit='cm'"
+        """
+        metadata_dict = _attrs.asdict(self)
+        metadata_keys = sorted(metadata_dict.keys())
+        return (
+            ', '.join(f'{key}={repr(metadata_dict[key])}' for key in metadata_keys if metadata_dict[key] is not None)
+        )

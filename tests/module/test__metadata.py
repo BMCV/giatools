@@ -119,3 +119,30 @@ class Metadata__pixel_size(MetadataTestCase):
             with self.subTest(pixel_size=pixel_size):
                 with self.assertRaises(ValueError):
                     self.metadata.pixel_size = pixel_size
+
+
+class Metadata__str__(MetadataTestCase):
+
+    def test__full(self):
+        self.metadata.resolution = (512.0, 256.0)
+        self.metadata.z_spacing = 1.5
+        self.metadata.z_position = 3.0
+        self.metadata.unit = 'cm'
+        self.assertEqual(
+            str(self.metadata),
+            "resolution=(512.0, 256.0), unit='cm', z_position=3.0, z_spacing=1.5",
+        )
+
+    def test__partial(self):
+        self.metadata.z_spacing = 1.5
+        self.metadata.unit = 'cm'
+        self.assertEqual(
+            str(self.metadata),
+            "unit='cm', z_spacing=1.5",
+        )
+
+    def test__empty(self):
+        self.assertEqual(
+            str(self.metadata),
+            ""
+        )

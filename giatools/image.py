@@ -92,6 +92,42 @@ class Image:
         self.original_axes = original_axes
         self.metadata = _metadata.Metadata() if metadata is None else metadata
 
+    @property
+    def original_shape(self) -> _T.Optional[_T.Tuple[int, ...]]:
+        """
+        The shape of the original image data, if `original_axes` is available.
+
+        Example:
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.original_shape)
+            (25, 2, 50, 50)
+        """
+        if self.original_axes is None:
+            return None
+        else:
+            return tuple(
+                [self.data.shape[self.axes.index(axis)] for axis in self.original_axes],
+            )
+
+    @property
+    def shape(self) -> _T.Tuple[int, ...]:
+        """
+        The shape of the image data.
+
+        This is a short-hand for `image.data.shape`, provided for consistency with the :py:attr:`original_shape`
+        attribute.
+
+        Example:
+
+            >>> from giatools import Image
+            >>> image = Image.read('data/input7_uint8_zcyx.tiff')
+            >>> print(image.shape)
+            (1, 1, 25, 50, 50, 2)
+        """
+        return self.data.shape
+
     @staticmethod
     def read(
         filepath: _T.PathLike,
