@@ -47,6 +47,18 @@ class ImageTestCase(unittest.TestCase):
         )
 
 
+class Image__shape(ImageTestCase):
+
+    def test(self):
+        self.assertEqual(self.img1.shape, self.img1_shape)
+
+
+class Image__original_shape(ImageTestCase):
+
+    def test(self):
+        self.assertEqual(self.img1.original_shape, (2, 32, 26, 3))
+
+
 class Image__read(ImageTestCase):
 
     @unittest.mock.patch('giatools.image.Image.normalize_axes_like')
