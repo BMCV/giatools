@@ -109,7 +109,11 @@ class ToolBaseplate:
         """
         args = self.parser.parse_args()
         input_filepaths = {key: getattr(args, key) for key in self.input_keys}
-        input_images = {key: self._read_image(args, key, filepath) for key, filepath in input_filepaths.items()}
+        input_images = {
+            key: self._read_image(args, key, filepath)
+            for key, filepath in input_filepaths.items()
+            if filepath is not None
+        }
         output_filepaths = {key: getattr(args, key) for key in self.output_keys}
         if args.params is None:
             params = None
