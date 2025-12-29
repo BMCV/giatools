@@ -424,7 +424,7 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin):
 
         # Verify properties of the converted image
         self.assertEqual(img.data.dtype, original_dtype)
-        self.assertIs(img_converted.metadata, origianl_metadata)
+        self.assertIs(img_converted.metadata, original_metadata)
         self.assertEqual(img_converted.axes, original_axes)
         self.assertEqual(img_converted.original_axes, original_original_axes)
         self.assertEqual(img_converted.data.dtype, expected_dtype)
