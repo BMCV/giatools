@@ -39,10 +39,10 @@ if __name__ == '__main__':
         print(tool.args.params)
 
     for proc in tool.run('YX', output_dtype_hint='binary'):
-        if proc['input2'] is None:
-            proc['output'] = _threshold(proc['input1'].data)
-        else:
+        if 'input2' in tool.args.input_images:
             proc['output'] = _threshold(proc['input1'].data, proc['input2'].data)
+        else:
+            proc['output'] = _threshold(proc['input1'].data, None)
 
 
 class ToolBaseplate(unittest.TestCase):
@@ -111,7 +111,7 @@ class ToolBaseplate(unittest.TestCase):
             )
             output_image = giatools.image.Image.read(output_filepath, normalize_axes=None)
             expected_image_data = _threshold(
-                giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data,
+                giatools.image.Image.read('tests/data/input4_uint8.png', normalize_axes=None).data, None,
             ).astype(np.uint8) * 255
             np.testing.assert_array_equal(output_image.data, expected_image_data)
             self.assertEqual(output_image.axes, 'YXC')
