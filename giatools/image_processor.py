@@ -25,8 +25,10 @@ def apply_output_dtype_hint(base_image: _Image, image: _Image, dtype_hint: Outpu
     The `image` is not changed in place, a new image is returned (the data can be copied, but not necessarily). The
     `dtype_hint` parameter determines the policy for deriving the target `dtype` of the output image:
 
-    - `'binary'`: Like `'bool'`, but convert to uint8 and use 0/255 labels instead of `False`/`True`.
-    - `'bool'`: Convert to boolean type.
+    - `'binary'`: Like `'bool'`, but convert to uint8 and use 0/255 labels instead of `False`/`True`. Using
+      high-contrast labels facilitates visual inspection.
+    - `'bool'`: Convert to boolean type. Note that bool-typed images cannot be written to some files (e.g., PNG) and
+      `'binary'` should be preferred to also facilitate visual inspection.
     - `'float16'`, `'float32'`, `'float64'`: Convert to the explicitly specified float type.
     - `'floating'`: Use the float type that the `image` already has, if applicable; otherwise, convert to float64.
     - `'preserve'`: Convert to the same dtype as the input image `base_image`.
