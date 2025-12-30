@@ -593,6 +593,34 @@ class Image__astype(ImageTestCase, ImageTestCase__dtype_mixin, Image__astype__mi
 class Image__astype__dask(ImageTestCase, ImageTestCase__dtype_mixin__dask, Image__astype__mixin):
     pass  # Tests with Dask arrays
 
+    @minimum_python_version(3, 11)
+    def test__non_bool__exact(self):
+        super().test__non_bool__exact()
+
+    @minimum_python_version(3, 11)
+    def test__non_bool__inexact(self):
+        super().test__non_bool__inexact()
+
+    @minimum_python_version(3, 11)
+    def test__conversion__from_bool(self):
+        super().test__conversion__from_bool()
+
+    @minimum_python_version(3, 11)
+    def test__conversion__to_bool__2_labels(self):
+        super().test__conversion__to_bool__2_labels()
+
+    @minimum_python_version(3, 11)
+    def test__conversion__to_bool__1_non_zero_label(self):
+        super().test__conversion__to_bool__1_non_zero_label()
+
+    @minimum_python_version(3, 11)
+    def test__conversion__to_bool__1_zero_label(self):
+        super().test__conversion__to_bool__1_zero_label()
+
+    @minimum_python_version(3, 11)
+    def test__conversion__to_bool__invalid(self):
+        super().test__conversion__to_bool__invalid()
+
 
 class Image__clip_to_dtype__mixin:
 
@@ -644,3 +672,19 @@ class Image__clip_to_dtype(ImageTestCase, ImageTestCase__dtype_mixin, Image__cli
 
 class Image__clip_to_dtype__dask(ImageTestCase, ImageTestCase__dtype_mixin__dask, Image__clip_to_dtype__mixin):
     pass  # Tests with Dask arrays
+
+    @minimum_python_version(3, 11)
+    def test__float32_to_int8__no_clip(self):
+        super().test__float32_to_int8__no_clip()
+
+    @minimum_python_version(3, 11)
+    def test__float32_to_float16__clip_below(self):
+        super().test__float32_to_float16__clip_below()
+
+    @minimum_python_version(3, 11)
+    def test__float32_to_int8__clip_above(self):
+        super().test__float32_to_int8__clip_above()
+
+    @minimum_python_version(3, 11)
+    def test__bool_to_uint8(self):
+        super().test__bool_to_uint8()
