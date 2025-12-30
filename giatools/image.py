@@ -480,8 +480,19 @@ class Image:
         Raises:
             TypeError: If `dtype` is `bool`.
         """
-        if dtype in (bool, _np.bool_):
-            raise TypeError('Clipping to boolean dtype is not supported.')
+        if _np.issubdtype(dtype, bool):
+            if _np.issubdtype(self.data.dtype, bool):
+                if force_copy:
+                    return Image(
+                        data=self.data.copy(),
+                        axes=self.axes,
+                        original_axes=self.original_axes,
+                        metadata=self.metadata,
+                    )
+                else:
+                    return self
+            else:
+                raise TypeError('Clipping to boolean dtype is not supported.')
 
         # Determine the actual range of the source image
         min_src_value, max_src_value = _get_min_max_values(self.data)

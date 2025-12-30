@@ -195,24 +195,40 @@ class Image__iterate_jointly(ImageTestCase):
 
 class Image__clip_to_dtype(ImageTestCase):
 
+    def _issubdtype(self, a, b):
+        ret = self._issubdtype__results.get((a, b), None)
+        assert ret is not None, f'Unexpected args to issubdtype: {a}, {b}'
+        return ret
+
     def test__bool(self):
+        self._issubdtype__results = {
+            (bool, bool): True,
+            (self.img1.data.dtype, bool): False,
+        }
+        self._np.issubdtype.side_effect = self._issubdtype
         with self.assertRaises(TypeError):
             self.img1.clip_to_dtype(bool)
 
     def test__to_superset_int(self):
         self._get_min_max_values.return_value = (-15, +15)
-        self._np.issubdtype.return_value = True  # target dtype is an integer type
+        self._issubdtype__results = {
+            (self._np.uint8, bool): False,
+            (self._np.uint8, self._np.integer): True,  # target dtype is an integer type
+        }
         self._np.iinfo.return_value.min = -15
         self._np.iinfo.return_value.max = +15
-        img_clipped = self.img1.clip_to_dtype('mocked-int-type')
+        img_clipped = self.img1.clip_to_dtype(self._np.uint8)
         self.assertIs(img_clipped, self.img1)
         self.img1.data.copy.assert_not_called()
 
     def test__to_superset_float(self):
         self._get_min_max_values.return_value = (-15, +15)
-        self._np.issubdtype.return_value = False  # target dtype is a float type
+        self._issubdtype__results = {
+            (self._np.uint8, bool): False,
+            (self._np.uint8, self._np.integer): False,  # target dtype is a float type
+        }
         self._np.finfo.return_value.min.item.return_value = -15.
         self._np.finfo.return_value.max.item.return_value = +15.
-        img_clipped = self.img1.clip_to_dtype('mocked-float-type')
+        img_clipped = self.img1.clip_to_dtype(self._np.float64)
         self.assertIs(img_clipped, self.img1)
         self.img1.data.copy.assert_not_called()

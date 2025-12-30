@@ -61,7 +61,9 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
                 # Create random image data
                 np.random.seed(0)
                 data = np.random.rand(*shape)
-                if np.issubdtype(dtype, np.integer):
+                if np.issubdtype(dtype, np.floating):
+                    pass
+                elif np.issubdtype(dtype, np.integer):
                     data = (data * np.iinfo(dtype).max).astype(dtype)
                 elif np.issubdtype(dtype, bool):
                     data = (data > 0.5).round().astype(bool)

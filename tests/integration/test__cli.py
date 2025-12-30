@@ -177,7 +177,7 @@ class ToolBaseplate(unittest.TestCase):
             params=None,
             verbose=False,
             input_filepaths={'input': filepath},
-            input_images={'input': giatools.image.Image(data, axes='YX')},
+            input_images={'input': giatools.image.Image(data, axes='YX', original_axes='YX')},
             output_filepaths={'output': output_filepath},
             raw_args=types.SimpleNamespace(),
         )
