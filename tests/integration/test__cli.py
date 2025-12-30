@@ -4,6 +4,7 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 
 import numpy as np
@@ -12,7 +13,10 @@ import giatools.cli
 import giatools.image
 import giatools.typing as _T
 
-from ..tools import minimum_python_version
+from ..tools import (
+    minimum_python_version,
+    random_io_test,
+)
 
 
 def _threshold(image1: np.ndarray, image2: _T.Optional[np.ndarray]) -> np.ndarray:
@@ -45,7 +49,7 @@ if __name__ == '__main__':
             proc['output'] = _threshold(proc['input1'].data, None)
 
 
-class ToolBaseplate(unittest.TestCase):
+class ToolBaseplate__cli(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
@@ -159,3 +163,23 @@ class ToolBaseplate(unittest.TestCase):
                 '--output', output_filepath,
             )
             self.assertEqual(result.stdout.strip('\n'), str(params))
+
+
+class ToolBaseplate(unittest.TestCase):
+
+    @random_io_test(shape=(10, 10), dtype=bool, ext='tiff')
+    def test__preserve__bool(self, filepath, data):
+        output_filepath = str(pathlib.Path(filepath).parent / 'output.tiff')
+        tool = giatools.cli.ToolBaseplate(params_required=False)
+        tool.add_input_image('input')
+        tool.add_output_image('output')
+        tool.args = types.SimpleNamespace(
+            params=None,
+            verbose=False,
+            input_filepaths={'input': filepath},
+            input_images={'input': giatools.image.Image(data, axes='YX')},
+            output_filepaths={'output': output_filepath},
+            raw_args=types.SimpleNamespace(),
+        )
+        for section in tool.run('YX', output_dtype_hint='preserve'):
+            section['output'] = section['input'].data

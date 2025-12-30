@@ -61,8 +61,12 @@ def random_io_test(shape: Tuple, dtype: np.dtype, ext: str):
                 # Create random image data
                 np.random.seed(0)
                 data = np.random.rand(*shape)
-                if not np.issubdtype(dtype, np.floating):
+                if np.issubdtype(dtype, np.integer):
                     data = (data * np.iinfo(dtype).max).astype(dtype)
+                elif np.issubdtype(dtype, bool):
+                    data = (data > 0.5).round().astype(bool)
+                else:
+                    assert False, f'Unsupported dtype {dtype}'
 
                 # Supply a temporary file to write the image to
                 filepath = os.path.join(temp_path, f'test.{ext}')
