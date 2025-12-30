@@ -167,6 +167,7 @@ class ToolBaseplate__cli(unittest.TestCase):
 
 class ToolBaseplate(unittest.TestCase):
 
+    @minimum_python_version(3, 11)
     @random_io_test(shape=(10, 10), dtype=bool, ext='tiff')
     def test__preserve__bool(self, filepath, data):
         output_filepath = str(pathlib.Path(filepath).parent / 'output.tiff')
