@@ -297,7 +297,7 @@ class ImageTestCase__dtype_mixin:
         include_limits: bool = False,
     ) -> giatools.image.Image:
         """
-        Create a test image with random data of the given data type.
+        Create a test image with random, uniformly distributed data of the given data type.
         """
         assert dtype != bool, 'This method is only for non-boolean dtypes.'
         np.random.seed(0)
@@ -578,9 +578,8 @@ class Image__astype__mixin:
 
     def test__conversion__to_bool__invalid(self):
         for src_dtype in self.exact_non_bool_dtype_list:
-            img = self.create_random_non_bool_image(src_dtype)
-            img.data = np.random.randint(0, 3, img.data.shape).astype(src_dtype)
-            assert len(np.unique(img.data)) > 2  # sanity check
+            img = self.create_random_non_bool_image(src_dtype, min_value=0, max_value=3)
+            assert len(np.unique(np.asarray(img.data))) > 2  # sanity check
             with self.subTest(f'from {src_dtype} to bool (invalid case)'):
                 with self.assertRaises(ValueError):
                     img.astype(bool)
