@@ -33,6 +33,12 @@ class ImageTestCase(unittest.TestCase):
         self._np = unittest.mock.patch(
             'giatools.image._np'
         ).start()
+        self._get_min_max_values = unittest.mock.patch(
+            'giatools.image._get_min_max_values'
+        ).start()
+        self._unique = unittest.mock.patch(
+            'giatools.image._unique'
+        ).start()
 
         self.addCleanup(unittest.mock.patch.stopall)
 
@@ -194,8 +200,7 @@ class Image__clip_to_dtype(ImageTestCase):
             self.img1.clip_to_dtype(bool)
 
     def test__to_superset_int(self):
-        self.img1.data.min.return_value.item.return_value = -15
-        self.img1.data.max.return_value.item.return_value = +15
+        self._get_min_max_values.return_value = (-15, +15)
         self._np.issubdtype.return_value = True  # target dtype is an integer type
         self._np.iinfo.return_value.min = -15
         self._np.iinfo.return_value.max = +15
@@ -204,8 +209,7 @@ class Image__clip_to_dtype(ImageTestCase):
         self.img1.data.copy.assert_not_called()
 
     def test__to_superset_float(self):
-        self.img1.data.min.return_value.item.return_value = -15
-        self.img1.data.max.return_value.item.return_value = +15
+        self._get_min_max_values.return_value = (-15, +15)
         self._np.issubdtype.return_value = False  # target dtype is a float type
         self._np.finfo.return_value.min.item.return_value = -15.
         self._np.finfo.return_value.max.item.return_value = +15.

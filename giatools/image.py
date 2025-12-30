@@ -417,7 +417,7 @@ class Image:
 
         # Special case: Conversion to `bool`
         elif dtype == bool:
-            labels = _np.unique(self.data)
+            labels = _unique(self.data)
             if len(labels) > 2:
                 raise ValueError(
                     f'Cannot convert image data from {self.data.dtype} to bool without overflows '
@@ -442,8 +442,7 @@ class Image:
                 dtype = resolve_unsignedinteger_to
 
             # Check for overflows
-            src_min = self.data.min().item()  # convert to native Python type (int, float)
-            src_max = self.data.max().item()  # convert to native Python type (int, float)
+            src_min, src_max = _get_min_max_values(self.data)
             if _np.issubdtype(dtype, _np.integer):
                 dst_min = _np.iinfo(dtype).min
                 dst_max = _np.iinfo(dtype).max
@@ -485,8 +484,7 @@ class Image:
             raise TypeError('Clipping to boolean dtype is not supported.')
 
         # Determine the actual range of the source image
-        min_src_value = self.data.min().item()  # convert to native Python type (float, int)
-        max_src_value = self.data.max().item()  # convert to native Python type (float, int)
+        min_src_value, max_src_value = _get_min_max_values(self.data)
 
         # Determine the valid range for the target dtype
         if _np.issubdtype(dtype, _np.integer):
@@ -511,3 +509,26 @@ class Image:
                 original_axes=self.original_axes,
                 metadata=self.metadata,
             )
+
+
+def _get_min_max_values(array: _T.NDArray) -> _T.Tuple[_T.Union[float, int], _T.Union[float, int]]:
+    if hasattr(array, 'compute'):  # Dask array
+        import dask.array as da
+        min_src_value, max_src_value = (
+            value.item()  # convert to native Python type (float, int)
+            for value in da.compute(array.min(), array.max())
+        )
+    else:  # NumPy array
+        min_src_value, max_src_value = (
+            value.item()  # convert to native Python type (float, int)
+            for value in (array.min(), array.max())
+        )
+    return min_src_value, max_src_value
+
+
+def _unique(array: _T.NDArray) -> _T.NDArray:
+    if hasattr(array, 'compute'):  # Dask array
+        import dask.array as da
+        return da.unique(array).compute()
+    else:  # NumPy array
+        return _np.unique(array)
