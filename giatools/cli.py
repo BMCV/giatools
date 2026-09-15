@@ -40,7 +40,8 @@ class ToolBaseplate:
     args: _T.Optional[types.SimpleNamespace] = None
     """
     Command-line arguments parsed from the command line (including the loaded input images, that are provided via the
-    `args.input_images` dictionary).
+    `args.input_images` dictionary). The unparsed command-line arguments (e.g., image file paths) are accessible via
+    the `args.raw_args` namespace.
     """
 
     input_keys: _T.List[str]
